@@ -2,11 +2,17 @@
 
 This is the `python` package for implementing EBM. 
 
+```py
+pip install alabEBM
+```
+
 ## Usage
 
 To generate random data:
 
 ```py
+from alabEBM import generate
+import numpy as np 
 S_ordering = np.array([
         'HIP-FCI', 'PCC-FCI', 'AB', 'P-Tau', 'MMSE', 'ADAS', 
         'HIP-GMI', 'AVLT-Sum', 'FUS-GMI', 'FUS-FCI'
@@ -31,6 +37,10 @@ generate(
 To get results:
 
 ```py
+from alabEBM import run_hard_kmeans
+from alabEBM import run_soft_kmeans
+from alabEBM import run_conjugate_priors
+
 data_file = '../alabEBM/data/25|50_10.csv'
 n_iter = 20
 n_shuffle = 2
