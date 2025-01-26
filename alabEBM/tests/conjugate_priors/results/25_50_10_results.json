@@ -3,14 +3,14 @@
         "HIP-FCI (1)": 1,
         "PCC-FCI (2)": 2,
         "AB (3)": 3,
-        "P-Tau (4)": 7,
-        "MMSE (5)": 5,
-        "ADAS (6)": 6,
-        "HIP-GMI (7)": 9,
+        "P-Tau (4)": 8,
+        "MMSE (5)": 4,
+        "ADAS (6)": 5,
+        "HIP-GMI (7)": 6,
         "AVLT-Sum (8)": 10,
-        "FUS-GMI (9)": 8,
-        "FUS-FCI (10)": 4
+        "FUS-GMI (9)": 9,
+        "FUS-FCI (10)": 7
     },
-    "kendalls_tau": 0.5555555555555555,
-    "p_value": 0.02860945767195767
+    "kendalls_tau": 0.6888888888888888,
+    "p_value": 0.00468694885361552
 }

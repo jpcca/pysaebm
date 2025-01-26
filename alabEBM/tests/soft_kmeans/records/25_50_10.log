@@ -1,0 +1,13 @@
+2025-01-26 17:53:15,507 - INFO - Running soft kmeans for file: 25_50_10
+2025-01-26 17:53:15,511 - INFO - Number of biomarkers: 10
+2025-01-26 17:53:16,988 - INFO - Iteration 200/2000, Acceptance Ratio: 3.50%, Log Likelihood: -1129.4065, Current Accepted Order: dict_values([4, 6, 7, 9, 2, 10, 3, 1, 8, 5]) 
+2025-01-26 17:53:17,799 - INFO - Iteration 400/2000, Acceptance Ratio: 1.75%, Log Likelihood: -1129.4065, Current Accepted Order: dict_values([4, 6, 7, 9, 2, 10, 3, 1, 8, 5]) 
+2025-01-26 17:53:18,605 - INFO - Iteration 600/2000, Acceptance Ratio: 1.17%, Log Likelihood: -1129.4065, Current Accepted Order: dict_values([4, 6, 7, 9, 2, 10, 3, 1, 8, 5]) 
+2025-01-26 17:53:19,453 - INFO - Iteration 800/2000, Acceptance Ratio: 0.88%, Log Likelihood: -1129.4065, Current Accepted Order: dict_values([4, 6, 7, 9, 2, 10, 3, 1, 8, 5]) 
+2025-01-26 17:53:20,307 - INFO - Iteration 1000/2000, Acceptance Ratio: 0.70%, Log Likelihood: -1129.4065, Current Accepted Order: dict_values([4, 6, 7, 9, 2, 10, 3, 1, 8, 5]) 
+2025-01-26 17:53:21,128 - INFO - Iteration 1200/2000, Acceptance Ratio: 0.58%, Log Likelihood: -1129.4065, Current Accepted Order: dict_values([4, 6, 7, 9, 2, 10, 3, 1, 8, 5]) 
+2025-01-26 17:53:21,964 - INFO - Iteration 1400/2000, Acceptance Ratio: 0.64%, Log Likelihood: -1128.7974, Current Accepted Order: dict_values([4, 6, 7, 9, 2, 8, 3, 1, 10, 5]) 
+2025-01-26 17:53:22,783 - INFO - Iteration 1600/2000, Acceptance Ratio: 4.31%, Log Likelihood: -1131.5312, Current Accepted Order: dict_values([8, 9, 4, 6, 3, 2, 7, 1, 5, 10]) 
+2025-01-26 17:53:23,596 - INFO - Iteration 1800/2000, Acceptance Ratio: 4.56%, Log Likelihood: -1129.8186, Current Accepted Order: dict_values([8, 4, 9, 6, 3, 2, 7, 1, 5, 10]) 
+2025-01-26 17:53:24,411 - INFO - Iteration 2000/2000, Acceptance Ratio: 4.30%, Log Likelihood: -1130.4627, Current Accepted Order: dict_values([7, 4, 9, 6, 3, 2, 5, 1, 8, 10]) 
+2025-01-26 17:53:24,712 - INFO - Results saved to soft_kmeans/results/25_50_10_results.json

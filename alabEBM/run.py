@@ -52,7 +52,7 @@ def run_ebm(
     heatmap_folder = f"{output_dir}/heatmaps"
     traceplot_folder = f"{output_dir}/traceplots"
     results_folder = f"{output_dir}/results"
-    logs_folder = f"{output_dir}/logs"
+    logs_folder = f"{output_dir}/records"
 
     os.makedirs(heatmap_folder, exist_ok=True)
     os.makedirs(traceplot_folder, exist_ok=True)
