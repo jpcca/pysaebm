@@ -3,10 +3,9 @@ import pandas as pd
 import numpy as np
 import os
 from collections import OrderedDict
-import seaborn as sns
-import matplotlib.pyplot as plt
 from sklearn.cluster import KMeans
 from scipy.stats import mode
+from numba import jit
 
 def compute_theta_phi_for_biomarker(biomarker_df, max_attempt = 100, seed = None):
     """get theta and phi parameters for this biomarker using hard k-means
@@ -34,6 +33,7 @@ def compute_theta_phi_for_biomarker(biomarker_df, max_attempt = 100, seed = None
         predictions = clustering_result.labels_
         cluster_counts = np.bincount(predictions) # array([3, 2])
         
+        # Exit if exactly two clusters and neither one is empty
         if len(cluster_counts) == n_clusters and all(c > 1 for c in cluster_counts):
             break 
         curr_attempt += 1
@@ -49,13 +49,13 @@ def compute_theta_phi_for_biomarker(biomarker_df, max_attempt = 100, seed = None
     phi_cluster_idx = mode_result[0] if isinstance(mode_result, np.ndarray) else mode_result
     theta_cluster_idx = 1 - phi_cluster_idx
 
-    # two empty clusters to strore measurements
-    clustered_measurements = [[] for _ in range(2)]
+    # Empty clusters to strore measurements
+    clustered_measurements = [[] for _ in range(n_clusters)]
     # Store measurements into their cluster
     for i, prediction in enumerate(predictions):
         clustered_measurements[prediction].append(measurements[i][0])
     
-     # Calculate means and standard deviations
+    # Calculate means and standard deviations
     theta_mean, theta_std = np.mean(
         clustered_measurements[theta_cluster_idx]), np.std(
             clustered_measurements[theta_cluster_idx])
@@ -78,7 +78,6 @@ def get_theta_phi_estimates(
     Args:
     data (pd.DataFrame): DataFrame containing participant data with columns 'participant', 
         'biomarker', 'measurement', and 'diseased'.
-    # biomarkers (List[str]): A list of biomarker names.
 
     Returns:
     Dict[str, Dict[str, float]]: A dictionary where each key is a biomarker name,
@@ -104,65 +103,57 @@ def get_theta_phi_estimates(
         }
     return estimates
 
-def fill_up_kj_and_affected(pdata, k_j):
-    '''Fill up a single participant's data using k_j; basically add two columns: 
-    k_j and affected
-    Note that this function assumes that pdata already has the S_n column
+@jit(nopython=True)
+def _compute_likelihood_core(measurements, affected, mus, stds):
+    """Core computation function optimized with Numba"""
+    likelihood = 1.0 
+    for i in range(len(measurements)):
+        var = stds[i] * stds[i]
+        if var <= 0 or np.isnan(measurements[i]) or np.isnan(mus[i]):
+            continue
+        # Add a small positive constant to var to avoid division by very small numbers
+        # Otherwise, likelihood might be inf
+        var = max(var, 1e-10)
+        likelihood *= np.exp(-(measurements[i] - mus[i])**2 / (2 * var)) / np.sqrt(2 * np.pi * var)
+    return likelihood 
 
-    Input:
-    - pdata: a dataframe of ten biomarker values for a specific participant 
-    - k_j: a scalar
-    '''
-    data = pdata.copy()
-    data['k_j'] = k_j
-    data['affected'] = data.apply(lambda row: row.k_j >= row.S_n, axis=1)
-    return data
+def compute_likelihood(
+    measurements: np.ndarray,
+    S_n: np.ndarray,
+    biomarkers: np.ndarray,
+    k_j: int,
+    theta_phi: Dict[str, Dict[str, float]]
+) -> float:
+    """
+    Compute the likelihood for given participant data.
 
-def compute_single_measurement_likelihood(theta_phi, biomarker, affected, measurement):
-    '''Computes the likelihood of the measurement value of a single biomarker
+    Args:
+        measurements (np.ndarray): Array of measurement values.
+        S_n (np.ndarray): Array of stage values (mapped from biomarkers).
+        biomarkers (np.ndarray): Array of biomarker names.
+        k_j (int): Current stage.
+        theta_phi (Dict[str, Dict[str, float]]): Biomarker parameter dictionary.
 
-    We know the normal distribution defined by either theta or phi
-    and we know the measurement. This will give us the probability
-    of this given measurement value. 
+    Returns:
+        float: Likelihood value.
+    """
+    affected = k_j >= S_n
+    mus = np.zeros(len(measurements))
+    stds = np.zeros(len(measurements))
 
-    input:
-    - theta_phi: the dictionary containing theta and phi values for each biomarker
-    - biomarker: an integer between 0 and 9 
-    - affected: boolean 
-    - measurement: the observed value for a biomarker in a specific participant
+    for i, (biomarker, is_affected) in enumerate(zip(biomarkers, affected)):
+        params = theta_phi[biomarker]
+        if is_affected:
+            mus[i] = params['theta_mean']
+            stds[i] = params['theta_std']
+        else:
+            mus[i] = params['phi_mean']
+            stds[i] = params['phi_std']
 
-    output: a scalar
-    '''
-    biomarker_dict = theta_phi[biomarker]
-    mu = biomarker_dict['theta_mean'] if affected else biomarker_dict['phi_mean']
-    std = biomarker_dict['theta_std'] if affected else biomarker_dict['phi_std']
-    var = std**2
-    if var <= int(0) or np.isnan(measurement) or np.isnan(mu):
-        print(f"Invalid values: measurement: {measurement}, mu: {mu}, var: {var}")
-        likelihood = np.exp(-(measurement - mu)**2 /
-                            (2 * var)) / np.sqrt(2 * np.pi * var)
-    else:
-        likelihood = np.exp(-(measurement - mu)**2 /
-                            (2 * var)) / np.sqrt(2 * np.pi * var)
-    return likelihood
-
-def compute_likelihood(pdata, k_j, theta_phi):
-    '''This implementes the formula of https://ebm-book2.vercel.app/distributions.html#known-k-j
-    This function computes the likelihood of seeing this sequence of biomarker values 
-    for a specific participant, assuming that this participant is at stage k_j
-    '''
-    data = fill_up_kj_and_affected(pdata, k_j)
-    likelihood = 1
-    for i, row in data.iterrows():
-        biomarker = row['biomarker']
-        measurement = row['measurement']
-        affected = row['affected']
-        likelihood *= compute_single_measurement_likelihood(
-            theta_phi, biomarker, affected, measurement)
-    return likelihood
-
+    return _compute_likelihood_core(measurements, affected, mus, stds)
 
 def shuffle_order(arr: np.ndarray, n_shuffle: int) -> None:
+
     """
     Randomly shuffle a specified number of elements in an array.
 
@@ -183,7 +174,6 @@ def shuffle_order(arr: np.ndarray, n_shuffle: int) -> None:
 
     # Place the shuffled elements back into the array
     arr[indices] = selected_elements
-
 
 def obtain_most_likely_order_dic(all_current_accepted_order_dicts, burn_in, thining):
     """Obtain the most likely order based on all the accepted orders 
@@ -217,7 +207,6 @@ def obtain_most_likely_order_dic(all_current_accepted_order_dicts, burn_in, thin
             raise ValueError(
                 f"Could not assign a unique stage for biomarker {biomarker}.")
     return od
-
 
 def get_biomarker_stage_probability(all_current_accepted_order_dicts, burn_in, thining):
     """filter through all_dicts using burn_in and thining 
@@ -258,25 +247,3 @@ def get_biomarker_stage_probability(all_current_accepted_order_dicts, burn_in, t
     dff = pd.DataFrame(dict_list)
     dff.set_index(dff.columns[0], inplace=True)
     return dff
-
-
-def save_heatmap(all_dicts, burn_in, thining, folder_name, file_name, title):
-    # Check if the directory exists
-    if not os.path.exists(folder_name):
-        # Create the directory if it does not exist
-        os.makedirs(folder_name)
-    biomarker_stage_probability_df = get_biomarker_stage_probability(
-        all_dicts, burn_in, thining)
-    sns.heatmap(biomarker_stage_probability_df,
-                annot=True, cmap="Greys", linewidths=.5,
-                cbar_kws={'label': 'Probability'},
-                fmt=".1f",
-                # vmin=0, vmax=1,
-                )
-    plt.xlabel('Stage')
-    plt.ylabel('Biomarker')
-    plt.title(title)
-    plt.tight_layout()
-    plt.savefig(f"{folder_name}/{file_name}.png")
-    # plt.savefig(f'{file_name}.pdf')
-    plt.close()

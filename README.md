@@ -1,89 +1,66 @@
 # EBM 
 
-This is the `python` package for implementing EBM. 
+This is the `python` package for implementing [Event Based Models for Disease Progression](https://ebmbook.vercel.app/). 
 
-```py
+## Installation
+
+```bash
 pip install alabEBM
 ```
 
-## Usage
-
-To generate random data:
+## Generate Random Data
 
 ```py
-from alabEBM import generate
-import numpy as np 
-S_ordering = np.array([
-        'HIP-FCI', 'PCC-FCI', 'AB', 'P-Tau', 'MMSE', 'ADAS', 
-        'HIP-GMI', 'AVLT-Sum', 'FUS-GMI', 'FUS-FCI'
-    ])
+from alabEBM import generate, get_params_path
+import os
 
-real_theta_phi_file = '../alabEBM/data/real_theta_phi.json'
+# Get path to default parameters
+params_file = get_params_path()
 
-js = [50, 100]
-rs = [0.1, 0.5]
-num_of_datasets_per_combination = 20
+# Generate data using default parameters
+S_ordering = [
+    'HIP-FCI', 'PCC-FCI', 'AB', 'P-Tau', 'MMSE', 'ADAS',
+    'HIP-GMI', 'AVLT-Sum', 'FUS-GMI', 'FUS-FCI'
+]
 
 generate(
-    S_ordering,
-    real_theta_phi_file,
-    js,
-    rs,
-    num_of_datasets_per_combination,
-    output_dir = 'data'
+    S_ordering=S_ordering,
+    real_theta_phi_file=params_file,  # Use default parameters
+    js = [50, 100], # Number of participants
+    rs = [0.1, 0.5], # Percentage of non-diseased participants
+    num_of_datasets_per_combination=2,
+    output_dir='my_data'
 )
 ```
 
-To get results:
+## Run MCMC Algorithms 
 
 ```py
-from alabEBM import run_hard_kmeans
-from alabEBM import run_soft_kmeans
-from alabEBM import run_conjugate_priors
+from alabEBM import run_ebm
+from alabEBM.data import get_sample_data_path
+import os
 
-data_file = '../alabEBM/data/25|50_10.csv'
-n_iter = 20
-n_shuffle = 2
-burn_in = 2
-thinning = 2
-heatmap_folder = 'heatmap'
-filename = '25_50_10_hk'
-temp_result_file = f'results/{filename}.json'
+print("Current Working Directory:", os.getcwd())
 
-run_hard_kmeans(
-    data_file,
-    n_iter,
-    n_shuffle,
-    burn_in,
-    thinning,
-    heatmap_folder,
-    filename,
-    temp_result_file,
-)
-
-filename = '25_50_10_sk'
-temp_result_file = f'results/{filename}.json'
-run_soft_kmeans(
-    data_file,
-    n_iter,
-    n_shuffle,
-    burn_in,
-    thinning,
-    heatmap_folder,
-    filename,
-    temp_result_file,
-)
-
-filename = '25_50_10_cp'
-temp_result_file = f'results/{filename}.json'
-run_conjugate_priors(
-    data_file,
-    n_iter,
-    n_shuffle,
-    burn_in,
-    thinning,
-    heatmap_folder,
-    filename,
-    temp_result_file,
-)
+for algorithm in ['soft_kmeans', 'conjugate_priors', 'hard_kmeans']:
+    results = run_ebm(
+        data_file=get_sample_data_path('25|50_10.csv'),  # Use the path helper
+        algorithm=algorithm,
+        n_iter=2000,
+        n_shuffle=2,
+        burn_in=1000,
+        thinning=20,
+    )
 ```
+
+## Features
+
+- Multiple MCMC algorithms:
+    - Conjugate Priors
+    - Hard K-means
+    - Soft K-means
+
+- Data generation utilities
+- Extensive logging
+
+
