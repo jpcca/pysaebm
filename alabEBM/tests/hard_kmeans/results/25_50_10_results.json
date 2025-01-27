@@ -1,16 +1,16 @@
 {
     "most_likely_order": {
-        "HIP-FCI (1)": 8,
+        "HIP-FCI (1)": 10,
         "PCC-FCI (2)": 1,
         "AB (3)": 2,
-        "P-Tau (4)": 4,
-        "MMSE (5)": 7,
-        "ADAS (6)": 5,
-        "HIP-GMI (7)": 9,
-        "AVLT-Sum (8)": 10,
-        "FUS-GMI (9)": 3,
-        "FUS-FCI (10)": 6
+        "P-Tau (4)": 3,
+        "MMSE (5)": 9,
+        "ADAS (6)": 8,
+        "HIP-GMI (7)": 4,
+        "AVLT-Sum (8)": 5,
+        "FUS-GMI (9)": 6,
+        "FUS-FCI (10)": 7
     },
-    "kendalls_tau": 0.28888888888888886,
-    "p_value": 0.2912483465608466
+    "kendalls_tau": 0.19999999999999998,
+    "p_value": 0.4843127204585538
 }

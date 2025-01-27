@@ -9,7 +9,7 @@ if os.path.exists("README.md"):
 
 setup(
     name="alabEBM",  # Package name
-    version="0.1.1", 
+    version="0.1.2", 
     packages=find_packages(),  # Automatically find subpackages
     description="Implementation of event-based models for degenerative diseases.",
     long_description=long_description,  # Use the content of README.md

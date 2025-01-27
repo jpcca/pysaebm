@@ -127,6 +127,6 @@ def metropolis_hastings_hard_kmeans(
                 f"Iteration {iteration + 1}/{iterations}, "
                 f"Acceptance Ratio: {acceptance_ratio:.2f}%, "
                 f"Log Likelihood: {current_ln_likelihood:.4f}, "
-                f"Current Accepted Order: {current_order_dict.values()} "
+                f"Current Accepted Order: {current_order_dict.values()} ",
             )
     return all_orders, log_likelihoods
