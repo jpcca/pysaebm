@@ -1,0 +1,16 @@
+{
+    "most_likely_order": {
+        "HIP-FCI (1)": 1,
+        "PCC-FCI (2)": 6,
+        "AB (3)": 4,
+        "P-Tau (4)": 2,
+        "MMSE (5)": 3,
+        "ADAS (6)": 5,
+        "HIP-GMI (7)": 8,
+        "AVLT-Sum (8)": 9,
+        "FUS-GMI (9)": 10,
+        "FUS-FCI (10)": 7
+    },
+    "kendalls_tau": 0.6,
+    "p_value": 0.016666115520282188
+}

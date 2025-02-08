@@ -9,7 +9,7 @@ if os.path.exists("README.md"):
 
 setup(
     name="alabEBM",  # Package name
-    version="0.1.2", 
+    version="0.2.0", 
     packages=find_packages(),  # Automatically find subpackages
     description="Implementation of event-based models for degenerative diseases.",
     long_description=long_description,  # Use the content of README.md
@@ -21,6 +21,10 @@ setup(
         "pandas",
         "numpy",
         "scipy",
+        "matplotlib",
+        "seaborn",
+        "scikit-learn",
+        "numba"
     ],
     classifiers=[
         "Programming Language :: Python :: 3",
@@ -30,4 +34,7 @@ setup(
     python_requires=">=3.7",  # Specify Python version compatibility
     license="MIT",  # License type
     include_package_data=True,  # Include non-code files (like `data/`) in the package
+    package_data={
+        "alabEBM": ["data/samples/*.csv", "data/real_theta_phi.json"],  # Include these files
+    },
 )

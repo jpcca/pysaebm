@@ -41,9 +41,10 @@ def compute_theta_phi_biomarker(
             else:
                 stage_likelihoods = participant_stage_likelihoods[p]
                 affected_prob = np.sum(stage_likelihoods[diseased_stages >= curr_order])
-                if affected_prob > 0.5:
+                non_affected_prob = np.sum(stage_likelihoods[diseased_stages < curr_order])
+                if affected_prob > non_affected_prob:
                     affected_cluster.append(m)
-                elif affected_prob < 0.5:
+                elif affected_prob < non_affected_prob:
                     non_affected_cluster.append(m)
                 else:
                     if np.random.random() > 0.5:
@@ -62,8 +63,8 @@ def compute_theta_phi_biomarker(
 def update_theta_phi_estimates(
     biomarker_data: Dict[str, Tuple[int, np.ndarray, np.ndarray, bool]],
     theta_phi_default: Dict[str, Dict[str, float]],
-    participant_stage_likelihoods,
-    diseased_stages
+    participant_stage_likelihoods: Dict[int, np.ndarray],
+    diseased_stages:np.ndarray
     ) -> Dict[str, Dict[str, float]]:
     """Update theta and phi params using the soft K-means for all biomarkers."""
     updated_params = defaultdict(dict)
@@ -109,6 +110,9 @@ def preprocess_biomarker_data(
     """
     biomarker_data = {}
     for biomarker, bdata in data_we_have.groupby('biomarker'):
+        # Sort by participant to ensure consistent ordering
+        bdata = bdata.sort_values(by = 'participant', ascending = True)
+
         curr_order = current_order_dict[biomarker]
         measurements = bdata['measurement'].values 
         participants = bdata['participant'].values  
@@ -125,9 +129,7 @@ def compute_total_ln_likelihood_and_stage_likelihoods(
     """Calculate the total log likelihood across all participants 
         and obtain participant_stage_likelihoods
     """
-
     total_ln_likelihood = 0.0 
-    # Dict[int, np.ndarray]
     # This is only for diseased participants
     participant_stage_likelihoods = {}
     for participant, (measurements, S_n, biomarkers) in participant_data.items():
@@ -140,13 +142,16 @@ def compute_total_ln_likelihood_and_stage_likelihoods(
                     measurements, S_n, biomarkers, k_j = k_j, theta_phi=theta_phi
                 ) for k_j in diseased_stages
             ])
-            # Avoid likelihood_sum to be 0
             epsilon = 1e-10
-            likelihood_sum = max(np.sum(stage_likelihoods), epsilon)
-            probs = stage_likelihoods/likelihood_sum
-            participant_stage_likelihoods[participant] = probs
-            likelihood = likelihood_sum / len(diseased_stages)
-        total_ln_likelihood += np.log(likelihood + 1e-10)
+            likelihood_sum = np.sum(stage_likelihoods)
+            if likelihood_sum == 0:
+                participant_stage_likelihoods[participant] = stage_likelihoods/epsilon
+                likelihood = epsilon
+            else:
+                normalized_probs = stage_likelihoods/likelihood_sum
+                participant_stage_likelihoods[participant] = normalized_probs
+                likelihood = np.mean(likelihood_sum)
+        total_ln_likelihood += np.log(likelihood)
     return total_ln_likelihood, participant_stage_likelihoods
 
 def preprocess_participant_data(
@@ -163,7 +168,6 @@ def preprocess_participant_data(
         Dict[int, Tuple[np.ndarray, np.ndarray, np.ndarray, bool]]: A dictionary where keys are participant IDs,
             and values are tuples of (measurements, S_n, biomarkers).
     """
-    # This modifies data source in-place
     data_we_have['S_n'] = data_we_have['biomarker'].map(current_order_dict)
 
     participant_data = {}
@@ -180,7 +184,6 @@ def metropolis_hastings_soft_kmeans(
     n_shuffle: int,
 ) -> Tuple[List[Dict], List[float]]:
     """Metropolis-Hastings clustering algorithm."""
-
     n_participants = len(data_we_have.participant.unique())
     biomarkers = data_we_have.biomarker.unique()
     n_stages = len(biomarkers) + 1
@@ -195,6 +198,7 @@ def metropolis_hastings_soft_kmeans(
     current_order_dict = dict(zip(biomarkers, current_order))
     current_ln_likelihood = -np.inf
     acceptance_count = 0
+
     # Note that this records only the current accepted orders in each iteration
     all_orders = []
     # This records all log likelihoods
@@ -221,20 +225,13 @@ def metropolis_hastings_soft_kmeans(
                 diseased_stages
         )
 
-        # Now, update theta_phi_estimates using soft kmeans
-        # based on the updated participant_stage_likelihoods
-        theta_phi_estimates = update_theta_phi_estimates(
-            biomarker_data,
-            theta_phi_default,
-            participant_stage_likelihoods,
-            diseased_stages
+        max_likelihood = max(ln_likelihood, current_ln_likelihood)
+        prob_accept = np.exp(
+            (ln_likelihood - max_likelihood) -
+            (current_ln_likelihood - max_likelihood)
         )
 
-        prob_accept = np.exp(ln_likelihood - current_ln_likelihood)
-
-        # prob_of_accepting_new_order = np.exp(
-        #     all_participant_ln_likelihood - current_accepted_likelihood)
-
+        # prob_accept = np.exp(ln_likelihood - current_ln_likelihood)
         # np.exp(a)/np.exp(b) = np.exp(a - b)
         # if a > b, then np.exp(a - b) > 1
 
@@ -245,6 +242,14 @@ def metropolis_hastings_soft_kmeans(
             current_ln_likelihood = ln_likelihood
             current_order_dict = new_order_dict 
             acceptance_count += 1
+            # Now, update theta_phi_estimates using soft kmeans
+            # based on the updated participant_stage_likelihoods
+            theta_phi_estimates = update_theta_phi_estimates(
+                biomarker_data,
+                theta_phi_default,
+                participant_stage_likelihoods,
+                diseased_stages
+            )
         
         all_orders.append(current_order_dict)
 

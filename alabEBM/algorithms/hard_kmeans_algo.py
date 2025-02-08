@@ -49,8 +49,11 @@ def calculate_all_participant_ln_likelihood(
                     measurements, S_n, biomarkers, k_j = k_j, theta_phi=theta_phi
                 ) for k_j in diseased_stages
             ]
-            likelihood = np.mean(stage_likelihoods)
-        total_ln_likelihood += np.log(likelihood + 1e-10)
+            # Avoid likelihood_sum to be 0
+            epsilon = 1e-10
+            likelihood_sum = max(np.sum(stage_likelihoods), epsilon)
+            likelihood = likelihood_sum / len(diseased_stages)
+        total_ln_likelihood += np.log(likelihood)
     return total_ln_likelihood
 
 def metropolis_hastings_hard_kmeans(
@@ -68,6 +71,8 @@ def metropolis_hastings_hard_kmeans(
     non_diseased_ids = data_we_have.loc[data_we_have.diseased == False].participant.unique()
 
     theta_phi_default = data_utils.get_theta_phi_estimates(data_we_have)
+
+    logging.info(f"Default Theta and Phi Parameters: {theta_phi_default.items()} ")
 
     current_order = np.random.permutation(np.arange(1, n_stages))
     current_order_dict = dict(zip(biomarkers, current_order))
@@ -97,19 +102,17 @@ def metropolis_hastings_hard_kmeans(
         ln_likelihood = calculate_all_participant_ln_likelihood(
             participant_data, non_diseased_ids, theta_phi_default, diseased_stages
         )
-
-        # Log-Sum-Exp trick for numerical stability 
+        
         max_likelihood = max(ln_likelihood, current_ln_likelihood)
         prob_accept = np.exp(
-            (ln_likelihood - max_likelihood) - (current_ln_likelihood - max_likelihood)
+            (ln_likelihood - max_likelihood) -
+            (current_ln_likelihood - max_likelihood)
         )
 
-        # prob_of_accepting_new_order = np.exp(
-        #     all_participant_ln_likelihood - current_accepted_likelihood)
-
+        # prob_accept = np.exp(ln_likelihood - current_ln_likelihood)
         # np.exp(a)/np.exp(b) = np.exp(a - b)
         # if a > b, then np.exp(a - b) > 1
-
+        
         # Accept or reject 
         # it will definitly update at the first iteration
         if np.random.rand() < prob_accept:
@@ -120,13 +123,13 @@ def metropolis_hastings_hard_kmeans(
         
         all_orders.append(current_order_dict)
 
-        # Print progress 10 times
+        # Log progress
         if (iteration + 1) % max(10, iterations // 10) == 0:
             acceptance_ratio = 100 * acceptance_count / (iteration + 1)
             logging.info(
                 f"Iteration {iteration + 1}/{iterations}, "
                 f"Acceptance Ratio: {acceptance_ratio:.2f}%, "
                 f"Log Likelihood: {current_ln_likelihood:.4f}, "
-                f"Current Accepted Order: {current_order_dict.values()} ",
+                f"Current Accepted Order: {current_order_dict.values()}, "
             )
     return all_orders, log_likelihoods

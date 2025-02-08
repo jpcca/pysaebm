@@ -161,17 +161,21 @@ def calculate_all_participant_ln_likelihood_and_update_participant_stages(
             likelihood = data_utils.compute_likelihood(
                 measurements, S_n, biomarkers, k_j = 0, theta_phi = theta_phi)
         else:
-            stage_likelihoods = [
+            stage_likelihoods = np.array([
                 data_utils.compute_likelihood(
                     measurements, S_n, biomarkers, k_j = k_j, theta_phi=theta_phi
                 ) for k_j in diseased_stages
-            ]
+            ])
+            epsilon = 1e-10
             likelihood_sum = np.sum(stage_likelihoods)
-            probabilities = stage_likelihoods/likelihood_sum
-            # Sample a stage and update participant stage
-            participant_stages[participant] = np.random.choice(diseased_stages, p = probabilities)
+            if likelihood_sum == 0:
+                participant_stages[participant] = np.random.choice(diseased_stages)
+                likelihood_sum = epsilon
+            else:
+                normalized_probs = stage_likelihoods/likelihood_sum
+                participant_stages[participant] = np.random.choice(diseased_stages, p=normalized_probs)
             likelihood = likelihood_sum / len(diseased_stages)
-        total_ln_likelihood += np.log(likelihood + 1e-10)
+        total_ln_likelihood += np.log(likelihood)
     return total_ln_likelihood
 
 def preprocess_participant_data(
@@ -222,6 +226,7 @@ def metropolis_hastings_conjugate_priors(
     non_diseased_ids = data_we_have.loc[data_we_have.diseased == False].participant.unique()
 
     theta_phi_default = data_utils.get_theta_phi_estimates(data_we_have)
+    theta_phi_estimates = theta_phi_default.copy()
 
     # initialize an ordering and likelihood
     current_order = np.random.permutation(np.arange(1, n_stages))
@@ -252,13 +257,6 @@ def metropolis_hastings_conjugate_priors(
         # Update participant data based on the new order
         # Update data_we_have based on the new order and the updated participant_stages
         participant_data = preprocess_participant_data(data_we_have)
-
-        # Update theta and phi parameters for all biomarkers
-        # We basically need the original raw data and the updated affected col 
-        theta_phi_estimates = update_theta_phi_estimates(
-            biomarker_data, 
-            theta_phi_default
-        ) 
         
         ln_likelihood = calculate_all_participant_ln_likelihood_and_update_participant_stages(
             participant_data,
@@ -268,11 +266,13 @@ def metropolis_hastings_conjugate_priors(
             participant_stages
         )
 
-        prob_accept = np.exp(ln_likelihood - current_ln_likelihood)
+        max_likelihood = max(ln_likelihood, current_ln_likelihood)
+        prob_accept = np.exp(
+            (ln_likelihood - max_likelihood) -
+            (current_ln_likelihood - max_likelihood)
+        )
 
-        # prob_of_accepting_new_order = np.exp(
-        #     all_participant_ln_likelihood - current_accepted_likelihood)
-
+        # prob_accept = np.exp(ln_likelihood - current_ln_likelihood)
         # np.exp(a)/np.exp(b) = np.exp(a - b)
         # if a > b, then np.exp(a - b) > 1
 
@@ -283,6 +283,12 @@ def metropolis_hastings_conjugate_priors(
             current_ln_likelihood = ln_likelihood
             current_order_dict = new_order_dict 
             acceptance_count += 1
+            # Update theta and phi parameters for all biomarkers
+            # We basically need the original raw data and the updated affected col 
+            theta_phi_estimates = update_theta_phi_estimates(
+                biomarker_data, 
+                theta_phi_default
+            ) 
         
         all_orders.append(current_order_dict)
 

@@ -1,15 +1,22 @@
 from alabEBM import run_ebm
 from alabEBM.data import get_sample_data_path
 import os
+import alabEBM
 
-print("Current Working Directory:", os.getcwd())
+cwd = os.getcwd()
+print("Current Working Directory:", cwd)
+data_dir = f"{cwd}/alabEBM/tests/my_data"
+data_files = os.listdir(data_dir) 
 
-for algorithm in ['soft_kmeans', 'conjugate_priors', 'hard_kmeans']:
-    results = run_ebm(
-        data_file=get_sample_data_path('25|50_10.csv'),  # Use the path helper
-        algorithm=algorithm,
-        n_iter=2000,
-        n_shuffle=2,
-        burn_in=1000,
-        thinning=20,
-    )
+# for algorithm in ['soft_kmeans', 'conjugate_priors', 'hard_kmeans']:
+for algorithm in ['conjugate_priors']:
+    for data_file in data_files:
+        results = run_ebm(
+            data_file= f"{data_dir}/{data_file}",
+            # data_file=get_sample_data_path('25|50_10.csv'),  # Use the path helper
+            algorithm=algorithm,
+            n_iter=2000,
+            n_shuffle=2,
+            burn_in=1000,
+            thinning=20,
+        )
