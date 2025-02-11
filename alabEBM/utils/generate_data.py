@@ -12,7 +12,9 @@ def generate_data_from_ebm(
     healthy_ratio: float,
     output_dir: str,
     m,  # combstr_m
-    seed: Optional[int] = 0
+    seed: int,
+    prefix: Optional[str] = None,  # Optional prefix
+    suffix: Optional[str] = None   # Optional suffix
 ) -> pd.DataFrame:
     """
     Simulate an Event-Based Model (EBM) for disease progression.
@@ -27,7 +29,8 @@ def generate_data_from_ebm(
     output_dir (str): Directory where output files will be saved.
     healthy_ratio (float): Proportion of healthy participants out of n_participants.
     seed (Optional[int]): Seed for the random number generator for reproducibility.
-
+    prefix (Optional[str]): Optional prefix of filename
+    suffix (Optional[str]): Optional suffix of filename
     Returns:
     pd.DataFrame: A DataFrame with columns 'participant', "biomarker", 'measurement', 
         'diseased'.
@@ -112,10 +115,12 @@ def generate_data_from_ebm(
     data['biomarker'] = data.apply(
         lambda row: f"{row.biomarker} ({biomarker_name_change_dic[row.biomarker]})", axis=1)
 
-    if not os.path.exists(output_dir):
-        os.makedirs(output_dir)
-
     filename = f"{int(healthy_ratio*n_participants)}|{n_participants}_{m}"
+    if prefix:
+        filename = f"{prefix}_{filename}"
+    if suffix:
+        filename = f"{filename}_{suffix}"
+        
     data.to_csv(f'{output_dir}/{filename}.csv', index=False)
     print("Data generation done! Output saved to:", filename)
     return data
@@ -126,7 +131,10 @@ def generate(
     js: List[int],
     rs: List[float],
     num_of_datasets_per_combination: int,
-    output_dir: str = 'data'
+    output_dir: str = 'data',
+    seed: Optional[int] = None,
+    prefix: Optional[str] = None,
+    suffix: Optional[str] = None,
 ):
     """
     Generates datasets for multiple combinations of participants, healthy ratios, and datasets.
@@ -138,10 +146,22 @@ def generate(
     rs (List[float]): List of healthy ratios.
     num_of_datasets_per_combination (int): Number of datasets to generate per combination.
     output_dir (str): Directory to save the generated datasets.
+    seed (Optional[int]): Global seed for reproducibility. If None, a random seed is used.
+    prefix (Optional[str]): Optional prefix of filename
+    suffix (Optional[str]): Optional suffix of filename
     """
+    # Ensure output directory exists
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+
+    if seed is None:
+        seed = np.random.SeedSequence().entropy 
+    rng = np.random.default_rng(seed)
+
     for j in js:
         for r in rs:
             for m in range(num_of_datasets_per_combination):
+                sub_seed = rng.integers(0, 1_000_000)
                 generate_data_from_ebm(
                     n_participants=j,
                     S_ordering=S_ordering,
@@ -149,6 +169,8 @@ def generate(
                     healthy_ratio=r,
                     output_dir=output_dir,
                     m=m,
-                    seed=int(j * 10 + (r * 100) + m),
+                    seed=sub_seed,
+                    prefix=prefix,
+                    suffix=suffix
                 )
     print(f"Data generation complete. Files saved in {output_dir}/")

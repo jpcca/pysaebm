@@ -29,7 +29,10 @@ generate(
     js = [50, 100], # Number of participants
     rs = [0.1, 0.5], # Percentage of non-diseased participants
     num_of_datasets_per_combination=2,
-    output_dir='my_data'
+    output_dir='my_data',
+    seed = None,
+    prefix = None,
+    suffix = None,
 )
 ```
 
