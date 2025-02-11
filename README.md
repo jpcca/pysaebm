@@ -53,6 +53,23 @@ for algorithm in ['soft_kmeans', 'conjugate_priors', 'hard_kmeans']:
     )
 ```
 
+## Input data
+
+The input data should have four columns:
+
+- participant: int
+- biomarker: str
+- measurement: float
+- diseased: bool 
+
+An example is https://raw.githubusercontent.com/hongtaoh/alabEBM/refs/heads/main/alabEBM/tests/my_data/10%7C100_0.csv
+
+The data should be in a [tidy format](https://vita.had.co.nz/papers/tidy-data.pdf), i.e.,
+
+- Each variable is a column. 
+- Each observation is a row. 
+- Each type of observational unit is a table. 
+
 ## Features
 
 - Multiple MCMC algorithms:

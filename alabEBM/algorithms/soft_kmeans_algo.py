@@ -5,12 +5,13 @@ import logging
 from collections import defaultdict 
 from alabEBM.utils.logging_utils import setup_logging 
 import alabEBM.utils.data_processing as data_utils 
+import sys 
 
 def compute_theta_phi_biomarker(
     participants: np.ndarray,
     measurements: np.ndarray,
     diseased: np.ndarray,
-    participant_stage_likelihoods: Dict[int, np.ndarray],
+    participant_stage_posteriors: Dict[int, np.ndarray],
     diseased_stages: np.ndarray,
     curr_order: int,
     ) -> Tuple[float, float, float, float]:
@@ -21,7 +22,7 @@ def compute_theta_phi_biomarker(
         participants (np.ndarray): Array of participant IDs.
         measurements (np.ndarray): Array of measurements for the biomarker.
         diseased (np.ndarray): Boolean array indicating whether each participant is diseased.
-        participant_stage_likelihoods (Dict[int, np.ndarray]): Dictionary mapping participant IDs to their stage likelihoods.
+        participant_stage_posteriors (Dict[int, np.ndarray]): Dictionary mapping participant IDs to their stage likelihoods.
         diseased_stages (np.ndarray): Array of stages considered diseased.
         curr_order (int): Current order of the biomarker.
 
@@ -39,7 +40,7 @@ def compute_theta_phi_biomarker(
             if curr_order == 1:
                 affected_cluster.append(m)
             else:
-                stage_likelihoods = participant_stage_likelihoods[p]
+                stage_likelihoods = participant_stage_posteriors[p]
                 affected_prob = np.sum(stage_likelihoods[diseased_stages >= curr_order])
                 non_affected_prob = np.sum(stage_likelihoods[diseased_stages < curr_order])
                 if affected_prob > non_affected_prob:
@@ -63,7 +64,7 @@ def compute_theta_phi_biomarker(
 def update_theta_phi_estimates(
     biomarker_data: Dict[str, Tuple[int, np.ndarray, np.ndarray, bool]],
     theta_phi_default: Dict[str, Dict[str, float]],
-    participant_stage_likelihoods: Dict[int, np.ndarray],
+    participant_stage_posteriors: Dict[int, np.ndarray],
     diseased_stages:np.ndarray
     ) -> Dict[str, Dict[str, float]]:
     """Update theta and phi params using the soft K-means for all biomarkers."""
@@ -76,7 +77,7 @@ def update_theta_phi_estimates(
             participants,
             measurements,
             diseased,
-            participant_stage_likelihoods,
+            participant_stage_posteriors,
             diseased_stages,
             curr_order,
         ) 
@@ -127,32 +128,48 @@ def compute_total_ln_likelihood_and_stage_likelihoods(
     diseased_stages: np.ndarray
     ) -> Tuple[float, Dict[int, np.ndarray]]:
     """Calculate the total log likelihood across all participants 
-        and obtain participant_stage_likelihoods
+        and obtain participant_stage_posteriors
     """
     total_ln_likelihood = 0.0 
     # This is only for diseased participants
-    participant_stage_likelihoods = {}
+    participant_stage_posteriors = {}
+    num_diseased_stages = len(diseased_stages)
+
     for participant, (measurements, S_n, biomarkers) in participant_data.items():
         if participant in non_diseased_ids:
-            likelihood = data_utils.compute_likelihood(
+            # Non-diseased participant (fixed k=0)
+            ln_likelihood = data_utils.compute_ln_likelihood(
                 measurements, S_n, biomarkers, k_j = 0, theta_phi = theta_phi)
         else:
-            stage_likelihoods = np.array([
-                data_utils.compute_likelihood(
+            # Diseased participant (sum over possible stages)
+            ln_stage_likelihoods = np.array([
+                data_utils.compute_ln_likelihood(
                     measurements, S_n, biomarkers, k_j = k_j, theta_phi=theta_phi
                 ) for k_j in diseased_stages
             ])
-            epsilon = 1e-10
+            # Use log-sum-exp trick for numerical stability
+            max_ln_likelihood = np.max(ln_stage_likelihoods)
+            stage_likelihoods = np.exp(ln_stage_likelihoods - max_ln_likelihood)
             likelihood_sum = np.sum(stage_likelihoods)
-            if likelihood_sum == 0:
-                participant_stage_likelihoods[participant] = stage_likelihoods/epsilon
-                likelihood = epsilon
-            else:
-                normalized_probs = stage_likelihoods/likelihood_sum
-                participant_stage_likelihoods[participant] = normalized_probs
-                likelihood = np.mean(likelihood_sum)
-        total_ln_likelihood += np.log(likelihood)
-    return total_ln_likelihood, participant_stage_likelihoods
+            ln_likelihood = max_ln_likelihood + np.log(likelihood_sum)
+
+            # if likelihood_sum == 0:
+            #     # Edge case: All stages have effectively zero likelihood
+            #     normalized_probs = np.ones(num_diseased_stages) / num_diseased_stages
+            #     ln_likelihood = np.log(sys.float_info.min)
+            # else:
+            # Normalize probabilities and compute marginal likelihood
+            # Proof:
+            # exp(ln(a₁) - M) = exp(ln(a₁)) * exp(-M) = a₁ * exp(-M)
+            # exp(ln(a₂) - M) = a₂ * exp(-M)
+            # exp(ln(a₃) - M) = a₃ * exp(-M)
+            # normalized_prob₁ = (a₁ * exp(-M)) / (a₁ * exp(-M) + a₂ * exp(-M) + a₃ * exp(-M))
+            # = (a₁ * exp(-M)) / ((a₁ + a₂ + a₃) * exp(-M))
+            # = a₁ / (a₁ + a₂ + a₃)
+            participant_stage_posteriors[participant] = stage_likelihoods/likelihood_sum
+
+        total_ln_likelihood += ln_likelihood
+    return total_ln_likelihood, participant_stage_posteriors
 
 def preprocess_participant_data(
     data_we_have: pd.DataFrame, current_order_dict: Dict
@@ -218,18 +235,28 @@ def metropolis_hastings_soft_kmeans(
         # Obtain biomarker data
         biomarker_data = preprocess_biomarker_data(data_we_have, new_order_dict)
 
-        ln_likelihood, participant_stage_likelihoods = compute_total_ln_likelihood_and_stage_likelihoods(
+        ln_likelihood, participant_stage_posteriors = compute_total_ln_likelihood_and_stage_likelihoods(
                 participant_data,
                 non_diseased_ids,
                 theta_phi_estimates,
                 diseased_stages
         )
 
-        max_likelihood = max(ln_likelihood, current_ln_likelihood)
-        prob_accept = np.exp(
-            (ln_likelihood - max_likelihood) -
-            (current_ln_likelihood - max_likelihood)
+        # Now, update theta_phi_estimates using soft kmeans
+        # based on the updated participant_stage_posteriors
+        theta_phi_estimates = update_theta_phi_estimates(
+            biomarker_data,
+            theta_phi_default,
+            participant_stage_posteriors,
+            diseased_stages
         )
+
+        delta = ln_likelihood - current_ln_likelihood
+        # Compute acceptance probability safely
+        if delta > 0:
+            prob_accept = 1.0  # Always accept improvements
+        else:
+            prob_accept = np.exp(delta)  # Only exponentiate negative deltas
 
         # prob_accept = np.exp(ln_likelihood - current_ln_likelihood)
         # np.exp(a)/np.exp(b) = np.exp(a - b)
@@ -242,14 +269,6 @@ def metropolis_hastings_soft_kmeans(
             current_ln_likelihood = ln_likelihood
             current_order_dict = new_order_dict 
             acceptance_count += 1
-            # Now, update theta_phi_estimates using soft kmeans
-            # based on the updated participant_stage_likelihoods
-            theta_phi_estimates = update_theta_phi_estimates(
-                biomarker_data,
-                theta_phi_default,
-                participant_stage_likelihoods,
-                diseased_stages
-            )
         
         all_orders.append(current_order_dict)
 

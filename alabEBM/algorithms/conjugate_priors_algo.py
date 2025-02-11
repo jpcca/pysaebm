@@ -158,24 +158,24 @@ def calculate_all_participant_ln_likelihood_and_update_participant_stages(
     total_ln_likelihood = 0.0 
     for participant, (measurements, S_n, biomarkers) in participant_data.items():
         if participant in non_diseased_ids:
-            likelihood = data_utils.compute_likelihood(
+            ln_likelihood = data_utils.compute_ln_likelihood(
                 measurements, S_n, biomarkers, k_j = 0, theta_phi = theta_phi)
         else:
-            stage_likelihoods = np.array([
-                data_utils.compute_likelihood(
+            ln_stage_likelihoods = np.array([
+                data_utils.compute_ln_likelihood(
                     measurements, S_n, biomarkers, k_j = k_j, theta_phi=theta_phi
                 ) for k_j in diseased_stages
             ])
-            epsilon = 1e-10
+            # Use log-sum-exp trick for numerical stability
+            max_ln_likelihood = np.max(ln_stage_likelihoods)
+            stage_likelihoods = np.exp(ln_stage_likelihoods - max_ln_likelihood)
             likelihood_sum = np.sum(stage_likelihoods)
-            if likelihood_sum == 0:
-                participant_stages[participant] = np.random.choice(diseased_stages)
-                likelihood_sum = epsilon
-            else:
-                normalized_probs = stage_likelihoods/likelihood_sum
-                participant_stages[participant] = np.random.choice(diseased_stages, p=normalized_probs)
-            likelihood = likelihood_sum / len(diseased_stages)
-        total_ln_likelihood += np.log(likelihood)
+
+            normalized_probs = stage_likelihoods/likelihood_sum
+            participant_stages[participant] = np.random.choice(diseased_stages, p=normalized_probs)
+            
+            ln_likelihood = max_ln_likelihood + np.log(likelihood_sum)
+        total_ln_likelihood += ln_likelihood
     return total_ln_likelihood
 
 def preprocess_participant_data(
@@ -257,7 +257,14 @@ def metropolis_hastings_conjugate_priors(
         # Update participant data based on the new order
         # Update data_we_have based on the new order and the updated participant_stages
         participant_data = preprocess_participant_data(data_we_have)
-        
+
+        # Update theta and phi parameters for all biomarkers
+        # We basically need the original raw data and the updated affected col 
+        theta_phi_estimates = update_theta_phi_estimates(
+            biomarker_data, 
+            theta_phi_default
+        ) 
+
         ln_likelihood = calculate_all_participant_ln_likelihood_and_update_participant_stages(
             participant_data,
             non_diseased_ids,
@@ -266,29 +273,23 @@ def metropolis_hastings_conjugate_priors(
             participant_stages
         )
 
-        max_likelihood = max(ln_likelihood, current_ln_likelihood)
-        prob_accept = np.exp(
-            (ln_likelihood - max_likelihood) -
-            (current_ln_likelihood - max_likelihood)
-        )
+        delta = ln_likelihood - current_ln_likelihood
+        # Compute acceptance probability safely
+        if delta > 0:
+            prob_accept = 1.0  # Always accept improvements
+        else:
+            prob_accept = np.exp(delta)  # Only exponentiate negative deltas
 
         # prob_accept = np.exp(ln_likelihood - current_ln_likelihood)
         # np.exp(a)/np.exp(b) = np.exp(a - b)
         # if a > b, then np.exp(a - b) > 1
 
         # Accept or reject 
-        # it will definitly update at the first iteration
         if np.random.rand() < prob_accept:
             current_order = new_order 
             current_ln_likelihood = ln_likelihood
             current_order_dict = new_order_dict 
             acceptance_count += 1
-            # Update theta and phi parameters for all biomarkers
-            # We basically need the original raw data and the updated affected col 
-            theta_phi_estimates = update_theta_phi_estimates(
-                biomarker_data, 
-                theta_phi_default
-            ) 
         
         all_orders.append(current_order_dict)
 

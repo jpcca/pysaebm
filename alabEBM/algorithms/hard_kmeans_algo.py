@@ -19,11 +19,12 @@ def preprocess_participant_data(
         Dict[int, Tuple[np.ndarray, np.ndarray, np.ndarray]]: A dictionary where keys are participant IDs,
             and values are tuples of (measurements, S_n, biomarkers).
     """
-    # This modifies data source in-place
-    data_we_have['S_n'] = data_we_have['biomarker'].map(current_order_dict)
+    # Create a copy instead of modifying the original DataFrame
+    data_copy = data_we_have.copy()
+    data_copy['S_n'] = data_copy['biomarker'].map(current_order_dict)
 
     participant_data = {}
-    for participant, pdata in data_we_have.groupby('participant'):
+    for participant, pdata in data_copy.groupby('participant'):
         measurements = pdata['measurement'].values 
         S_n = pdata['S_n'].values 
         biomarkers = pdata['biomarker'].values  
@@ -40,20 +41,23 @@ def calculate_all_participant_ln_likelihood(
     total_ln_likelihood = 0.0 
     for participant, (measurements, S_n, biomarkers) in participant_data.items():
         if participant in non_diseased_ids:
-            likelihood = data_utils.compute_likelihood(
+            ln_likelihood = data_utils.compute_ln_likelihood(
                 measurements, S_n, biomarkers, k_j = 0, theta_phi = theta_phi
             )
         else:
-            stage_likelihoods = [
-                data_utils.compute_likelihood(
+            ln_stage_likelihoods = [
+                data_utils.compute_ln_likelihood(
                     measurements, S_n, biomarkers, k_j = k_j, theta_phi=theta_phi
                 ) for k_j in diseased_stages
             ]
-            # Avoid likelihood_sum to be 0
-            epsilon = 1e-10
-            likelihood_sum = max(np.sum(stage_likelihoods), epsilon)
-            likelihood = likelihood_sum / len(diseased_stages)
-        total_ln_likelihood += np.log(likelihood)
+            # Use log-sum-exp trick for numerical stability
+            max_ln_likelihood = np.max(ln_stage_likelihoods)
+            stage_likelihoods = np.exp(ln_stage_likelihoods - max_ln_likelihood)
+            likelihood_sum = np.sum(stage_likelihoods)
+            ln_likelihood = max_ln_likelihood + np.log(likelihood_sum)
+            
+        total_ln_likelihood += ln_likelihood
+
     return total_ln_likelihood
 
 def metropolis_hastings_hard_kmeans(
@@ -103,11 +107,12 @@ def metropolis_hastings_hard_kmeans(
             participant_data, non_diseased_ids, theta_phi_default, diseased_stages
         )
         
-        max_likelihood = max(ln_likelihood, current_ln_likelihood)
-        prob_accept = np.exp(
-            (ln_likelihood - max_likelihood) -
-            (current_ln_likelihood - max_likelihood)
-        )
+        delta = ln_likelihood - current_ln_likelihood
+        # Compute acceptance probability safely
+        if delta > 0:
+            prob_accept = 1.0  # Always accept improvements
+        else:
+            prob_accept = np.exp(delta)  # Only exponentiate negative deltas
 
         # prob_accept = np.exp(ln_likelihood - current_ln_likelihood)
         # np.exp(a)/np.exp(b) = np.exp(a - b)

@@ -133,6 +133,7 @@ def run_ebm(
 
     # Save results 
     results = {
+        "n_iter": n_iter,
         "most_likely_order": most_likely_order_dic,
         "kendalls_tau": tau, 
         "p_value": p_value,

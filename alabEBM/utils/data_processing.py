@@ -5,7 +5,8 @@ import os
 from collections import OrderedDict
 from sklearn.cluster import KMeans
 from scipy.stats import mode
-from numba import jit
+from numba import njit
+import sys 
 
 def compute_theta_phi_for_biomarker(biomarker_df, max_attempt = 100, seed = None):
     """get theta and phi parameters for this biomarker using hard k-means
@@ -103,21 +104,22 @@ def get_theta_phi_estimates(
         }
     return estimates
 
-@jit(nopython=True)
-def _compute_likelihood_core(measurements, affected, mus, stds):
+@njit
+def _compute_ln_likelihood_core(measurements, mus, stds):
     """Core computation function optimized with Numba"""
-    likelihood = 1.0 
+    ln_likelihood = 0.0
+    log_two_pi = np.log(2 * np.pi)
+    two_times_pi = 2 * np.pi
     for i in range(len(measurements)):
-        var = stds[i] * stds[i]
-        if var <= 0 or np.isnan(measurements[i]) or np.isnan(mus[i]):
-            continue
-        # Add a small positive constant to var to avoid division by very small numbers
-        # Otherwise, likelihood might be inf
-        var = max(var, 1e-10)
-        likelihood *= np.exp(-(measurements[i] - mus[i])**2 / (2 * var)) / np.sqrt(2 * np.pi * var)
-    return likelihood 
+        var = stds[i] ** 2
+        diff = measurements[i] - mus[i]
+        # likelihood *= np.exp(-diff**2 / (2 * var)) / np.sqrt(2 * np.pi * var)
+        # Log of normal PDF: ln(1/sqrt(2π*var) * exp(-diff²/2var))
+        # = -ln(sqrt(2π*var)) - diff²/2var
+        ln_likelihood += (-0.5 * (log_two_pi + np.log(var)) - diff**2 / (2 * var))
+    return ln_likelihood
 
-def compute_likelihood(
+def compute_ln_likelihood(
     measurements: np.ndarray,
     S_n: np.ndarray,
     biomarkers: np.ndarray,
@@ -125,7 +127,7 @@ def compute_likelihood(
     theta_phi: Dict[str, Dict[str, float]]
 ) -> float:
     """
-    Compute the likelihood for given participant data.
+    Compute the log likelihood for given participant data.
 
     Args:
         measurements (np.ndarray): Array of measurement values.
@@ -135,11 +137,11 @@ def compute_likelihood(
         theta_phi (Dict[str, Dict[str, float]]): Biomarker parameter dictionary.
 
     Returns:
-        float: Likelihood value.
+        float: Log likelihood value.
     """
-    affected = k_j >= S_n
     mus = np.zeros(len(measurements))
     stds = np.zeros(len(measurements))
+    affected = k_j >= S_n
 
     for i, (biomarker, is_affected) in enumerate(zip(biomarkers, affected)):
         params = theta_phi[biomarker]
@@ -149,8 +151,14 @@ def compute_likelihood(
         else:
             mus[i] = params['phi_mean']
             stds[i] = params['phi_std']
+    
+    # Apply mask after mus and stds are computed
+    valid_mask = (~np.isnan(measurements)) & (~np.isnan(mus)) & (stds > 0)
+    measurements = measurements[valid_mask]
+    mus = mus[valid_mask]
+    stds = stds[valid_mask]
 
-    return _compute_likelihood_core(measurements, affected, mus, stds)
+    return _compute_ln_likelihood_core(measurements, mus, stds)
 
 def shuffle_order(arr: np.ndarray, n_shuffle: int) -> None:
 
