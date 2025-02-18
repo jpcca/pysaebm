@@ -7,7 +7,7 @@ import scipy.stats as stats
 
 def generate_data_from_ebm(
     n_participants: int,
-    S_ordering: List[str],
+    biomarker_order: Dict[str, int],
     real_theta_phi_file: str,
     healthy_ratio: float,
     output_dir: str,
@@ -21,7 +21,7 @@ def generate_data_from_ebm(
 
     Args:
     n_participants (int): Number of participants.
-    S_ordering (List[str]): Biomarker names ordered according to the order 
+    biomarker_order (Dict[str, int]): Biomarker names and their orders
         in which each of them get affected by the disease.
     real_theta_phi_file (str): Directory of a JSON file which contains 
         theta and phi values for all biomarkers.
@@ -39,6 +39,10 @@ def generate_data_from_ebm(
     assert n_participants > 0, "Number of participants must be greater than 0."
     assert 0 <= healthy_ratio <= 1, "Healthy ratio must be between 0 and 1."
 
+    # Change dict to list 
+    biomarker_order = dict(sorted(biomarker_order.items(), key=lambda item:item[1]))
+    ordered_biomarkers = list(biomarker_order.keys())
+
     # Set the seed for numpy's random number generator
     rng = np.random.default_rng(seed)
 
@@ -52,7 +56,7 @@ def generate_data_from_ebm(
         raise ValueError(
             f"File {real_theta_phi_file} is not a valid JSON file.")
 
-    n_biomarkers = len(S_ordering)
+    n_biomarkers = len(ordered_biomarkers)
     n_stages = n_biomarkers + 1
 
     n_healthy = int(n_participants * healthy_ratio)
@@ -71,17 +75,17 @@ def generate_data_from_ebm(
     theta_dist = {biomarker: stats.norm(
         real_theta_phi[biomarker]['theta_mean'],
         real_theta_phi[biomarker]['theta_std']
-    ) for biomarker in S_ordering}
+    ) for biomarker in ordered_biomarkers}
 
     phi_dist = {biomarker: stats.norm(
         real_theta_phi[biomarker]['phi_mean'],
         real_theta_phi[biomarker]['phi_std']
-    ) for biomarker in S_ordering}
+    ) for biomarker in ordered_biomarkers}
 
     # Populate the matrix with biomarker measurements
     for j in range(n_participants):
-        for n, biomarker in enumerate(S_ordering):
-            # because for each j, we generate X[j, n] in the order of S_ordering,
+        for n, biomarker in enumerate(ordered_biomarkers):
+            # because for each j, we generate X[j, n] in the order of ordered_biomarkers,
             # the final dataset will have this ordering as well.
             k_j = kjs[j]
             S_n = n + 1
@@ -101,19 +105,19 @@ def generate_data_from_ebm(
                 X[j, n] = (j, biomarker, phi_dist[biomarker].rvs(random_state=rng),
                            k_j, S_n, 'not_affected')
 
-    df = pd.DataFrame(X, columns=S_ordering)
+    df = pd.DataFrame(X, columns=ordered_biomarkers)
     # make this dataframe wide to long
     df_long = df.melt(var_name="Biomarker", value_name="Value")
     data = df_long['Value'].apply(pd.Series)
     data.columns = ['participant', "biomarker",
                     'measurement', 'k_j', 'S_n', 'affected_or_not']
 
-    biomarker_name_change_dic = dict(
-        zip(S_ordering, range(1, n_biomarkers + 1)))
+    # biomarker_name_change_dic = dict(
+    #     zip(ordered_biomarkers, range(1, n_biomarkers + 1)))
     data['diseased'] = data.apply(lambda row: row.k_j > 0, axis=1)
     data.drop(['k_j', 'S_n', 'affected_or_not'], axis=1, inplace=True)
-    data['biomarker'] = data.apply(
-        lambda row: f"{row.biomarker} ({biomarker_name_change_dic[row.biomarker]})", axis=1)
+    # data['biomarker'] = data.apply(
+    #     lambda row: f"{row.biomarker} ({biomarker_name_change_dic[row.biomarker]})", axis=1)
 
     filename = f"{int(healthy_ratio*n_participants)}|{n_participants}_{m}"
     if prefix:
@@ -126,7 +130,7 @@ def generate_data_from_ebm(
     return data
 
 def generate(
-    S_ordering: List[str],
+    biomarker_order: Dict[str, int],
     real_theta_phi_file: str,
     js: List[int],
     rs: List[float],
@@ -140,7 +144,7 @@ def generate(
     Generates datasets for multiple combinations of participants, healthy ratios, and datasets.
 
     Args:
-    S_ordering (List[str]): Biomarker names ordered according to the disease progression.
+    biomarker_order (Dict[str, int]): Biomarker names and their orders
     real_theta_phi_file (str): Path to the JSON file containing theta and phi values.
     js (List[int]): List of numbers of participants.
     rs (List[float]): List of healthy ratios.
@@ -164,7 +168,7 @@ def generate(
                 sub_seed = rng.integers(0, 1_000_000)
                 generate_data_from_ebm(
                     n_participants=j,
-                    S_ordering=S_ordering,
+                    biomarker_order=biomarker_order,
                     real_theta_phi_file=real_theta_phi_file,
                     healthy_ratio=r,
                     output_dir=output_dir,

@@ -2,7 +2,7 @@ import json
 import pandas as pd
 import os
 import logging
-from typing import List, Dict
+from typing import List, Dict, Optional
 from scipy.stats import kendalltau
 import re 
 
@@ -24,6 +24,7 @@ def run_ebm(
     n_shuffle: int = 2,
     burn_in: int = 1000,
     thinning: int = 50,
+    correct_ordering: Optional[Dict[str, int]] = None,
 ) -> Dict[str, float]:
     """
     Run the metropolis hastings algorithm and save results 
@@ -35,6 +36,7 @@ def run_ebm(
         n_shuffle (int): Number of shuffles per iteration.
         burn_in (int): Burn-in period for the MCMC chain.
         thinning (int): Thinning interval for the MCMC chain.
+        correct_ordering (Optional[Dict[str, int]]): biomarker name: the initial correct order of it (if known)
 
     Returns:
         Dict[str, float]: Results including Kendall's tau and p-value.
@@ -106,8 +108,9 @@ def run_ebm(
             burn_in,
             thinning,
             folder_name=heatmap_folder,
-            file_name=f"{fname}_heatmap",
-            title=f"Heatmap of {fname}",
+            file_name=f"{fname}_heatmap_{algorithm}",
+            title=f"Heatmap of {fname} using {algorithm}",
+            correct_ordering = correct_ordering
         )
     except Exception as e:
         logging.error(f"Error generating heatmap: {e}")
@@ -115,7 +118,7 @@ def run_ebm(
 
     # Save trace plot
     try:
-        save_traceplot(log_likelihoods, traceplot_folder, f"{fname}_traceplot")
+        save_traceplot(log_likelihoods, traceplot_folder, f"{fname}_traceplot_{algorithm}")
     except Exception as e:
         logging.error(f"Error generating trace plot: {e}")
         raise 
@@ -126,7 +129,12 @@ def run_ebm(
             accepted_order_dicts, burn_in, thinning
         )
         most_likely_order = list(most_likely_order_dic.values())
-        tau, p_value = kendalltau(most_likely_order, range(1, n_biomarkers + 1))
+        # Only calculate tau and p_value if correct_ordering is provided
+        if correct_ordering:
+            tau, p_value = kendalltau(most_likely_order, list(correct_ordering.values()))
+            original_order = correct_ordering
+        else:
+            tau, p_value, original_order = None, None, None
     except Exception as e:
         logging.error(f"Error calculating Kendall's tau: {e}")
         raise
@@ -137,6 +145,7 @@ def run_ebm(
         "most_likely_order": most_likely_order_dic,
         "kendalls_tau": tau, 
         "p_value": p_value,
+        "original_order": original_order
     }
     try:
         with open(f"{results_folder}/{fname}_results.json", "w") as f:

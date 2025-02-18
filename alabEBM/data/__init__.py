@@ -12,3 +12,7 @@ def get_sample_data_path(filename):
 def get_params_path():
     """Returns path to real_theta_phi.json"""
     return os.path.join(get_data_dir(), 'real_theta_phi.json')
+
+def get_biomarker_order_path():
+    """Returns path to biomarker_order.json"""
+    return os.path.join(get_data_dir(), 'biomarker_order.json')

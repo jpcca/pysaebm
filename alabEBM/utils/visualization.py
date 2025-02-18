@@ -2,22 +2,40 @@ import os
 import seaborn as sns
 import matplotlib.pyplot as plt
 from . import data_processing
-from typing import List, Dict
+from typing import List, Dict, Optional
 
 import os
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-def save_heatmap(all_dicts, burn_in, thining, folder_name, file_name, title):
+def save_heatmap(
+    all_dicts: List[Dict],
+    burn_in:int, 
+    thining:int, 
+    folder_name:str, 
+    file_name:str, 
+    title:str,
+    correct_ordering: Optional[Dict[str, int]] = None,
+    ):
     os.makedirs(folder_name, exist_ok=True)
     
     biomarker_stage_probability_df = data_processing.get_biomarker_stage_probability(
         all_dicts, burn_in, thining
     )
+
+    if correct_ordering:
+        biomarker_order = dict(sorted(correct_ordering.items(), key=lambda item:item[1]))
+        ordered_biomarkers = list(biomarker_order.keys())
+
+        # Rename index to include order in format "ABC (1)"
+        renamed_index = [f"{biomarker} ({biomarker_order[biomarker]})" for biomarker in ordered_biomarkers]
+
+        # Reorder DataFrame rows
+        biomarker_stage_probability_df = biomarker_stage_probability_df.loc[ordered_biomarkers]
+        biomarker_stage_probability_df.index = renamed_index
     
     # Find the longest biomarker name
-    longest_biomarker = max(biomarker_stage_probability_df.index, key=len)
-    max_name_length = len(longest_biomarker)
+    max_name_length = max(len(name) for name in biomarker_stage_probability_df.index)
     
     # Dynamically adjust figure width based on the longest name
     fig_width = max(10, max_name_length * 0.3)  # Scale width based on name length
@@ -45,7 +63,6 @@ def save_heatmap(all_dicts, burn_in, thining, folder_name, file_name, title):
     # Save figure with padding to ensure labels are not cut off
     plt.savefig(f"{folder_name}/{file_name}.png", bbox_inches="tight", dpi=300)
     plt.close()
-
 
 
 def save_traceplot(

@@ -1,0 +1,12 @@
+{
+    "HIP-FCI": 1,
+    "PCC-FCI": 2,
+    "AB": 3,
+    "P-Tau": 4,
+    "MMSE": 5,
+    "ADAS": 6,
+    "HIP-GMI": 7,
+    "AVLT-Sum": 8,
+    "FUS-GMI": 9,
+    "FUS-FCI": 10
+}

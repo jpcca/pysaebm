@@ -2,7 +2,6 @@ from typing import List, Optional, Tuple, Dict
 import pandas as pd
 import numpy as np
 import os
-from collections import OrderedDict
 from sklearn.cluster import KMeans
 from scipy.stats import mode
 from numba import njit
@@ -191,12 +190,10 @@ def obtain_most_likely_order_dic(all_current_accepted_order_dicts, burn_in, thin
         - thining
     Outputs:
         - a dictionary where key is biomarker and value is the most likely order for that biomarker
-        Note that in this dic, the order follows the same order as in 
-        data_we_have.biomarker.unique()
     """
     biomarker_stage_probability_df = get_biomarker_stage_probability(
         all_current_accepted_order_dicts, burn_in, thining)
-    od = OrderedDict()
+    dic = {}
     assigned_stages = set()
 
     for i, biomarker in enumerate(biomarker_stage_probability_df.index):
@@ -208,13 +205,13 @@ def obtain_most_likely_order_dic(all_current_accepted_order_dicts, burn_in, thin
 
         for stage in sorted_indices:
             if stage not in assigned_stages:
-                od[biomarker] = int(stage)
+                dic[biomarker] = int(stage)
                 assigned_stages.add(stage)
                 break
         else:
             raise ValueError(
                 f"Could not assign a unique stage for biomarker {biomarker}.")
-    return od
+    return dic
 
 def get_biomarker_stage_probability(all_current_accepted_order_dicts, burn_in, thining):
     """filter through all_dicts using burn_in and thining 
