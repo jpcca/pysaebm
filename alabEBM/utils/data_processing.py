@@ -168,19 +168,24 @@ def shuffle_order(arr: np.ndarray, n_shuffle: int) -> None:
     arr (np.ndarray): The array to shuffle elements in.
     n_shuffle (int): The number of elements to shuffle within the array.
     """
+    # Validate input 
+    if n_shuffle <= 1:
+        raise ValueError("n_shuffle must be >= 2 or =0")
     if n_shuffle > len(arr):
-        raise ValueError(
-            "n_shuffle cannot be greater than the length of the array")
+        raise ValueError("n_shuffle cannot exceed array length")
+    if n_shuffle == 0:
+        return 
 
-    # Randomly choose indices to shuffle
+    # Select indices and extract elements
     indices = np.random.choice(len(arr), size=n_shuffle, replace=False)
-
-    # Obtain and shuffle the elements at these indices
-    selected_elements = arr[indices]
-    np.random.shuffle(selected_elements)
-
-    # Place the shuffled elements back into the array
-    arr[indices] = selected_elements
+    original_indices = indices.copy()
+    
+    while True:
+        shuffled_indices = np.random.permutation(original_indices)
+        # Full derangement: make sure no indice stays in its original place
+        if not np.any(shuffled_indices == original_indices):
+            break 
+    arr[indices] = arr[shuffled_indices]
 
 def obtain_most_likely_order_dic(all_current_accepted_order_dicts, burn_in, thining):
     """Obtain the most likely order based on all the accepted orders 

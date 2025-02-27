@@ -68,10 +68,11 @@ def save_heatmap(
 def save_traceplot(
     log_likelihoods: List[float],
     folder_name: str,
-    file_name: str):
+    file_name: str
+):
     os.makedirs(folder_name, exist_ok=True)
     plt.figure(figsize=(10,6))
-    plt.plot(log_likelihoods, label="Log Likelihood")
+    plt.plot(range(40, len(log_likelihoods)), log_likelihoods[40:], label="Log Likelihood")
     plt.xlabel("Iteration")
     plt.ylabel("Log Likelihood")
     plt.title("Trace Plot of Log Likelihood")

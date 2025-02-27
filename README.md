@@ -8,6 +8,10 @@ This is the `python` package for implementing [Event Based Models for Disease Pr
 pip install alabEBM
 ```
 
+## Change Log
+
+- 2025-02-26. V 0.3.4. Modified the `shuffle_order` function to ensure full derangement, making convergence faster. 
+
 ## Generate Random Data
 
 ```py
