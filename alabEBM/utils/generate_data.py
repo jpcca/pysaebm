@@ -51,7 +51,7 @@ def generate_data_from_ebm(
         with open(real_theta_phi_file) as f:
             real_theta_phi = json.load(f)
     except FileNotFoundError:
-        raise FileNotFoundError(f"File {real_theta_phi} not fount")
+        raise FileNotFoundError(f"File {real_theta_phi_file} not found")
     except json.JSONDecodeError:
         raise ValueError(
             f"File {real_theta_phi_file} is not a valid JSON file.")

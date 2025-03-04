@@ -8,7 +8,7 @@ def extract_fname(data_file:str) -> str:
     Replace invalid characters (e.g., `|`) with underscores.
     """
     base_name = data_file.split('/')[-1]
-    fname = base_name.split(".")[0]
+    fname = base_name.split(".csv")[0]
     fname = re.sub(r'[\\|/:"*?<>]+', '_', fname)
     return fname 
 

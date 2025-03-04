@@ -95,8 +95,7 @@ def run_ebm(
                 data, n_iter, n_shuffle
             )
         else:
-            logging.error(f"You must choose from 'hard_kmeans', 'soft_kmeans', and 'conjugate_priors'!")
-            raise
+            raise ValueError("You must choose from 'hard_kmeans', 'soft_kmeans', and 'conjugate_priors'!")
     except Exception as e:
         logging.error(f"Error in Metropolis-Hastings algorithm: {e}")
         raise
