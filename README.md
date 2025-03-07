@@ -13,7 +13,7 @@ pip install alabebm
 - 2025-02-26. V 0.3.4. Modified the `shuffle_order` function to ensure full derangement, making convergence faster. 
 - 2025-03-06 (V 0.4.0)
     - use `pyproject.toml` instead
-    - update `conjuage_priors_algo.py`, now without using `participant_stages` but keeping the uncertainties just like in `soft_kmeans_algo.py`. 
+    - update `conjuage_priors_algo.py`, now without using the auxiliary variable of `participant_stages`. Kept the uncertainties just like in `soft_kmeans_algo.py`. 
 - 2025-03-07 (V 0.4.2)
     - Compute `new_ln_likelihood_new_theta_phi` based on `new_theta_phi_estimates`, which is based on `stage_likelihoods_posteriors` that is based on the newly proposed order and previous `theta_phi_estimates`.
     - Update `theta_phi_estimates` with `new_theta_phi_estimates` only if new order is accepted.
