@@ -3,8 +3,8 @@ from typing import List, Dict, Tuple
 import pandas as pd
 import logging
 from collections import defaultdict 
-from alabEBM.utils.logging_utils import setup_logging 
-import alabEBM.utils.data_processing as data_utils 
+from alabebm.utils.logging_utils import setup_logging 
+import alabebm.utils.data_processing as data_utils 
 import sys 
 
 def compute_theta_phi_biomarker(

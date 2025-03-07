@@ -2,7 +2,7 @@ import numpy as np
 import numba 
 import pandas as pd 
 from typing import List, Dict, Tuple
-import alabEBM.utils.data_processing as data_utils 
+import alabebm.utils.data_processing as data_utils 
 import logging
 
 def preprocess_participant_data(

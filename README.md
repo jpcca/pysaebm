@@ -5,17 +5,20 @@ This is the `python` package for implementing [Event Based Models for Disease Pr
 ## Installation
 
 ```bash
-pip install alabEBM
+pip install alabebm
 ```
 
 ## Change Log
 
 - 2025-02-26. V 0.3.4. Modified the `shuffle_order` function to ensure full derangement, making convergence faster. 
+- 2025-03-06
+    - use `pyproject.toml` instead
+    - update `conjuage_priors_algo.py`, now without using `participant_stages` but keeping the uncertainties just like in `soft_kmeans_algo.py`. 
 
 ## Generate Random Data
 
 ```py
-from alabEBM import generate, get_params_path, get_biomarker_order_path
+from alabebm import generate, get_params_path, get_biomarker_order_path
 import os
 import json 
 
@@ -44,8 +47,8 @@ generate(
 ## Run MCMC Algorithms 
 
 ```py
-from alabEBM import run_ebm
-from alabEBM.data import get_sample_data_path
+from alabebm import run_ebm
+from alabebm.data import get_sample_data_path
 import os
 
 print("Current Working Directory:", os.getcwd())

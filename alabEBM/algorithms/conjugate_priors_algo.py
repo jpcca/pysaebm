@@ -1,6 +1,7 @@
 import numpy as np 
 import pandas as pd 
-import alabEBM.utils.data_processing as data_utils 
+import alabebm.utils.data_processing as data_utils 
+from . import soft_kmeans_algo as sk 
 from typing import List, Dict, Tuple
 import logging 
 from collections import defaultdict 
@@ -48,157 +49,102 @@ def estimate_params_exact(
 
     return mu_estimation, std_estimation
 
-def update_theta_phi_estimates(
-    biomarker_data: Dict[str, Tuple[int, np.ndarray, np.ndarray, np.ndarray, np.ndarray]], 
-    theta_phi_default: Dict[str, Dict[str, float]]
-) -> Dict[str, Dict[str, float]]:
+def compute_theta_phi_biomarker(
+    participants: np.ndarray,
+    measurements: np.ndarray,
+    diseased: np.ndarray,
+    participant_stage_posteriors: Dict[int, np.ndarray],
+    diseased_stages: np.ndarray,
+    curr_order: int,
+    ) -> Tuple[float, float, float, float]:
     """
-    Update theta (θ) and phi (φ) parameters for all biomarkers using conjugate priors.
+    Compute mean and std for both the affected and non-affected clusters for a single biomarker.
 
     Args:
-        biomarker_data (Dict): Dictionary containing biomarker data. Keys are biomarker names, and values
-            are tuples of (curr_order, measurements, participants, diseased, affected).
-        theta_phi_default (Dict): Default values for theta and phi parameters for each biomarker.
+        participants (np.ndarray): Array of participant IDs.
+        measurements (np.ndarray): Array of measurements for the biomarker.
+        diseased (np.ndarray): Boolean array indicating whether each participant is diseased.
+        participant_stage_posteriors (Dict[int, np.ndarray]): Dictionary mapping participant IDs to their stage likelihoods.
+        diseased_stages (np.ndarray): Array of stages considered diseased.
+        curr_order (int): Current order of the biomarker.
 
     Returns:
-        Dict[str, Dict[str, float]]: Updated theta and phi parameters for each biomarker.
-
-    Notes:
-        - If there is only one observation or no observations at all, the function resorts to the default
-          values provided in `theta_phi_default`.
-        - This situation can occur if, for example, a biomarker indicates a stage of (num_biomarkers),
-          but all participants' stages are smaller than that stage. In such cases, the biomarker is not
-          affected for any participant, and default values are used.
+        Tuple[float, float, float, float]: Mean and standard deviation for affected (theta) and non-affected (phi) clusters.
     """
+    affected_cluster = []
+    non_affected_cluster = []
+
+    for idx, p in enumerate(participants):
+        m = measurements[idx]
+        if not diseased[idx]:
+            non_affected_cluster.append(m)
+        else:
+            if curr_order == 1:
+                affected_cluster.append(m)
+            else:
+                stage_likelihoods = participant_stage_posteriors[p]
+                affected_prob = np.sum(stage_likelihoods[diseased_stages >= curr_order])
+                non_affected_prob = np.sum(stage_likelihoods[diseased_stages < curr_order])
+                if affected_prob > non_affected_prob:
+                    affected_cluster.append(m)
+                elif affected_prob < non_affected_prob:
+                    non_affected_cluster.append(m)
+                else:
+                    if np.random.random() > 0.5:
+                        affected_cluster.append(m)
+                    else:
+                        non_affected_cluster.append(m)
+                        
+    # np.var won't make sense if there is only one participant
+    if len(affected_cluster) <= 1:
+        theta_mean, theta_std = np.nan, np.nan 
+    else:
+        s0_sq = np.var(affected_cluster, ddof=1)
+        m0 = np.mean(affected_cluster)
+        theta_mean, theta_std = estimate_params_exact(
+            m0=m0, n0=1, s0_sq=s0_sq, v0=1, data=affected_cluster)
+    if len(non_affected_cluster) <= 1:
+        phi_mean, phi_std = np.nan, np.nan 
+    else:
+        s0_sq = np.var(non_affected_cluster, ddof=1)
+        m0 = np.mean(non_affected_cluster)
+        phi_mean, phi_std = estimate_params_exact(
+            m0=m0, n0=1, s0_sq=s0_sq, v0=1, data=non_affected_cluster)
+    return theta_mean, theta_std, phi_mean, phi_std
+        
+def update_theta_phi_estimates(
+    biomarker_data: Dict[str, Tuple[int, np.ndarray, np.ndarray, bool]],
+    theta_phi_default: Dict[str, Dict[str, float]],
+    participant_stage_posteriors: Dict[int, np.ndarray],
+    diseased_stages:np.ndarray
+    ) -> Dict[str, Dict[str, float]]:
+    """Update theta and phi params using the conjugate priors for all biomarkers."""
     updated_params = defaultdict(dict)
     for biomarker, (
-        curr_order, measurements, participants, diseased, affected) in biomarker_data.items():
-        theta_mean = theta_phi_default[biomarker]['theta_mean']
-        theta_std = theta_phi_default[biomarker]['theta_std']
-        phi_mean = theta_phi_default[biomarker]['phi_mean']
-        phi_std = theta_phi_default[biomarker]['phi_std']
-
-        for affected_bool in [True, False]:
-            measurements_of_affected_bool = measurements[affected == affected_bool]
-            if len(measurements_of_affected_bool) > 1:
-                s0_sq = np.var(measurements_of_affected_bool, ddof=1)
-                m0 = np.mean(measurements_of_affected_bool)
-                mu_estimate, std_estimate = estimate_params_exact(
-                    m0=m0, n0=1, s0_sq=s0_sq, v0=1, data=measurements_of_affected_bool)
-                if affected_bool:
-                    theta_mean = mu_estimate
-                    theta_std = std_estimate
-                else:
-                    phi_mean = mu_estimate
-                    phi_std = std_estimate
-            
-            updated_params[biomarker] = {
-                'theta_mean': theta_mean,
-                'theta_std': theta_std,
-                'phi_mean': phi_mean,
-                'phi_std': phi_std,
-            }
+        curr_order, measurements, participants, diseased) in biomarker_data.items():
+        dic = {'biomarker': biomarker}
+        theta_phi_default_biomarker = theta_phi_default[biomarker]
+        theta_mean, theta_std, phi_mean, phi_std = compute_theta_phi_biomarker(
+            participants,
+            measurements,
+            diseased,
+            participant_stage_posteriors,
+            diseased_stages,
+            curr_order,
+        ) 
+        if theta_std == 0 or np.isnan(theta_std):
+            theta_mean = theta_phi_default_biomarker['theta_mean']
+            theta_std = theta_phi_default_biomarker['theta_std']
+        if phi_std == 0 or np.isnan(phi_std):
+            phi_mean = theta_phi_default_biomarker['phi_mean']
+            phi_std = theta_phi_default_biomarker['phi_std']
+        updated_params[biomarker] = {
+            'theta_mean': theta_mean,
+            'theta_std': theta_std,
+            'phi_mean': phi_mean,
+            'phi_std': phi_std,
+        }
     return updated_params
-
-def preprocess_biomarker_data(
-    data_we_have: pd.DataFrame, 
-    current_order_dict: Dict,
-    participant_stages: np.ndarray
-) -> Dict[str, Tuple[int, np.ndarray, np.ndarray, np.ndarray, np.ndarray]]:
-    """
-    Preprocess raw participant data into a structured format for biomarker analysis.
-
-    Args:
-        data_we_have (pd.DataFrame): Raw participant data.
-        current_order_dict (Dict): Mapping of biomarkers to their current order (stages).
-        participant_stages (np.ndarray): Array of disease stages for each participant.
-
-    Returns:
-        Dict[str, Tuple[int, np.ndarray, np.ndarray, np.ndarray, np.ndarray]]: Preprocessed biomarker data.
-            Keys are biomarker names, and values are tuples of (curr_order, measurements, participants, diseased, affected).
-    """
-    # This modifies data source in-place
-    data_we_have['S_n'] = data_we_have['biomarker'].map(current_order_dict)
-    participant_stage_dic = dict(
-        zip(np.arange(0, len(participant_stages)), participant_stages))
-    data_we_have['k_j'] = data_we_have['participant'].map(participant_stage_dic)
-    data_we_have['affected'] = data_we_have['k_j'] >= data_we_have['S_n']
-
-    biomarker_data = {}
-    for biomarker, bdata in data_we_have.groupby('biomarker'):
-        curr_order = current_order_dict[biomarker]
-        measurements = bdata['measurement'].values 
-        participants = bdata['participant'].values  
-        diseased = bdata['diseased'].values
-        affected = bdata['affected'].values
-        biomarker_data[biomarker] = (curr_order, measurements, participants, diseased, affected)
-    return biomarker_data
-
-def calculate_all_participant_ln_likelihood_and_update_participant_stages(
-    participant_data: Dict[int, Tuple[np.ndarray, np.ndarray, np.ndarray]],
-    non_diseased_ids: np.ndarray,
-    theta_phi: Dict[str, Dict[str, float]],
-    diseased_stages: np.ndarray,
-    participant_stages: np.ndarray
-) -> float:
-    """
-    Calculate the total log likelihood across all participants and update their disease stages.
-
-    Args:
-        participant_data (Dict): Dictionary containing participant data. Keys are participant IDs, and values
-            are tuples of (measurements, S_n, biomarkers).
-        non_diseased_ids (np.ndarray): Array of participant IDs who are non-diseased.
-        theta_phi (Dict): Theta and phi parameters for each biomarker.
-        diseased_stages (np.ndarray): Array of possible disease stages.
-        participant_stages (np.ndarray): Array of current disease stages for each participant.
-
-    Returns:
-        float: Total log likelihood across all participants.
-    """
-    total_ln_likelihood = 0.0 
-    for participant, (measurements, S_n, biomarkers) in participant_data.items():
-        if participant in non_diseased_ids:
-            ln_likelihood = data_utils.compute_ln_likelihood(
-                measurements, S_n, biomarkers, k_j = 0, theta_phi = theta_phi)
-        else:
-            ln_stage_likelihoods = np.array([
-                data_utils.compute_ln_likelihood(
-                    measurements, S_n, biomarkers, k_j = k_j, theta_phi=theta_phi
-                ) for k_j in diseased_stages
-            ])
-            # Use log-sum-exp trick for numerical stability
-            max_ln_likelihood = np.max(ln_stage_likelihoods)
-            stage_likelihoods = np.exp(ln_stage_likelihoods - max_ln_likelihood)
-            likelihood_sum = np.sum(stage_likelihoods)
-
-            normalized_probs = stage_likelihoods/likelihood_sum
-            participant_stages[participant] = np.random.choice(diseased_stages, p=normalized_probs)
-            
-            ln_likelihood = max_ln_likelihood + np.log(likelihood_sum)
-        total_ln_likelihood += ln_likelihood
-    return total_ln_likelihood
-
-def preprocess_participant_data(
-    data_we_have: pd.DataFrame, 
-    ) -> Dict[int, Tuple[np.ndarray, np.ndarray, np.ndarray]]:
-    """
-    Preprocess participant data into NumPy arrays for efficient computation.
-
-    Args:
-        data_we_have (pd.DataFrame): Raw participant data.
-
-    Returns:
-        Dict[int, Tuple[np.ndarray, np.ndarray, np.ndarray]]: A dictionary where keys are participant IDs,
-            and values are tuples of (measurements, S_n, biomarkers).
-    """
-
-    participant_data = {}
-    for participant, pdata in data_we_have.groupby('participant'):
-        measurements = pdata['measurement'].values 
-        S_n = pdata['S_n'].values 
-        biomarkers = pdata['biomarker'].values  
-        participant_data[participant] = (measurements, S_n, biomarkers)
-    return participant_data
 
 def metropolis_hastings_conjugate_priors(
     data_we_have: pd.DataFrame,
@@ -218,7 +164,6 @@ def metropolis_hastings_conjugate_priors(
             - List of accepted biomarker orderings at each iteration.
             - List of log likelihoods at each iteration.
     """
-
     n_participants = len(data_we_have.participant.unique())
     biomarkers = data_we_have.biomarker.unique()
     n_stages = len(biomarkers) + 1
@@ -233,16 +178,11 @@ def metropolis_hastings_conjugate_priors(
     current_order_dict = dict(zip(biomarkers, current_order))
     current_ln_likelihood = -np.inf
     acceptance_count = 0
+
     # Note that this records only the current accepted orders in each iteration
     all_orders = []
     # This records all log likelihoods
     log_likelihoods = []
-
-    # Initiate random participant stages
-    participant_stages = np.zeros(n_participants)
-    for idx in range(n_participants):
-        if idx not in non_diseased_ids:
-            participant_stages[idx] = np.random.randint(1, len(diseased_stages) + 1)
 
     for iteration in range(iterations):
         log_likelihoods.append(current_ln_likelihood)
@@ -251,26 +191,26 @@ def metropolis_hastings_conjugate_priors(
         data_utils.shuffle_order(new_order, n_shuffle)
         new_order_dict = dict(zip(biomarkers, new_order))
 
-        biomarker_data = preprocess_biomarker_data(
-            data_we_have, new_order_dict, participant_stages)
+        # Update participant data with the new order dict
+        participant_data = sk.preprocess_participant_data(data_we_have, new_order_dict)
 
-        # Update participant data based on the new order
-        # Update data_we_have based on the new order and the updated participant_stages
-        participant_data = preprocess_participant_data(data_we_have)
+        # Obtain biomarker data
+        biomarker_data = sk.preprocess_biomarker_data(data_we_have, new_order_dict)
 
-        # Update theta and phi parameters for all biomarkers
-        # We basically need the original raw data and the updated affected col 
+        ln_likelihood, participant_stage_posteriors = sk.compute_total_ln_likelihood_and_stage_likelihoods(
+                participant_data,
+                non_diseased_ids,
+                theta_phi_estimates,
+                diseased_stages
+        )
+
+        # Now, update theta_phi_estimates using conjugate priors
+        # based on the updated participant_stage_posteriors
         theta_phi_estimates = update_theta_phi_estimates(
-            biomarker_data, 
-            theta_phi_default
-        ) 
-
-        ln_likelihood = calculate_all_participant_ln_likelihood_and_update_participant_stages(
-            participant_data,
-            non_diseased_ids,
-            theta_phi_estimates,
-            diseased_stages,
-            participant_stages
+            biomarker_data,
+            theta_phi_default,
+            participant_stage_posteriors,
+            diseased_stages
         )
 
         delta = ln_likelihood - current_ln_likelihood

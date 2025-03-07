@@ -7,15 +7,15 @@ from scipy.stats import kendalltau
 import re 
 
 # Import utility functions
-from alabEBM.utils.visualization import save_heatmap, save_traceplot 
-from alabEBM.utils.logging_utils import setup_logging 
-from alabEBM.utils.data_processing import get_theta_phi_estimates, obtain_most_likely_order_dic
-from alabEBM.utils.runners import extract_fname, cleanup_old_files
+from alabebm.utils.visualization import save_heatmap, save_traceplot 
+from alabebm.utils.logging_utils import setup_logging 
+from alabebm.utils.data_processing import get_theta_phi_estimates, obtain_most_likely_order_dic
+from alabebm.utils.runners import extract_fname, cleanup_old_files
 
 # Import algorithms
-from alabEBM.algorithms.soft_kmeans_algo import metropolis_hastings_soft_kmeans
-from alabEBM.algorithms.conjugate_priors_algo import metropolis_hastings_conjugate_priors
-from alabEBM.algorithms.hard_kmeans_algo import metropolis_hastings_hard_kmeans
+from alabebm.algorithms.soft_kmeans_algo import metropolis_hastings_soft_kmeans
+from alabebm.algorithms.conjugate_priors_algo import metropolis_hastings_conjugate_priors
+from alabebm.algorithms.hard_kmeans_algo import metropolis_hastings_hard_kmeans
 
 def run_ebm(
     data_file: str,
