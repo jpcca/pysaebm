@@ -6,6 +6,32 @@ import alabebm.utils.data_processing as data_utils
 from . import soft_kmeans_algo as sk 
 import logging
 
+def preprocess_participant_data(
+    data_we_have: pd.DataFrame, current_order_dict: Dict
+    ) -> Dict[int, Tuple[np.ndarray, np.ndarray, np.ndarray]]:
+    """
+    Preprocess participant data into NumPy arrays for efficient computation.
+
+    Args:
+        data (pd.DataFrame): Raw participant data.
+        current_order_dict (Dict): Mapping of biomarkers to stages.
+
+    Returns:
+        Dict[int, Tuple[np.ndarray, np.ndarray, np.ndarray]]: A dictionary where keys are participant IDs,
+            and values are tuples of (measurements, S_n, biomarkers).
+    """
+    # Create a copy instead of modifying the original DataFrame
+    data_copy = data_we_have.copy()
+    data_copy['S_n'] = data_copy['biomarker'].map(current_order_dict)
+
+    participant_data = {}
+    for participant, pdata in data_copy.groupby('participant'):
+        measurements = pdata['measurement'].values 
+        S_n = pdata['S_n'].values 
+        biomarkers = pdata['biomarker'].values  
+        participant_data[participant] = (measurements, S_n, biomarkers)
+    return participant_data
+
 def calculate_all_participant_ln_likelihood(
     participant_data: Dict[int, Tuple[np.ndarray, np.ndarray, np.ndarray]],
     non_diseased_ids: np.ndarray,
@@ -75,7 +101,7 @@ def metropolis_hastings_hard_kmeans(
         new_order_dict = dict(zip(biomarkers, new_order))
 
         # Update participant data with the new order dict
-        participant_data = sk.preprocess_participant_data(data_we_have, new_order_dict)
+        participant_data = preprocess_participant_data(data_we_have, new_order_dict)
 
         # Calculate likelihoods
         ln_likelihood = calculate_all_participant_ln_likelihood(
@@ -101,7 +127,7 @@ def metropolis_hastings_hard_kmeans(
             current_order_dict = new_order_dict 
             acceptance_count += 1
         
-        all_orders.append(current_order_dict.copy())
+        all_orders.append(current_order_dict)
 
         # Log progress
         if (iteration + 1) % max(10, iterations // 10) == 0:

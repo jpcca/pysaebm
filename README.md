@@ -11,9 +11,16 @@ pip install alabebm
 ## Change Log
 
 - 2025-02-26. V 0.3.4. Modified the `shuffle_order` function to ensure full derangement, making convergence faster. 
-- 2025-03-06
+- 2025-03-06 (V 0.4.0)
     - use `pyproject.toml` instead
     - update `conjuage_priors_algo.py`, now without using `participant_stages` but keeping the uncertainties just like in `soft_kmeans_algo.py`. 
+- 2025-03-07 (V 0.4.2)
+    - Compute `new_ln_likelihood_new_theta_phi` based on `new_theta_phi_estimates`, which is based on `stage_likelihoods_posteriors` that is based on the newly proposed order and previous `theta_phi_estimates`.
+    - Update `theta_phi_estimates` with `new_theta_phi_estimates` only if new order is accepted.
+    - The fallback theta_phi_estimates is the previous parameters rather than theta_phi_default 
+    - `all_accepted_orders.append(current_order_dict.copy())` to make sure the results are not mutated. 
+    - Previously I calculated the `new_ln_likelihood` and `stage_likelihoods_posteriors` based on the newly proposed order and previous `theta_phi_estimates`, and directly update theta_phi_estimates whether we accept the new order or not. 
+    - Previously, I excluded `copy()` in `all_accepted_orders.append(current_order_dict.copy())`, which is inaccurate. 
 
 ## Generate Random Data
 

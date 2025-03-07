@@ -197,46 +197,35 @@ def metropolis_hastings_conjugate_priors(
         # Obtain biomarker data
         biomarker_data = sk.preprocess_biomarker_data(data_we_have, new_order_dict)
 
-        # Compute stage_likelihoods_posteriors using current theta_phi_estimates
-        _, stage_likelihoods_posteriors = sk.compute_total_ln_likelihood_and_stage_likelihoods(
-            participant_data,
-            non_diseased_ids,
-            theta_phi_estimates,
-            diseased_stages
+        new_ln_likelihood, stage_likelihoods_posteriors = sk.compute_total_ln_likelihood_and_stage_likelihoods(
+                participant_data,
+                non_diseased_ids,
+                theta_phi_estimates,
+                diseased_stages
         )
 
-        # Compute new_theta_phi_estimates based on new_order
-        new_theta_phi_estimates = update_theta_phi_estimates(
+        # Now, update theta_phi_estimates using conjugate priors
+        # based on the updated stage_likelihoods_posteriors
+        theta_phi_estimates = update_theta_phi_estimates(
             biomarker_data,
-            theta_phi_estimates,
+            theta_phi_default,
             stage_likelihoods_posteriors,
             diseased_stages
         )
 
-        # Recompute new_ln_likelihood using new_theta_phi_estimates
-        new_ln_likelihood_new_theta, _ = sk.compute_total_ln_likelihood_and_stage_likelihoods(
-            participant_data,
-            non_diseased_ids,
-            new_theta_phi_estimates,
-            diseased_stages
-        )
-
-        # Compute acceptance probability
-        delta = new_ln_likelihood_new_theta - current_ln_likelihood
-        if delta >= 0:
-            prob_accept = 1.0
-        else:
-            prob_accept = np.exp(delta)
-
-        # Accept or reject the new state
-        if np.random.rand() < prob_accept:
-            current_order = new_order
-            current_order_dict = new_order_dict
-            current_ln_likelihood = new_ln_likelihood_new_theta
-            theta_phi_estimates = new_theta_phi_estimates
+        max_ll = max(new_ln_likelihood, current_ln_likelihood)
+        # Softmax
+        # Essentially: prob_new = new/new + current
+        prob_new = np.exp(new_ln_likelihood - max_ll) / (np.exp(new_ln_likelihood - max_ll) + np.exp(current_ln_likelihood - max_ll))
+        
+        # Sample from the distribution:
+        if np.random.rand() < prob_new:
+            current_order = new_order 
+            current_ln_likelihood = ln_likelihood
+            current_order_dict = new_order_dict 
             acceptance_count += 1
-
-        all_accepted_orders.append(current_order_dict.copy())
+        
+        all_accepted_orders.append(current_order_dict)
 
         # Log progress
         if (iteration + 1) % max(10, iterations // 10) == 0:
