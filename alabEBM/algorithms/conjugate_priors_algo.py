@@ -191,11 +191,22 @@ def metropolis_hastings_conjugate_priors(
         data_utils.shuffle_order(new_order, n_shuffle)
         new_order_dict = dict(zip(biomarkers, new_order))
 
+        """
+        When we propose a new ordering, we want to calculate the total ln likelihood, which is 
+        dependent on theta_phi_estimates, which are dependent on biomarker_data and stage_likelihoods_posterior,
+        both of which are dependent on the ordering. 
+
+        Therefore, we need to update participant_data, biomarker_data, stage_likelihoods_posterior
+        and theta_phi_estimates before we can calculate the total ln likelihood associated with the new ordering
+        """
+
         # Update participant data with the new order dict
         participant_data = sk.preprocess_participant_data(data_we_have, new_order_dict)
 
         # Obtain biomarker data
         biomarker_data = sk.preprocess_biomarker_data(data_we_have, new_order_dict)
+
+        theta_phi_estimates = theta_phi_default.copy()
 
         # Compute stage_likelihoods_posteriors using current theta_phi_estimates
         _, stage_likelihoods_posteriors = sk.compute_total_ln_likelihood_and_stage_likelihoods(
@@ -214,7 +225,7 @@ def metropolis_hastings_conjugate_priors(
         )
 
         # Recompute new_ln_likelihood using new_theta_phi_estimates
-        new_ln_likelihood_new_theta, _ = sk.compute_total_ln_likelihood_and_stage_likelihoods(
+        new_ln_likelihood_new_theta_phi, _ = sk.compute_total_ln_likelihood_and_stage_likelihoods(
             participant_data,
             non_diseased_ids,
             new_theta_phi_estimates,
@@ -222,17 +233,14 @@ def metropolis_hastings_conjugate_priors(
         )
 
         # Compute acceptance probability
-        delta = new_ln_likelihood_new_theta - current_ln_likelihood
-        if delta >= 0:
-            prob_accept = 1.0
-        else:
-            prob_accept = np.exp(delta)
+        delta = new_ln_likelihood_new_theta_phi - current_ln_likelihood
+        prob_accept = 1.0 if delta > 0 else np.exp(delta)
 
         # Accept or reject the new state
         if np.random.rand() < prob_accept:
             current_order = new_order
             current_order_dict = new_order_dict
-            current_ln_likelihood = new_ln_likelihood_new_theta
+            current_ln_likelihood = new_ln_likelihood_new_theta_phi
             theta_phi_estimates = new_theta_phi_estimates
             acceptance_count += 1
 

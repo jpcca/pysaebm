@@ -14,7 +14,8 @@ def generate_data_from_ebm(
     m,  # combstr_m
     seed: int,
     prefix: Optional[str] = None,  # Optional prefix
-    suffix: Optional[str] = None   # Optional suffix
+    suffix: Optional[str] = None,   # Optional suffix,
+    keep_all_cols: Optional[bool] = False 
 ) -> pd.DataFrame:
     """
     Simulate an Event-Based Model (EBM) for disease progression.
@@ -115,7 +116,8 @@ def generate_data_from_ebm(
     # biomarker_name_change_dic = dict(
     #     zip(ordered_biomarkers, range(1, n_biomarkers + 1)))
     data['diseased'] = data.apply(lambda row: row.k_j > 0, axis=1)
-    data.drop(['k_j', 'S_n', 'affected_or_not'], axis=1, inplace=True)
+    if not keep_all_cols:
+        data.drop(['k_j', 'S_n', 'affected_or_not'], axis=1, inplace=True)
     # data['biomarker'] = data.apply(
     #     lambda row: f"{row.biomarker} ({biomarker_name_change_dic[row.biomarker]})", axis=1)
 
@@ -139,6 +141,7 @@ def generate(
     seed: Optional[int] = None,
     prefix: Optional[str] = None,
     suffix: Optional[str] = None,
+    keep_all_cols: Optional[bool] = False 
 ):
     """
     Generates datasets for multiple combinations of participants, healthy ratios, and datasets.
@@ -175,6 +178,7 @@ def generate(
                     m=m,
                     seed=sub_seed,
                     prefix=prefix,
-                    suffix=suffix
+                    suffix=suffix,
+                    keep_all_cols = keep_all_cols
                 )
     print(f"Data generation complete. Files saved in {output_dir}/")

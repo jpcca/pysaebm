@@ -21,6 +21,17 @@ pip install alabebm
     - `all_accepted_orders.append(current_order_dict.copy())` to make sure the results are not mutated. 
     - Previously I calculated the `new_ln_likelihood` and `stage_likelihoods_posteriors` based on the newly proposed order and previous `theta_phi_estimates`, and directly update theta_phi_estimates whether we accept the new order or not. 
     - Previously, I excluded `copy()` in `all_accepted_orders.append(current_order_dict.copy())`, which is inaccurate. 
+- 2025-03-17 (V 0.4.3)
+    - Added `skip` and `title_detail` parameter in `save_traceplot` function. 
+- 2025-03-18 (V 0.4.4)
+    - Add optional horizontal bar indicating upper limit in trace plot. 
+- 2025-03-18 (V 0.4.7)
+    - Allowed keeping all cols (`keep_all_cols`) in data generation. 
+- 2025-03-18 (V 0.4.9)
+    - copy `data_we_have` and use `data_we_have.loc[:, 'S_n']` in soft kmeans algo when preprocessing participant and biomarker data.
+- 2025-03-10 (V)
+    - In hard kmeans, updated `delta = ln_likelihood - current_ln_likelihood`, and in soft kmeans and conjugate priors, made sure I am using `delta = new_ln_likelihood_new_theta_phi - current_ln_likelihood`.
+    - In each iteration, use `theta_phi_estimates = theta_phi_default.copy()` first. This means, `stage_likelihoods_posteriors` is based on the default theta_phi, not the previous iteration. 
 
 ## Generate Random Data
 

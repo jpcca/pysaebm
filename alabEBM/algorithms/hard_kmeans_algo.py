@@ -83,17 +83,8 @@ def metropolis_hastings_hard_kmeans(
         )
         
         delta = ln_likelihood - current_ln_likelihood
-        # Compute acceptance probability safely
-        if delta > 0:
-            prob_accept = 1.0  # Always accept improvements
-        else:
-            prob_accept = np.exp(delta)  # Only exponentiate negative deltas
-
-        # prob_accept = np.exp(ln_likelihood - current_ln_likelihood)
-        # np.exp(a)/np.exp(b) = np.exp(a - b)
-        # if a > b, then np.exp(a - b) > 1
+        prob_accept = 1.0 if delta > 0 else np.exp(delta)
         
-        # Accept or reject 
         # it will definitly update at the first iteration
         if np.random.rand() < prob_accept:
             current_order = new_order 

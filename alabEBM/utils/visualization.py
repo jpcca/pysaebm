@@ -68,14 +68,26 @@ def save_heatmap(
 def save_traceplot(
     log_likelihoods: List[float],
     folder_name: str,
-    file_name: str
+    file_name: str,
+    skip: int = 40,
+    title_detail: str = "",
+    upper_limit: float = None, 
 ):
     os.makedirs(folder_name, exist_ok=True)
     plt.figure(figsize=(10,6))
-    plt.plot(range(40, len(log_likelihoods)), log_likelihoods[40:], label="Log Likelihood")
+    plt.plot(range(skip, len(log_likelihoods)), log_likelihoods[skip:], label="Log Likelihood")
+    # Add horizontal line for upper limit if provided
+    if upper_limit is not None:
+        plt.axhline(y=upper_limit, color='r', linestyle='-', label="Upper Limit")
+        
+        # Add text annotation for the upper limit
+        # Position the text near the right end of the plot with a slight vertical offset
+        text_x = len(log_likelihoods) - skip - 5  # 5 points from the right edge
+        text_y = upper_limit + 0.02 * (max(log_likelihoods[skip:]) - min(log_likelihoods[skip:]))  # Small vertical offset
+        plt.text(text_x, text_y, "Upper Limit", color='r', fontweight='bold')
     plt.xlabel("Iteration")
     plt.ylabel("Log Likelihood")
-    plt.title("Trace Plot of Log Likelihood")
+    plt.title(f"Trace Plot of Log Likelihood {title_detail}")
     plt.legend()
     plt.grid(True)
     plt.savefig(f"{folder_name}/{file_name}.png")

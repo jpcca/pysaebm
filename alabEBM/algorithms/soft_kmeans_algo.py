@@ -110,10 +110,12 @@ def preprocess_participant_data(
             and values are tuples of (measurements, S_n, biomarkers).
     """
     # Change the column of S_n inplace
-    data_we_have['S_n'] = data_we_have['biomarker'].map(current_order_dict)
+    data_we_have = data_we_have.copy()
+    data_we_have.loc[:, 'S_n'] = data_we_have['biomarker'].map(current_order_dict)
 
     participant_data = {}
     for participant, pdata in data_we_have.groupby('participant'):
+        # Will be a numpy array
         measurements = pdata['measurement'].values 
         S_n = pdata['S_n'].values 
         biomarkers = pdata['biomarker'].values  
@@ -135,7 +137,9 @@ def preprocess_biomarker_data(
             and values are tuples of (curr_order, measurements, participants, diseased).
     """
     # Change the column of S_n inplace
-    data_we_have['S_n'] = data_we_have['biomarker'].map(current_order_dict)
+    # Ensuring that we are explicitly modifying data_we_have and not an ambiguous copy.
+    data_we_have = data_we_have.copy()
+    data_we_have.loc[:, 'S_n'] = data_we_have['biomarker'].map(current_order_dict)
 
     biomarker_data = {}
     for biomarker, bdata in data_we_have.groupby('biomarker'):
@@ -179,6 +183,7 @@ def compute_total_ln_likelihood_and_stage_likelihoods(
             max_ln_likelihood = np.max(ln_stage_likelihoods)
             stage_likelihoods = np.exp(ln_stage_likelihoods - max_ln_likelihood)
             likelihood_sum = np.sum(stage_likelihoods)
+            # Proof: https://hongtaoh.com/en/2024/12/14/log-sum-exp/
             ln_likelihood = max_ln_likelihood + np.log(likelihood_sum)
 
             # if likelihood_sum == 0:
@@ -226,6 +231,7 @@ def metropolis_hastings_soft_kmeans(
     log_likelihoods = []
 
     for iteration in range(iterations):
+        # floats are immutable, so no need to use .copy()
         log_likelihoods.append(current_ln_likelihood)
 
         # in each iteration, we have updated current_order_dict and theta_phi_estimates
@@ -240,6 +246,8 @@ def metropolis_hastings_soft_kmeans(
         participant_data = preprocess_participant_data(data_we_have, new_order_dict)
         # Obtain biomarker data
         biomarker_data = preprocess_biomarker_data(data_we_have, new_order_dict)
+
+        theta_phi_estimates = theta_phi_default.copy()
 
         # Compute stage_likelihoods_posteriors using current theta_phi_estimates
         _, stage_likelihoods_posteriors = compute_total_ln_likelihood_and_stage_likelihoods(
@@ -265,12 +273,12 @@ def metropolis_hastings_soft_kmeans(
             diseased_stages
         )
 
-        # Compute acceptance probability
         delta = new_ln_likelihood_new_theta_phi - current_ln_likelihood
-        if delta >= 0:
-            prob_accept = 1.0
-        else:
-            prob_accept = np.exp(delta)
+        prob_accept = 1.0 if delta > 0 else np.exp(delta)
+        # Proof:
+        # prob_accept = np.exp(ln_likelihood - current_ln_likelihood)
+        # np.exp(a)/np.exp(b) = np.exp(a - b)
+        # if a > b, then np.exp(a - b) > 1
 
         # Accept or reject the new state
         if np.random.rand() < prob_accept:

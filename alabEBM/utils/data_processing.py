@@ -38,9 +38,10 @@ def compute_theta_phi_for_biomarker(biomarker_df, max_attempt = 100, seed = None
             break 
         curr_attempt += 1
     else:
-        print(f"KMeans failed. Try randomizing the predictions")
+        print(f"KMeans failed. Will go ahead and randomize the predictions.")
         predictions = rng.choice([0, 1], size=len(measurements))
         cluster_counts = np.bincount(predictions)
+        # Check if two non-empty clusters exist:
         if len(cluster_counts) != n_clusters or not all(c > 1 for c in cluster_counts):
             raise ValueError(f"KMeans clustering failed to find valid clusters within max_attempt.")
     
