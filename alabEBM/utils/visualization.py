@@ -28,11 +28,11 @@ def save_heatmap(
         ordered_biomarkers = list(biomarker_order.keys())
 
         # Rename index to include order in format "ABC (1)"
-        renamed_index = [f"{biomarker} ({biomarker_order[biomarker]})" for biomarker in ordered_biomarkers]
+        # renamed_index = [f"{biomarker} ({biomarker_order[biomarker]})" for biomarker in ordered_biomarkers]
 
         # Reorder DataFrame rows
         biomarker_stage_probability_df = biomarker_stage_probability_df.loc[ordered_biomarkers]
-        biomarker_stage_probability_df.index = renamed_index
+        # biomarker_stage_probability_df.index = renamed_index
     
     # Find the longest biomarker name
     max_name_length = max(len(name) for name in biomarker_stage_probability_df.index)
@@ -63,7 +63,6 @@ def save_heatmap(
     # Save figure with padding to ensure labels are not cut off
     plt.savefig(f"{folder_name}/{file_name}.png", bbox_inches="tight", dpi=300)
     plt.close()
-
 
 def save_traceplot(
     log_likelihoods: List[float],

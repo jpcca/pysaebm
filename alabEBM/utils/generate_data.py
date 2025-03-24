@@ -32,9 +32,11 @@ def generate_data_from_ebm(
     seed (Optional[int]): Seed for the random number generator for reproducibility.
     prefix (Optional[str]): Optional prefix of filename
     suffix (Optional[str]): Optional suffix of filename
+    keep_all_cols (Optional[bool]): if true, drop ['k_j', 'S_n', 'affected_or_not']
+
     Returns:
     pd.DataFrame: A DataFrame with columns 'participant', "biomarker", 'measurement', 
-        'diseased'.
+        'diseased', with or without ['k_j', 'S_n', 'affected_or_not']
     """
     # Parameter validation
     assert n_participants > 0, "Number of participants must be greater than 0."
@@ -156,6 +158,7 @@ def generate(
     seed (Optional[int]): Global seed for reproducibility. If None, a random seed is used.
     prefix (Optional[str]): Optional prefix of filename
     suffix (Optional[str]): Optional suffix of filename
+    keep_all_cols (Optional[bool]): if true, drop ['k_j', 'S_n', 'affected_or_not']
     """
     # Ensure output directory exists
     if not os.path.exists(output_dir):

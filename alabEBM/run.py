@@ -13,9 +13,7 @@ from alabebm.utils.data_processing import get_theta_phi_estimates, obtain_most_l
 from alabebm.utils.runners import extract_fname, cleanup_old_files
 
 # Import algorithms
-from alabebm.algorithms.soft_kmeans_algo import metropolis_hastings_soft_kmeans
-from alabebm.algorithms.conjugate_priors_algo import metropolis_hastings_conjugate_priors
-from alabebm.algorithms.hard_kmeans_algo import metropolis_hastings_hard_kmeans
+from alabebm.algorithms import metropolis_hastings
 
 def run_ebm(
     data_file: str,
@@ -31,7 +29,7 @@ def run_ebm(
 
     Args:
         data_file (str): Path to the input CSV file with biomarker data.
-        algorithm (str): Choose from 'hard_kmeans', 'soft_kmeans', and 'conjugate_priors'.
+        algorithm (str): Choose from 'hard_kmeans', 'mle', and 'conjugate_priors'.
         n_iter (int): Number of iterations for the Metropolis-Hastings algorithm.
         n_shuffle (int): Number of shuffles per iteration.
         burn_in (int): Burn-in period for the MCMC chain.
@@ -41,6 +39,10 @@ def run_ebm(
     Returns:
         Dict[str, float]: Results including Kendall's tau and p-value.
     """
+    allowed_algorithms = {'hard_kmeans', 'mle', 'conjugate_priors'}  # Using a set for faster lookup
+    if algorithm not in allowed_algorithms:
+        raise ValueError(f"Invalid algorithm '{algorithm}'. Must be one of {allowed_algorithms}")
+
     # Folder to save all outputs
     output_dir = algorithm
     fname = extract_fname(data_file)
@@ -82,22 +84,41 @@ def run_ebm(
 
     # Run the Metropolis-Hastings algorithm
     try:
-        if algorithm == 'soft_kmeans':
-            accepted_order_dicts, log_likelihoods = metropolis_hastings_soft_kmeans(
-                data, n_iter, n_shuffle
-            )
-        elif algorithm == 'hard_kmeans':
-            accepted_order_dicts, log_likelihoods = metropolis_hastings_hard_kmeans(
-                data, n_iter, n_shuffle
-            )
-        elif algorithm == 'conjugate_priors':
-            accepted_order_dicts, log_likelihoods = metropolis_hastings_conjugate_priors(
-                data, n_iter, n_shuffle
-            )
-        else:
-            raise ValueError("You must choose from 'hard_kmeans', 'soft_kmeans', and 'conjugate_priors'!")
+        accepted_order_dicts, log_likelihoods = metropolis_hastings(data, n_iter, n_shuffle, algorithm)
     except Exception as e:
         logging.error(f"Error in Metropolis-Hastings algorithm: {e}")
+        raise
+
+    # Get the order associated with the highet log likelihoods
+    order_with_higest_ll = accepted_order_dicts[log_likelihoods.index(max(log_likelihoods))]
+    # Sort by keys in an ascending order
+    order_with_higest_ll = dict(sorted(order_with_higest_ll.items()))
+    if correct_ordering:
+        original_order = correct_ordering
+        # Sort both dicts by the key to make sure they are comparable
+        correct_ordering = dict(sorted(correct_ordering.items()))
+        tau2, p_value2 = kendalltau(
+            list(order_with_higest_ll.values()), 
+            list(correct_ordering.values()))
+    else:
+        tau2, p_value2, original_order = None, None, None 
+
+    # Calculate the most likely order
+    try:
+        most_likely_order_dic = obtain_most_likely_order_dic(
+            accepted_order_dicts, burn_in, thinning
+        )
+        most_likely_order_dic = dict(sorted(most_likely_order_dic.items()))
+        # most_likely_order = list(most_likely_order_dic.values())
+        # Only calculate tau and p_value if correct_ordering is provided
+        if correct_ordering:
+            tau, p_value = kendalltau(
+                list(most_likely_order_dic.values()), 
+                list(correct_ordering.values()))
+        else:
+            tau, p_value = None, None
+    except Exception as e:
+        logging.error(f"Error calculating Kendall's tau: {e}")
         raise
 
     # Save heatmap
@@ -109,7 +130,7 @@ def run_ebm(
             folder_name=heatmap_folder,
             file_name=f"{fname}_heatmap_{algorithm}",
             title=f"Heatmap of {fname} using {algorithm}",
-            correct_ordering = correct_ordering
+            correct_ordering = most_likely_order_dic
         )
     except Exception as e:
         logging.error(f"Error generating heatmap: {e}")
@@ -122,29 +143,16 @@ def run_ebm(
         logging.error(f"Error generating trace plot: {e}")
         raise 
 
-    # Calculate the most likely order
-    try:
-        most_likely_order_dic = obtain_most_likely_order_dic(
-            accepted_order_dicts, burn_in, thinning
-        )
-        most_likely_order = list(most_likely_order_dic.values())
-        # Only calculate tau and p_value if correct_ordering is provided
-        if correct_ordering:
-            tau, p_value = kendalltau(most_likely_order, list(correct_ordering.values()))
-            original_order = correct_ordering
-        else:
-            tau, p_value, original_order = None, None, None
-    except Exception as e:
-        logging.error(f"Error calculating Kendall's tau: {e}")
-        raise
-
     # Save results 
     results = {
         "n_iter": n_iter,
-        "most_likely_order": most_likely_order_dic,
+        "most_likely_order": dict(sorted(most_likely_order_dic.items(), key=lambda item:item[1])),
         "kendalls_tau": tau, 
         "p_value": p_value,
-        "original_order": original_order
+        "original_order": dict(sorted(original_order.items(), key=lambda item:item[1])),
+        "order_with_higest_ll": {k: int(v) for k, v in sorted(order_with_higest_ll.items(), key=lambda item: item[1])},
+        "kendalls_tau2": tau2,
+        "p_value2": p_value2
     }
     try:
         with open(f"{results_folder}/{fname}_results.json", "w") as f:
