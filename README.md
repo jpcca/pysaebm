@@ -46,6 +46,10 @@ pip install alabebm
     - In `results.json` reorder the biomarker according to their order rather than alphabetically ranked. 
     - Modified `obtain_most_likely_order_dic` so that we assign stages for biomarkers that have the highest probabilities first. 
     - In `results.json`, output the order associated with the highest total log likelihood. Also, calculate the kendall's tau and p values of it and the original order (if provided).
+- 2025-03-25 (V 0.8.1)
+    - In heatmap, reorder according to the order with highest log likelihood. Also, add the number just like (1).
+    - Able to add title detail to heatmaps and traceplots. 
+    - Able to add `fname_prefix` in `run_ebm()`. 
 
 ## Generate Random Data
 
@@ -94,8 +98,68 @@ for algorithm in ['soft_kmeans', 'conjugate_priors', 'hard_kmeans']:
         n_shuffle=2,
         burn_in=1000,
         thinning=20,
+        correct_ordering = None,
+        plot_title_detail = "",
     )
 ```
+
+## Interpreting the results 
+
+After running the algorithm, you'll get the results in the folder of `conjugate_priors`, including 
+
+- `heatmaps`. This folder contains the heatmap. Note that the number following each biomarker, such as (1), indicates the order of this biomarker according to the order that is associated with the highest likelihood (You can see the folder of `traceplots` for the likelihood history.)
+- `records` contains the logging information of the algorithm. 
+- `traceplots` contains the traceplots of log likelihood trajectory. 
+- `results` contains json files. Example of a result json:
+
+```json
+{
+    "n_iter": 200,
+    "most_likely_order": {
+        "HIP-FCI": 1,
+        "PCC-FCI": 2,
+        "FUS-GMI": 3,
+        "P-Tau": 4,
+        "AB": 5,
+        "HIP-GMI": 6,
+        "MMSE": 7,
+        "ADAS": 8,
+        "AVLT-Sum": 9,
+        "FUS-FCI": 10
+    },
+    "kendalls_tau": 0.6,
+    "p_value": 0.016666115520282188,
+    "original_order": {
+        "HIP-FCI": 1,
+        "PCC-FCI": 2,
+        "AB": 3,
+        "P-Tau": 4,
+        "MMSE": 5,
+        "ADAS": 6,
+        "HIP-GMI": 7,
+        "AVLT-Sum": 8,
+        "FUS-GMI": 9,
+        "FUS-FCI": 10
+    },
+    "order_with_higest_ll": {
+        "HIP-FCI": 1,
+        "PCC-FCI": 2,
+        "FUS-GMI": 3,
+        "AB": 4,
+        "P-Tau": 5,
+        "HIP-GMI": 6,
+        "MMSE": 7,
+        "ADAS": 8,
+        "AVLT-Sum": 9,
+        "FUS-FCI": 10
+    },
+    "kendalls_tau2": 0.6444444444444444,
+    "p_value2": 0.009148478835978836
+}
+```
+
+`n_iter` means the number of iterations. `most_likely_order` is the most likely order if we consider all the iteration results, burn in, and thinning. `kendalls_tau` and `p_value` is the result of most likely order versus the original order (if provided). `order_with_higest_ll` is the order associated with the highest log likelihood. `kendalls_tau2` and `p_value2` is the result of most likely order versus the original order (if provided). 
+
 
 ## Input data
 

@@ -15,7 +15,7 @@ def save_heatmap(
     folder_name:str, 
     file_name:str, 
     title:str,
-    correct_ordering: Optional[Dict[str, int]] = None,
+    best_order: Optional[Dict[str, int]] = None,
     ):
     os.makedirs(folder_name, exist_ok=True)
     
@@ -23,16 +23,16 @@ def save_heatmap(
         all_dicts, burn_in, thining
     )
 
-    if correct_ordering:
-        biomarker_order = dict(sorted(correct_ordering.items(), key=lambda item:item[1]))
+    if best_order:
+        biomarker_order = dict(sorted(best_order.items(), key=lambda item:item[1]))
         ordered_biomarkers = list(biomarker_order.keys())
 
         # Rename index to include order in format "ABC (1)"
-        # renamed_index = [f"{biomarker} ({biomarker_order[biomarker]})" for biomarker in ordered_biomarkers]
+        renamed_index = [f"{biomarker} ({biomarker_order[biomarker]})" for biomarker in ordered_biomarkers]
 
         # Reorder DataFrame rows
         biomarker_stage_probability_df = biomarker_stage_probability_df.loc[ordered_biomarkers]
-        # biomarker_stage_probability_df.index = renamed_index
+        biomarker_stage_probability_df.index = renamed_index
     
     # Find the longest biomarker name
     max_name_length = max(len(name) for name in biomarker_stage_probability_df.index)
@@ -68,9 +68,9 @@ def save_traceplot(
     log_likelihoods: List[float],
     folder_name: str,
     file_name: str,
+    title: str,
     skip: int = 40,
-    title_detail: str = "",
-    upper_limit: float = None, 
+    upper_limit: Optional[float] = None, 
 ):
     os.makedirs(folder_name, exist_ok=True)
     plt.figure(figsize=(10,6))
@@ -86,7 +86,7 @@ def save_traceplot(
         plt.text(text_x, text_y, "Upper Limit", color='r', fontweight='bold')
     plt.xlabel("Iteration")
     plt.ylabel("Log Likelihood")
-    plt.title(f"Trace Plot of Log Likelihood {title_detail}")
+    plt.title(title)
     plt.legend()
     plt.grid(True)
     plt.savefig(f"{folder_name}/{file_name}.png")

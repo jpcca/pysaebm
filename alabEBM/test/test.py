@@ -1,5 +1,6 @@
 from alabebm import run_ebm
 from alabebm.data import get_sample_data_path, get_biomarker_order_path
+from alabebm.utils.runners import extract_fname
 import os
 import json 
 
@@ -18,7 +19,6 @@ for algorithm in ['conjugate_priors']:
     for data_file in data_files:
         results = run_ebm(
             data_file= f"{data_dir}/{data_file}",
-            # data_file=get_sample_data_path('10|100_0.csv'),  # Use the path helper
             algorithm=algorithm,
             n_iter=200,
             n_shuffle=2,

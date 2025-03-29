@@ -1,13 +1,13 @@
-2025-03-24 18:48:43,366 - INFO - Running conjugate priors for file: 10_100_1
-2025-03-24 18:48:43,367 - INFO - Number of biomarkers: 10
-2025-03-24 18:48:44,803 - INFO - Iteration 20/200, Acceptance Ratio: 55.00%, Log Likelihood: -2431.3184, Current Accepted Order: dict_values([1, 4, 3, 9, 5, 6, 10, 7, 8, 2]), 
-2025-03-24 18:48:45,318 - INFO - Iteration 40/200, Acceptance Ratio: 30.00%, Log Likelihood: -2432.6060, Current Accepted Order: dict_values([1, 4, 3, 9, 5, 6, 10, 8, 7, 2]), 
-2025-03-24 18:48:45,829 - INFO - Iteration 60/200, Acceptance Ratio: 26.67%, Log Likelihood: -2420.8541, Current Accepted Order: dict_values([1, 4, 3, 2, 5, 6, 8, 9, 10, 7]), 
-2025-03-24 18:48:46,342 - INFO - Iteration 80/200, Acceptance Ratio: 22.50%, Log Likelihood: -2417.6724, Current Accepted Order: dict_values([1, 4, 3, 2, 5, 6, 7, 8, 10, 9]), 
-2025-03-24 18:48:46,853 - INFO - Iteration 100/200, Acceptance Ratio: 19.00%, Log Likelihood: -2412.9064, Current Accepted Order: dict_values([1, 4, 3, 2, 5, 6, 7, 8, 9, 10]), 
-2025-03-24 18:48:47,364 - INFO - Iteration 120/200, Acceptance Ratio: 16.67%, Log Likelihood: -2406.3041, Current Accepted Order: dict_values([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]), 
-2025-03-24 18:48:47,878 - INFO - Iteration 140/200, Acceptance Ratio: 14.29%, Log Likelihood: -2406.3041, Current Accepted Order: dict_values([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]), 
-2025-03-24 18:48:48,393 - INFO - Iteration 160/200, Acceptance Ratio: 12.50%, Log Likelihood: -2406.3041, Current Accepted Order: dict_values([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]), 
-2025-03-24 18:48:48,913 - INFO - Iteration 180/200, Acceptance Ratio: 11.11%, Log Likelihood: -2406.3041, Current Accepted Order: dict_values([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]), 
-2025-03-24 18:48:49,424 - INFO - Iteration 200/200, Acceptance Ratio: 10.00%, Log Likelihood: -2406.3041, Current Accepted Order: dict_values([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]), 
-2025-03-24 18:48:49,909 - INFO - Results saved to conjugate_priors/results/10_100_1_results.json
+2025-03-25 19:15:58,696 - INFO - Running conjugate priors for file: 10_100_1
+2025-03-25 19:15:58,698 - INFO - Number of biomarkers: 10
+2025-03-25 19:15:59,753 - INFO - Iteration 20/200, Acceptance Ratio: 20.00%, Log Likelihood: -2461.1714, Current Accepted Order: dict_values([1, 8, 5, 7, 3, 4, 6, 9, 10, 2]), 
+2025-03-25 19:16:00,114 - INFO - Iteration 40/200, Acceptance Ratio: 17.50%, Log Likelihood: -2438.5224, Current Accepted Order: dict_values([1, 8, 2, 5, 3, 4, 6, 7, 10, 9]), 
+2025-03-25 19:16:00,473 - INFO - Iteration 60/200, Acceptance Ratio: 15.00%, Log Likelihood: -2425.2265, Current Accepted Order: dict_values([1, 5, 2, 8, 3, 4, 6, 7, 9, 10]), 
+2025-03-25 19:16:00,837 - INFO - Iteration 80/200, Acceptance Ratio: 12.50%, Log Likelihood: -2422.3629, Current Accepted Order: dict_values([1, 5, 2, 7, 3, 4, 6, 8, 9, 10]), 
+2025-03-25 19:16:01,199 - INFO - Iteration 100/200, Acceptance Ratio: 11.00%, Log Likelihood: -2420.6715, Current Accepted Order: dict_values([1, 5, 2, 6, 3, 4, 7, 8, 9, 10]), 
+2025-03-25 19:16:01,563 - INFO - Iteration 120/200, Acceptance Ratio: 9.17%, Log Likelihood: -2420.6715, Current Accepted Order: dict_values([1, 5, 2, 6, 3, 4, 7, 8, 9, 10]), 
+2025-03-25 19:16:01,925 - INFO - Iteration 140/200, Acceptance Ratio: 9.29%, Log Likelihood: -2422.4413, Current Accepted Order: dict_values([1, 6, 2, 4, 3, 5, 7, 8, 9, 10]), 
+2025-03-25 19:16:02,285 - INFO - Iteration 160/200, Acceptance Ratio: 8.12%, Log Likelihood: -2422.4413, Current Accepted Order: dict_values([1, 6, 2, 4, 3, 5, 7, 8, 9, 10]), 
+2025-03-25 19:16:02,645 - INFO - Iteration 180/200, Acceptance Ratio: 8.33%, Log Likelihood: -2422.4390, Current Accepted Order: dict_values([1, 6, 2, 4, 3, 5, 7, 8, 9, 10]), 
+2025-03-25 19:16:03,005 - INFO - Iteration 200/200, Acceptance Ratio: 8.00%, Log Likelihood: -2408.3847, Current Accepted Order: dict_values([1, 6, 2, 3, 4, 5, 7, 8, 9, 10]), 
+2025-03-25 19:16:03,356 - INFO - Results saved to conjugate_priors/results/10_100_1_results.json

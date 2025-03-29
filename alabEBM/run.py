@@ -23,6 +23,8 @@ def run_ebm(
     burn_in: int = 1000,
     thinning: int = 50,
     correct_ordering: Optional[Dict[str, int]] = None,
+    plot_title_detail: Optional[str] = "",
+    fname_prefix: Optional[str] = "",
 ) -> Dict[str, float]:
     """
     Run the metropolis hastings algorithm and save results 
@@ -35,6 +37,9 @@ def run_ebm(
         burn_in (int): Burn-in period for the MCMC chain.
         thinning (int): Thinning interval for the MCMC chain.
         correct_ordering (Optional[Dict[str, int]]): biomarker name: the initial correct order of it (if known)
+        plot_title_detail (Optional[str]): optional string to add to plot title. 
+        fname_prefix (Optional[str]): the prefix of heatmap, traceplot, results.json, and logs file, e.g., 5_50_0_heatmap_conjugate_priors.png
+            In the example, there are no prefix strings. 
 
     Returns:
         Dict[str, float]: Results including Kendall's tau and p-value.
@@ -64,7 +69,7 @@ def run_ebm(
     os.makedirs(logs_folder, exist_ok=True)
 
     # Finally set up logging
-    log_file = f"{logs_folder}/{fname}.log"
+    log_file = f"{logs_folder}/{fname_prefix}{fname}.log"
     setup_logging(log_file)
 
     # Log the start of the run
@@ -94,9 +99,9 @@ def run_ebm(
     # Sort by keys in an ascending order
     order_with_higest_ll = dict(sorted(order_with_higest_ll.items()))
     if correct_ordering:
-        original_order = correct_ordering
         # Sort both dicts by the key to make sure they are comparable
         correct_ordering = dict(sorted(correct_ordering.items()))
+        original_order = correct_ordering.copy()
         tau2, p_value2 = kendalltau(
             list(order_with_higest_ll.values()), 
             list(correct_ordering.values()))
@@ -128,9 +133,9 @@ def run_ebm(
             burn_in,
             thinning,
             folder_name=heatmap_folder,
-            file_name=f"{fname}_heatmap_{algorithm}",
-            title=f"Heatmap of {fname} using {algorithm}",
-            correct_ordering = most_likely_order_dic
+            file_name=f"{fname_prefix}{fname}_heatmap_{algorithm}",
+            title=f"Heatmap of {fname_prefix}{fname} Using {algorithm}, {plot_title_detail}",
+            best_order = most_likely_order_dic
         )
     except Exception as e:
         logging.error(f"Error generating heatmap: {e}")
@@ -138,7 +143,12 @@ def run_ebm(
 
     # Save trace plot
     try:
-        save_traceplot(log_likelihoods, traceplot_folder, f"{fname}_traceplot_{algorithm}")
+        save_traceplot(
+            log_likelihoods, 
+            folder_name = traceplot_folder, 
+            file_name = f"{fname_prefix}{fname}_traceplot_{algorithm}",
+            title = f"Traceplot of Log Likelihoods" 
+        )
     except Exception as e:
         logging.error(f"Error generating trace plot: {e}")
         raise 
@@ -146,21 +156,24 @@ def run_ebm(
     # Save results 
     results = {
         "n_iter": n_iter,
+        "n_shuffle": n_shuffle, 
+        "burn_in": burn_in,
+        "thinning": thinning,
         "most_likely_order": dict(sorted(most_likely_order_dic.items(), key=lambda item:item[1])),
         "kendalls_tau": tau, 
         "p_value": p_value,
-        "original_order": dict(sorted(original_order.items(), key=lambda item:item[1])),
+        "original_order": original_order,
         "order_with_higest_ll": {k: int(v) for k, v in sorted(order_with_higest_ll.items(), key=lambda item: item[1])},
         "kendalls_tau2": tau2,
         "p_value2": p_value2
     }
     try:
-        with open(f"{results_folder}/{fname}_results.json", "w") as f:
+        with open(f"{results_folder}/{fname_prefix}{fname}_results.json", "w") as f:
             json.dump(results, f, indent=4)
     except Exception as e:
         logging.error(f"Error writing results to file: {e}")
         raise 
-    logging.info(f"Results saved to {results_folder}/{fname}_results.json")
+    logging.info(f"Results saved to {results_folder}/{fname_prefix}{fname}_results.json")
 
     # Clean up logging handlers
     logger = logging.getLogger()
