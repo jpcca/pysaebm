@@ -6,41 +6,41 @@
     "most_likely_order": {
         "HIP-FCI": 1,
         "PCC-FCI": 2,
-        "AB": 3,
-        "P-Tau": 4,
-        "MMSE": 5,
-        "HIP-GMI": 6,
-        "ADAS": 7,
-        "FUS-GMI": 8,
-        "AVLT-Sum": 9,
-        "FUS-FCI": 10
+        "FUS-GMI": 3,
+        "AB": 4,
+        "HIP-GMI": 5,
+        "MMSE": 6,
+        "FUS-FCI": 7,
+        "P-Tau": 8,
+        "ADAS": 9,
+        "AVLT-Sum": 10
     },
-    "kendalls_tau": 0.911111111111111,
-    "p_value": 2.9761904761904762e-05,
+    "kendalls_tau": 0.4222222222222222,
+    "p_value": 0.10831349206349207,
     "original_order": {
-        "HIP-FCI": 1,
-        "PCC-FCI": 2,
         "AB": 3,
-        "P-Tau": 4,
-        "MMSE": 5,
         "ADAS": 6,
-        "HIP-GMI": 7,
         "AVLT-Sum": 8,
+        "FUS-FCI": 10,
         "FUS-GMI": 9,
-        "FUS-FCI": 10
+        "HIP-FCI": 1,
+        "HIP-GMI": 7,
+        "MMSE": 5,
+        "P-Tau": 4,
+        "PCC-FCI": 2
     },
     "order_with_higest_ll": {
         "HIP-FCI": 1,
         "PCC-FCI": 2,
         "AB": 3,
-        "P-Tau": 4,
+        "FUS-GMI": 4,
         "HIP-GMI": 5,
         "MMSE": 6,
-        "ADAS": 7,
-        "FUS-GMI": 8,
-        "AVLT-Sum": 9,
-        "FUS-FCI": 10
+        "FUS-FCI": 7,
+        "P-Tau": 8,
+        "ADAS": 9,
+        "AVLT-Sum": 10
     },
-    "kendalls_tau2": 0.8666666666666666,
-    "p_value2": 0.00011518959435626102
+    "kendalls_tau2": 0.4666666666666666,
+    "p_value2": 0.07255015432098766
 }

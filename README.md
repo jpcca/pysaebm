@@ -50,6 +50,13 @@ pip install alabebm
     - In heatmap, reorder according to the order with highest log likelihood. Also, add the number just like (1).
     - Able to add title detail to heatmaps and traceplots. 
     - Able to add `fname_prefix` in `run_ebm()`. 
+- 2025-03-29 (V 0.8.9)
+    - Added `em` algorithm. 
+    - Added Dirichlet-Multinomial Model to describe uncertainy of stage distribution (a multinomial disribution of all disease stages; because we cannot always assume all disease stages are equally likely).
+    - `prior_v` default set to be 1. 
+    - Default to use dirichlet distribution instead of uniform distribution 
+    - Change data filename from 50|100_1 to 50_100_1. 
+    - Modified the `mle` algorithm to make sure the output does not contain `np.nan` (by using the fallback).
 
 ## Generate Random Data
 

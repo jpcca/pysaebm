@@ -44,7 +44,7 @@ def run_ebm(
     Returns:
         Dict[str, float]: Results including Kendall's tau and p-value.
     """
-    allowed_algorithms = {'hard_kmeans', 'mle', 'conjugate_priors'}  # Using a set for faster lookup
+    allowed_algorithms = {'hard_kmeans', 'mle', 'conjugate_priors', 'em'}  # Using a set for faster lookup
     if algorithm not in allowed_algorithms:
         raise ValueError(f"Invalid algorithm '{algorithm}'. Must be one of {allowed_algorithms}")
 
@@ -58,10 +58,11 @@ def run_ebm(
 
     # Then create directories
     os.makedirs(output_dir, exist_ok=True)
-    heatmap_folder = f"{output_dir}/heatmaps"
-    traceplot_folder = f"{output_dir}/traceplots"
-    results_folder = f"{output_dir}/results"
-    logs_folder = f"{output_dir}/records"
+
+    heatmap_folder = os.path.join(output_dir, "heatmaps")
+    traceplot_folder = os.path.join(output_dir, "traceplots")
+    results_folder = os.path.join(output_dir, "results")
+    logs_folder = os.path.join(output_dir, "records")
 
     os.makedirs(heatmap_folder, exist_ok=True)
     os.makedirs(traceplot_folder, exist_ok=True)
@@ -69,7 +70,7 @@ def run_ebm(
     os.makedirs(logs_folder, exist_ok=True)
 
     # Finally set up logging
-    log_file = f"{logs_folder}/{fname_prefix}{fname}.log"
+    log_file = os.path.join(logs_folder, f"{fname_prefix}{fname}.log")
     setup_logging(log_file)
 
     # Log the start of the run

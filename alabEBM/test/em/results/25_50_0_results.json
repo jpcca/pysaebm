@@ -1,0 +1,46 @@
+{
+    "n_iter": 200,
+    "n_shuffle": 2,
+    "burn_in": 100,
+    "thinning": 2,
+    "most_likely_order": {
+        "FUS-FCI": 1,
+        "AVLT-Sum": 2,
+        "HIP-FCI": 3,
+        "AB": 4,
+        "P-Tau": 5,
+        "PCC-FCI": 6,
+        "FUS-GMI": 7,
+        "MMSE": 8,
+        "ADAS": 9,
+        "HIP-GMI": 10
+    },
+    "kendalls_tau": 0.06666666666666667,
+    "p_value": 0.8618005952380953,
+    "original_order": {
+        "AB": 3,
+        "ADAS": 6,
+        "AVLT-Sum": 8,
+        "FUS-FCI": 10,
+        "FUS-GMI": 9,
+        "HIP-FCI": 1,
+        "HIP-GMI": 7,
+        "MMSE": 5,
+        "P-Tau": 4,
+        "PCC-FCI": 2
+    },
+    "order_with_higest_ll": {
+        "FUS-FCI": 1,
+        "AVLT-Sum": 2,
+        "HIP-FCI": 3,
+        "AB": 4,
+        "P-Tau": 5,
+        "PCC-FCI": 6,
+        "FUS-GMI": 7,
+        "MMSE": 8,
+        "ADAS": 9,
+        "HIP-GMI": 10
+    },
+    "kendalls_tau2": 0.06666666666666667,
+    "p_value2": 0.8618005952380953
+}

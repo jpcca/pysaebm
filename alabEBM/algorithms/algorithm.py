@@ -11,7 +11,7 @@ def metropolis_hastings(
     n_shuffle: int,
     algorithm: str = 'conjugate_priors',
     prior_n: float = 1.0,    # Weak prior (not data-dependent)
-    prior_v: float = 2.0     # Weak prior (not data-dependent)
+    prior_v: float = 1.0     # Weak prior (not data-dependent)
 ) -> Tuple[List[Dict], List[float]]:
     """
     Perform Metropolis-Hastings sampling with conjugate priors to estimate biomarker orderings.
@@ -32,7 +32,8 @@ def metropolis_hastings(
     n_participants = len(data_we_have.participant.unique())
     biomarkers = data_we_have.biomarker.unique()
     n_stages = len(biomarkers) + 1
-    diseased_stages = np.arange(start=1, stop=n_stages, step=1)
+    disease_stages = np.arange(start=1, stop=n_stages, step=1)
+    n_disease_stages = n_stages - 1
     non_diseased_ids = data_we_have.loc[data_we_have.diseased == False].participant.unique()
 
     theta_phi_default = data_utils.get_theta_phi_estimates(data_we_have)
@@ -42,6 +43,9 @@ def metropolis_hastings(
     current_order = np.random.permutation(np.arange(1, n_stages))
     current_order_dict = dict(zip(biomarkers, current_order))
     current_ln_likelihood = -np.inf
+    alpha_prior = [1.0]* (n_disease_stages)
+    current_pi = np.random.dirichlet(alpha_prior) # Sample from uniform dirichlet dist.
+    current_stage_post = {}
     acceptance_count = 0
 
     # Note that this records only the current accepted orders in each iteration
@@ -71,43 +75,47 @@ def metropolis_hastings(
         """
         If conjugate priors or MLE, update theta_phi_estimates
         """
-        if algorithm in ['conjugate_priors', 'mle']:
+        if algorithm != 'hard_kmeans':
 
             biomarker_data = data_utils.preprocess_biomarker_data(data_we_have, new_order_dict)
 
-            # Compute stage_likelihoods_posteriors using current theta_phi_estimates
-            _, stage_likelihoods_posteriors = data_utils.compute_total_ln_likelihood_and_stage_likelihoods(
+            # --- Compute stage posteriors with OLD θ/φ ---
+            # Only diseased participants have stage likelihoods 
+            _, stage_post_old = data_utils.compute_total_ln_likelihood_and_stage_likelihoods(
                 participant_data,
                 non_diseased_ids,
                 current_theta_phi,
-                diseased_stages
+                current_pi,
+                disease_stages
             )
 
             # Compute theta_phi_estimates based on new_order
             new_theta_phi = data_utils.update_theta_phi_estimates(
                 biomarker_data,
                 current_theta_phi, # Fallback uses current state’s θ/φ
-                stage_likelihoods_posteriors,
-                diseased_stages,
+                stage_post_old,
+                disease_stages,
                 algorithm = algorithm,
                 prior_n = prior_n, 
                 prior_v = prior_v,
             )
 
             # Recompute new_ln_likelihood using the new theta_phi_estimates
-            new_ln_likelihood, _ = data_utils.compute_total_ln_likelihood_and_stage_likelihoods(
+            new_ln_likelihood, stage_post_new = data_utils.compute_total_ln_likelihood_and_stage_likelihoods(
                 participant_data,
                 non_diseased_ids,
                 new_theta_phi,
-                diseased_stages
+                current_pi,
+                disease_stages
             )
         else:
             # If hard kmeans, it will use `theta_phi_estimates = theta_phi_default.copy()` defined above
-            new_ln_likelihood, _ = data_utils.compute_total_ln_likelihood_and_stage_likelihoods(
+            new_ln_likelihood, stage_post_new = data_utils.compute_total_ln_likelihood_and_stage_likelihoods(
                 participant_data,
                 non_diseased_ids,
                 theta_phi_default,
-                diseased_stages
+                current_pi,
+                disease_stages
             )
 
         # Compute acceptance probability
@@ -122,6 +130,11 @@ def metropolis_hastings(
             if algorithm != 'hard_kmeans':
                 current_theta_phi = new_theta_phi
             acceptance_count += 1
+
+            stage_counts = np.zeros(n_disease_stages)
+            for p, stage_probs in stage_post_new.items():
+                stage_counts += stage_probs # Soft counts 
+            current_pi = np.random.dirichlet(alpha_prior + stage_counts)
 
         all_accepted_orders.append(current_order_dict.copy())
 

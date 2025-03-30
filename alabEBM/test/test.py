@@ -15,10 +15,10 @@ biomarker_order_json = get_biomarker_order_path()
 with open(biomarker_order_json, 'r') as file:
     biomarker_order = json.load(file)
 
-for algorithm in ['conjugate_priors']:
+for algorithm in ['hard_kmeans', 'mle', 'conjugate_priors', 'em']:
     for data_file in data_files:
         results = run_ebm(
-            data_file= f"{data_dir}/{data_file}",
+            data_file= os.path.join(data_dir, data_file),
             algorithm=algorithm,
             n_iter=200,
             n_shuffle=2,

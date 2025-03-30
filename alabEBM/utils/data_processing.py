@@ -148,11 +148,43 @@ def estimate_params_exact(
 
     return mu_estimation, std_estimation
 
+def compute_theta_phi_biomarker_em(
+    participants: np.ndarray,
+    measurements: np.ndarray,
+    diseased: np.ndarray,
+    stage_likelihoods_posteriors: Dict[int, np.ndarray],
+    disease_stages: np.ndarray,
+    curr_order: int,
+    ) -> Tuple[float, float, float, float]:
+    """ Obtain biomarker's parameters using soft kmeans
+    """
+
+    # Obtain two responsibilites
+    resp_affected = [
+        sum(stage_likelihoods_posteriors[p][disease_stages >= curr_order]) if is_diseased else 0.0
+        for p, is_diseased in zip(participants, diseased)
+    ]
+
+    resp_affected = np.array(resp_affected)
+    resp_nonaffected = 1 - resp_affected
+
+    sum_affected = max(np.sum(resp_affected), 1e-9)
+    sum_nonaffected = max(np.sum(resp_nonaffected), 1e-9)
+
+    # Weighted average
+    theta_mean = np.sum(resp_affected*measurements)/sum_affected
+    phi_mean = np.sum(resp_nonaffected*measurements)/sum_nonaffected
+
+    # Weighted STD
+    theta_std = np.sqrt(np.sum(resp_affected*(measurements - theta_mean)**2) / sum_affected)
+    phi_std = np.sqrt(np.sum(resp_nonaffected*(measurements - phi_mean)**2) / sum_nonaffected)
+    return theta_mean, theta_std, phi_mean, phi_std
+
 def update_theta_phi_estimates(
     biomarker_data: Dict[str, Tuple[int, np.ndarray, np.ndarray, bool]],
     theta_phi_current: Dict[str, Dict[str, float]], # Current state’s θ/φ
     stage_likelihoods_posteriors: Dict[int, np.ndarray],
-    diseased_stages:np.ndarray,
+    disease_stages:np.ndarray,
     algorithm: str,
     prior_n: float,    # Weak prior (not data-dependent)
     prior_v: float     # Weak prior (not data-dependent)
@@ -167,28 +199,33 @@ def update_theta_phi_estimates(
         curr_order, measurements, participants, diseased) in biomarker_data.items():
         dic = {'biomarker': biomarker}
         theta_phi_current_biomarker = theta_phi_current[biomarker]
-        affected_cluster, non_affected_cluster = obtain_affected_and_non_clusters(
+        if algorithm not in ['conjugate_priors', "mle", 'em']:
+            raise ValueError('Algorithm should be chosen among conjugate_priors, em, and mle! Check your spelling!')
+        if algorithm == 'em': 
+            theta_mean, theta_std, phi_mean, phi_std = compute_theta_phi_biomarker_em(
             participants,
             measurements,
             diseased,
             stage_likelihoods_posteriors,
-            diseased_stages,
+            disease_stages,
             curr_order,
-        )
-        if algorithm == 'conjugate_priors':
-            theta_mean, theta_std, phi_mean, phi_std = compute_theta_phi_biomarker_conjugate_priors(
-                affected_cluster, 
-                non_affected_cluster, 
-                theta_phi_current_biomarker,
-                prior_n,
-                prior_v
             )
-        elif algorithm == 'mle':
-            theta_mean, theta_std, phi_mean, phi_std = compute_theta_phi_biomarker_mle(
-                affected_cluster, non_affected_cluster)
         else:
-            raise ValueError('Algorithm can only either be conjugate_priors or mle! Check your spelling!')
-            
+            affected_cluster, non_affected_cluster = obtain_affected_and_non_clusters(
+                participants,
+                measurements,
+                diseased,
+                stage_likelihoods_posteriors,
+                disease_stages,
+                curr_order,
+            )
+            if algorithm == 'conjugate_priors':
+                theta_mean, theta_std, phi_mean, phi_std = compute_theta_phi_biomarker_conjugate_priors(
+                    affected_cluster, non_affected_cluster, theta_phi_current_biomarker, prior_n, prior_v)
+            else:
+                theta_mean, theta_std, phi_mean, phi_std = compute_theta_phi_biomarker_mle(
+                    affected_cluster, non_affected_cluster, theta_phi_current_biomarker)
+
         updated_params[biomarker] = {
             'theta_mean': theta_mean,
             'theta_std': theta_std,
@@ -202,7 +239,7 @@ def obtain_affected_and_non_clusters(
     measurements: np.ndarray,
     diseased: np.ndarray,
     stage_likelihoods_posteriors: Dict[int, np.ndarray],
-    diseased_stages: np.ndarray,
+    disease_stages: np.ndarray,
     curr_order: int,
     ) -> Tuple[List[float], List[float]]:
 
@@ -214,7 +251,7 @@ def obtain_affected_and_non_clusters(
         measurements (np.ndarray): Array of measurements for the biomarker.
         diseased (np.ndarray): Boolean array indicating whether each participant is diseased.
         stage_likelihoods_posteriors (Dict[int, np.ndarray]): Dictionary mapping participant IDs to their stage likelihoods.
-        diseased_stages (np.ndarray): Array of stages considered diseased.
+        disease_stages (np.ndarray): Array of stages considered diseased.
         curr_order (int): Current order of the biomarker.
 
     Returns:
@@ -232,8 +269,8 @@ def obtain_affected_and_non_clusters(
                 affected_cluster.append(m)
             else:
                 stage_likelihoods = stage_likelihoods_posteriors[p]
-                affected_prob = np.sum(stage_likelihoods[diseased_stages >= curr_order])
-                non_affected_prob = np.sum(stage_likelihoods[diseased_stages < curr_order])
+                affected_prob = np.sum(stage_likelihoods[disease_stages >= curr_order])
+                non_affected_prob = np.sum(stage_likelihoods[disease_stages < curr_order])
                 if affected_prob > non_affected_prob:
                     affected_cluster.append(m)
                 elif affected_prob < non_affected_prob:
@@ -299,7 +336,8 @@ def compute_theta_phi_biomarker_conjugate_priors(
 
 def compute_theta_phi_biomarker_mle(
     affected_cluster: List[float],
-    non_affected_cluster: List[float]
+    non_affected_cluster: List[float],
+    theta_phi_current_biomarker: Dict[str, float], # Current state’s θ/φ
     ) -> Tuple[float, float, float, float]:
     """
     maximum likelihood estimation (MLE)
@@ -315,11 +353,11 @@ def compute_theta_phi_biomarker_mle(
     """
     
     # Compute means and standard deviations
-    theta_mean = np.mean(affected_cluster) if affected_cluster else np.nan
-    theta_std = np.std(affected_cluster, ddof=1) if len(affected_cluster) >= 2 else np.nan
+    theta_mean = np.mean(affected_cluster) if affected_cluster else theta_phi_current_biomarker['theta_mean']
+    theta_std = np.std(affected_cluster, ddof=1) if len(affected_cluster) >= 2 else theta_phi_current_biomarker['theta_std']
     phi_mean = np.mean(
-        non_affected_cluster) if non_affected_cluster else np.nan
-    phi_std = np.std(non_affected_cluster, ddof=1) if len(non_affected_cluster) >=2 else np.nan
+        non_affected_cluster) if non_affected_cluster else theta_phi_current_biomarker['phi_mean']
+    phi_std = np.std(non_affected_cluster, ddof=1) if len(non_affected_cluster) >=2 else theta_phi_current_biomarker['phi_std']
     return theta_mean, theta_std, phi_mean, phi_std
 
 def preprocess_participant_data(
@@ -384,7 +422,8 @@ def compute_total_ln_likelihood_and_stage_likelihoods(
     participant_data: Dict[int, Tuple[np.ndarray, np.ndarray, np.ndarray]],
     non_diseased_ids: np.ndarray,
     theta_phi: Dict[str, Dict[str, float]],
-    diseased_stages: np.ndarray
+    current_pi: np.ndarray,
+    disease_stages: np.ndarray
     ) -> Tuple[float, Dict[int, np.ndarray]]:
     """Calculate the total log likelihood across all participants 
         and obtain stage_likelihoods_posteriors
@@ -392,7 +431,7 @@ def compute_total_ln_likelihood_and_stage_likelihoods(
     total_ln_likelihood = 0.0 
     # This is only for diseased participants
     stage_likelihoods_posteriors = {}
-    # num_diseased_stages = len(diseased_stages)
+    # num_disease_stages = len(disease_stages)
 
     for participant, (measurements, S_n, biomarkers) in participant_data.items():
         if participant in non_diseased_ids:
@@ -404,7 +443,8 @@ def compute_total_ln_likelihood_and_stage_likelihoods(
             ln_stage_likelihoods = np.array([
                 compute_ln_likelihood(
                     measurements, S_n, biomarkers, k_j = k_j, theta_phi=theta_phi
-                ) for k_j in diseased_stages
+                ) + np.log(current_pi[k_j-1])
+                for k_j in disease_stages
             ])
             # Use log-sum-exp trick for numerical stability
             max_ln_likelihood = np.max(ln_stage_likelihoods)
@@ -415,7 +455,7 @@ def compute_total_ln_likelihood_and_stage_likelihoods(
 
             # if likelihood_sum == 0:
             #     # Edge case: All stages have effectively zero likelihood
-            #     normalized_probs = np.ones(num_diseased_stages) / num_diseased_stages
+            #     normalized_probs = np.ones(num_disease_stages) / num_disease_stages
             #     ln_likelihood = np.log(sys.float_info.min)
             # else:
             # Normalize probabilities and compute marginal likelihood

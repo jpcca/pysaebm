@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "alabebm"
-version = "0.8.1"
+version = "0.8.9"
 description = "Implementation of event-based models for degenerative diseases."
 readme = "README.md"
 authors = [
