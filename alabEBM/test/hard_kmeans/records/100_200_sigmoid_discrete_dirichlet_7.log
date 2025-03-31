@@ -1,0 +1,13 @@
+2025-03-30 20:44:23,567 - INFO - Running hard kmeans for file: 100_200_sigmoid_discrete_dirichlet_7
+2025-03-30 20:44:23,568 - INFO - Number of biomarkers: 10
+2025-03-30 20:44:24,487 - INFO - Iteration 20/200, Acceptance Ratio: 45.00%, Log Likelihood: -5575.4137, Current Accepted Order: dict_values([6, 10, 4, 1, 2, 7, 9, 3, 8, 5]), 
+2025-03-30 20:44:24,718 - INFO - Iteration 40/200, Acceptance Ratio: 30.00%, Log Likelihood: -5558.7652, Current Accepted Order: dict_values([6, 10, 4, 1, 2, 8, 9, 3, 7, 5]), 
+2025-03-30 20:44:24,946 - INFO - Iteration 60/200, Acceptance Ratio: 23.33%, Log Likelihood: -5553.8977, Current Accepted Order: dict_values([6, 10, 4, 3, 1, 8, 9, 2, 7, 5]), 
+2025-03-30 20:44:25,176 - INFO - Iteration 80/200, Acceptance Ratio: 21.25%, Log Likelihood: -5532.5921, Current Accepted Order: dict_values([6, 10, 2, 3, 1, 9, 8, 4, 5, 7]), 
+2025-03-30 20:44:25,406 - INFO - Iteration 100/200, Acceptance Ratio: 18.00%, Log Likelihood: -5521.2483, Current Accepted Order: dict_values([5, 10, 2, 3, 1, 9, 8, 4, 6, 7]), 
+2025-03-30 20:44:25,639 - INFO - Iteration 120/200, Acceptance Ratio: 15.83%, Log Likelihood: -5515.4179, Current Accepted Order: dict_values([5, 10, 2, 4, 1, 9, 8, 3, 6, 7]), 
+2025-03-30 20:44:25,870 - INFO - Iteration 140/200, Acceptance Ratio: 13.57%, Log Likelihood: -5515.4179, Current Accepted Order: dict_values([5, 10, 2, 4, 1, 9, 8, 3, 6, 7]), 
+2025-03-30 20:44:26,099 - INFO - Iteration 160/200, Acceptance Ratio: 12.50%, Log Likelihood: -5509.2001, Current Accepted Order: dict_values([5, 10, 2, 4, 1, 7, 8, 3, 6, 9]), 
+2025-03-30 20:44:26,329 - INFO - Iteration 180/200, Acceptance Ratio: 11.67%, Log Likelihood: -5506.4628, Current Accepted Order: dict_values([5, 10, 3, 4, 1, 7, 8, 2, 6, 9]), 
+2025-03-30 20:44:26,559 - INFO - Iteration 200/200, Acceptance Ratio: 10.50%, Log Likelihood: -5506.4628, Current Accepted Order: dict_values([5, 10, 3, 4, 1, 7, 8, 2, 6, 9]), 
+2025-03-30 20:44:26,912 - INFO - Results saved to hard_kmeans/results/100_200_sigmoid_discrete_dirichlet_7_results.json

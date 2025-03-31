@@ -1,0 +1,13 @@
+2025-03-30 20:44:33,676 - INFO - Running hard kmeans for file: 100_200_sigmoid_discrete_dirichlet_9
+2025-03-30 20:44:33,677 - INFO - Number of biomarkers: 10
+2025-03-30 20:44:34,593 - INFO - Iteration 20/200, Acceptance Ratio: 45.00%, Log Likelihood: -5458.1566, Current Accepted Order: dict_values([10, 8, 3, 4, 2, 6, 7, 1, 5, 9]), 
+2025-03-30 20:44:34,831 - INFO - Iteration 40/200, Acceptance Ratio: 37.50%, Log Likelihood: -5356.9353, Current Accepted Order: dict_values([5, 6, 3, 4, 2, 9, 7, 1, 8, 10]), 
+2025-03-30 20:44:35,064 - INFO - Iteration 60/200, Acceptance Ratio: 26.67%, Log Likelihood: -5344.8907, Current Accepted Order: dict_values([5, 6, 3, 4, 2, 10, 7, 1, 8, 9]), 
+2025-03-30 20:44:35,296 - INFO - Iteration 80/200, Acceptance Ratio: 20.00%, Log Likelihood: -5344.8907, Current Accepted Order: dict_values([5, 6, 3, 4, 2, 10, 7, 1, 8, 9]), 
+2025-03-30 20:44:35,526 - INFO - Iteration 100/200, Acceptance Ratio: 16.00%, Log Likelihood: -5344.8907, Current Accepted Order: dict_values([5, 6, 3, 4, 2, 10, 7, 1, 8, 9]), 
+2025-03-30 20:44:35,763 - INFO - Iteration 120/200, Acceptance Ratio: 13.33%, Log Likelihood: -5344.8907, Current Accepted Order: dict_values([5, 6, 3, 4, 2, 10, 7, 1, 8, 9]), 
+2025-03-30 20:44:35,996 - INFO - Iteration 140/200, Acceptance Ratio: 11.43%, Log Likelihood: -5344.8907, Current Accepted Order: dict_values([5, 6, 3, 4, 2, 10, 7, 1, 8, 9]), 
+2025-03-30 20:44:36,226 - INFO - Iteration 160/200, Acceptance Ratio: 10.00%, Log Likelihood: -5344.8907, Current Accepted Order: dict_values([5, 6, 3, 4, 2, 10, 7, 1, 8, 9]), 
+2025-03-30 20:44:36,457 - INFO - Iteration 180/200, Acceptance Ratio: 8.89%, Log Likelihood: -5344.8907, Current Accepted Order: dict_values([5, 6, 3, 4, 2, 10, 7, 1, 8, 9]), 
+2025-03-30 20:44:36,752 - INFO - Iteration 200/200, Acceptance Ratio: 8.00%, Log Likelihood: -5344.8907, Current Accepted Order: dict_values([5, 6, 3, 4, 2, 10, 7, 1, 8, 9]), 
+2025-03-30 20:44:37,104 - INFO - Results saved to hard_kmeans/results/100_200_sigmoid_discrete_dirichlet_9_results.json

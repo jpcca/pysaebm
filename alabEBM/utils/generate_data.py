@@ -6,166 +6,176 @@ import os
 import scipy.stats as stats
 from collections import Counter 
 
-def generate_data_from_ebm(
+def generate_data(
+    framework: str,
+    params_file: str,
     n_participants: int,
-    biomarker_order: Dict[str, int],
-    real_theta_phi_file: str,
     healthy_ratio: float,
     output_dir: str,
     m: int,  # combstr_m
     seed: int,
-    stage_distribution: Optional[str] = 'dirichlet',
-    prefix: Optional[str] = None,  # Optional prefix
-    suffix: Optional[str] = None,   # Optional suffix,
-    keep_all_cols: Optional[bool] = False 
+    stage_distribution: Optional[str],
+    dirichlet_alpha: Optional[List[float]],
+    beta_dist_alpha: Optional[float],
+    beta_dist_beta: Optional[float],
+    prefix: Optional[str],
+    suffix: Optional[str],
+    keep_all_cols: Optional[bool]
 ) -> pd.DataFrame:
     """
     Simulate an Event-Based Model (EBM) for disease progression.
 
     Args:
+
+    framework (str): either 'discrete' or 'sigmoid'
+    params_file (str): Directory of the params.json 
     n_participants (int): Number of participants.
-    biomarker_order (Dict[str, int]): Biomarker names and their orders
-        in which each of them get affected by the disease.
-    real_theta_phi_file (str): Directory of a JSON file which contains 
-        theta and phi values for all biomarkers.
-        See real_theta_phi.json for example format.
-    output_dir (str): Directory where output files will be saved.
     healthy_ratio (float): Proportion of healthy participants out of n_participants.
-    seed (int): Seed for the random number generator for reproducibility.
-    stage_distribution (Optional[str]), either 'uniform' or 'dirichlet'
+    output_dir (str): Directory to save the generated datasets.
+    m (int): variant of this combination
+    seed (Optional[int]): Global seed for reproducibility. If None, a random seed is used.
+    stage_distribution (Optional[str]), chooose from "continuous_uniform", "continuous_beta",
+        "discrete_uniform", and "discrete_dirichlet"
+    dirichlet_alpha (Optional[List[float]]): the dirichlet distribution alpha vector. Default to be None
+    beta_dist_alpha (Optional[float] = 2.0): beta distribution for continuous stages generation
+    beta_dist_beta (Optional[float] = 5.0): beta distribution for continuous stages generation
     prefix (Optional[str]): Optional prefix of filename
     suffix (Optional[str]): Optional suffix of filename
-    keep_all_cols (Optional[bool]): if False, drop ['k_j', 'S_n', 'affected_or_not']
+    keep_all_cols (Optional[bool]): if False, drop ['k_j', 'order', 'affected']
 
     Returns:
     pd.DataFrame: A DataFrame with columns 'participant', "biomarker", 'measurement', 
-        'diseased', with or without ['k_j', 'S_n', 'affected_or_not']
+        'diseased', with or without ['k_j', 'order', 'affected']
     """
     # Parameter validation
     assert n_participants > 0, "Number of participants must be greater than 0."
     assert 0 <= healthy_ratio <= 1, "Healthy ratio must be between 0 and 1."
-    assert stage_distribution in ['dirichlet', 'uniform'], "stage_distribution must be either dirichlet or uniform!"
+    assert framework in ['sigmoid', 'discrete'], "framework must either sigmoid or discrete"
+    if framework == 'sigmoid':
+        assert stage_distribution in [
+            "continuous_uniform", "continuous_beta",
+            "discrete_uniform", "discrete_dirichlet"
+        ], f"Invalid stage distribution: {stage_distribution}"
+    else:
+        assert stage_distribution in [
+            "discrete_uniform", "discrete_dirichlet"
+        ], f"Invalid stage distribution: {stage_distribution}"
 
-    # Change dict to list 
-    biomarker_order = dict(sorted(biomarker_order.items(), key=lambda item:item[1]))
-    ordered_biomarkers = list(biomarker_order.keys())
-
-    # Set the seed for numpy's random number generator
     rng = np.random.default_rng(seed)
 
-    # Load theta and phi values from the JSON file
-    try:
-        with open(real_theta_phi_file) as f:
-            real_theta_phi = json.load(f)
-    except FileNotFoundError:
-        raise FileNotFoundError(f"File {real_theta_phi_file} not found")
-    except json.JSONDecodeError:
-        raise ValueError(
-            f"File {real_theta_phi_file} is not a valid JSON file.")
+    # Load parameters
+    with open(params_file) as f:
+        params = json.load(f)
 
-    n_biomarkers = len(ordered_biomarkers)
-    n_stages = n_biomarkers + 1
-    disease_stages = np.arange(1, n_biomarkers + 1)
-    n_diseased_stages = n_biomarkers
+    # Calculate max_stage from actual biomarker orders
+    orders = [v["order"] for v in params.values()]
+    max_stage = max(orders)
+    biomarkers = list(params.keys())
+    n_biomarkers = len(params)
 
+    # Generate disease status
     n_healthy = int(n_participants * healthy_ratio)
-    n_diseased = int(n_participants - n_healthy)
+    n_diseased = n_participants - n_healthy
 
-    if n_diseased > 0:
-        if stage_distribution == 'dirichlet':
-            # this output would be an array (of length n_biomarkers) of floats and this array sums up 1
-            # note that some of the probs in the array might be 0
-            stage_probs = rng.dirichlet(np.ones(n_biomarkers))
-        elif stage_distribution == 'uniform':
-            stage_probs = np.ones(n_biomarkers)/n_biomarkers
-        # this output would be an array of stages
-        # for example, counts = [3, 7, 0] which means 3 people in stage1, 7 in stage2, and 0 in stage3
-        # and the sum of this array would be n_diseased
-        counts = rng.multinomial(n_diseased, stage_probs)
-        diseased_stages = np.repeat(disease_stages, counts)
+    # ================================================================
+    # Core generation logic 
+    # ================================================================
+
+    if stage_distribution.startswith('continuous'):
+        if stage_distribution == 'continuous_uniform':
+            kjs = rng.uniform(0, max_stage + 1, size = n_diseased)
+        elif stage_distribution == 'continuous_beta':
+            # Generate Beta-distributed values on [0, 1]
+            raw = rng.beta(beta_dist_alpha, beta_dist_beta, size=n_diseased)
+            # Scale to disease timeline [0, N+1)
+            kjs = raw * (max_stage + 1)
     else:
-        diseased_stages = np.array([], dtype=int)
-
-    # Generate disease stages
-    kjs = np.concatenate([np.zeros(n_healthy, dtype=int), diseased_stages])
-    # shuffle so that it's not 0s first and then disease stages but all random
-    rng.shuffle(kjs)
-
-    print(Counter(kjs))
-
-    # Initiate biomarker measurement matrix (J participants x N biomarkers) with None
-    # X = np.full((n_participants, n_biomarkers), None, dtype=object)
-    X = np.empty((n_participants, n_biomarkers), dtype=object)
-
-    # Create distributions for each biomarker
-    theta_dist = {biomarker: stats.norm(
-        real_theta_phi[biomarker]['theta_mean'],
-        real_theta_phi[biomarker]['theta_std']
-    ) for biomarker in ordered_biomarkers}
-
-    phi_dist = {biomarker: stats.norm(
-        real_theta_phi[biomarker]['phi_mean'],
-        real_theta_phi[biomarker]['phi_std']
-    ) for biomarker in ordered_biomarkers}
-
-    # Populate the matrix with biomarker measurements
-    for j in range(n_participants):
-        for n, biomarker in enumerate(ordered_biomarkers):
-            # because for each j, we generate X[j, n] in the order of ordered_biomarkers,
-            # the final dataset will have this ordering as well.
-            k_j = kjs[j]
-            S_n = n + 1
-
-            # Assign biomarker values based on the participant's disease stage
-            # affected, or not_affected, is regarding the biomarker, not the participant
-            if k_j >= 1:
-                if k_j >= S_n:
-                    # rvs() is affected by np.random()
-                    X[j, n] = (
-                        j, biomarker, theta_dist[biomarker].rvs(random_state=rng), k_j, S_n, 'affected')
-                else:
-                    X[j, n] = (j, biomarker, phi_dist[biomarker].rvs(random_state=rng),
-                               k_j, S_n, 'not_affected')
-            # if the participant is healthy
-            else:
-                X[j, n] = (j, biomarker, phi_dist[biomarker].rvs(random_state=rng),
-                           k_j, S_n, 'not_affected')
-
-    df = pd.DataFrame(X, columns=ordered_biomarkers)
-    # make this dataframe wide to long
-    df_long = df.melt(var_name="Biomarker", value_name="Value")
-    data = df_long['Value'].apply(pd.Series)
-    data.columns = ['participant', "biomarker",
-                    'measurement', 'k_j', 'S_n', 'affected_or_not']
-
-    # biomarker_name_change_dic = dict(
-    #     zip(ordered_biomarkers, range(1, n_biomarkers + 1)))
-    data['diseased'] = data.apply(lambda row: row.k_j > 0, axis=1)
-    if not keep_all_cols:
-        data.drop(['k_j', 'S_n', 'affected_or_not'], axis=1, inplace=True)
-    # data['biomarker'] = data.apply(
-    #     lambda row: f"{row.biomarker} ({biomarker_name_change_dic[row.biomarker]})", axis=1)
-
-    filename = f"{int(healthy_ratio*n_participants)}_{n_participants}_{m}"
-    if prefix:
-        filename = f"{prefix}_{filename}"
-    if suffix:
-        filename = f"{filename}_{suffix}"
+        if stage_distribution == "discrete_uniform":
+            kjs = rng.choice(np.arange(1, max_stage + 1), size=n_diseased)
+        elif stage_distribution == "discrete_dirichlet":
+            dirichlet_alpha = dirichlet_alpha or [1.0] * max_stage
+            stage_probs = rng.dirichlet(dirichlet_alpha)
+            counts = rng.multinomial(n_diseased, stage_probs)
+            kjs = np.repeat(np.arange(1, max_stage + 1), counts)
     
-    output_path = os.path.join(output_dir, f"{filename}.csv")
-    data.to_csv(output_path, index=False)
-    print("Data generation done! Output saved to:", filename)
-    return data
+    all_kjs = np.concatenate([np.zeros(n_healthy), kjs])
+    all_diseased = all_kjs > 0 
+
+    # Shuffle participants
+    shuffle_idx = rng.permutation(n_participants)
+    all_kjs = all_kjs[shuffle_idx]
+    all_diseased = all_diseased[shuffle_idx]
+
+    # print(int(healthy_ratio*n_participants) == n_participants - sum(all_diseased))
+
+    # ================================================================
+    # Biomarker generation (same for all paradigms)
+    # ================================================================
+    data = []
+    for participant_id, (k_j, is_diseased) in enumerate(zip(all_kjs, all_diseased)):
+        for biomarker in biomarkers:
+            bm_params = params[biomarker]
+            xi_i = bm_params['order']
+            
+            # Base noise (β_j,i) from phi distribution
+            # Nonaffected biomarker
+            beta_ji = rng.normal(bm_params["phi_mean"], bm_params["phi_std"])
+
+            if framework == 'discrete':
+                if not is_diseased or k_j < xi_i:
+                    measurement = beta_ji
+                else:
+                    measurement = rng.normal(bm_params['theta_mean'], bm_params['theta_std'])
+            else:
+                if is_diseased:
+                    # Diseased: sigmoid progression + noise
+                    R_i = bm_params["R_i"]
+                    rho_i = bm_params["rho_i"]
+                    sigmoid_term = R_i / (1 + np.exp(-rho_i * (k_j - xi_i)))
+                    measurement = sigmoid_term + beta_ji
+                else:
+                    # Healthy: pure noise (no disease effect)
+                    measurement = beta_ji
+            
+            if keep_all_cols:
+                data.append({
+                    "participant": participant_id,
+                    "biomarker": biomarker,
+                    "measurement": measurement,
+                    "diseased": is_diseased,
+                    "order": xi_i,
+                    "k_j": k_j,
+                    "affected": k_j >= xi_i
+                })
+            else:
+                data.append({
+                    "participant": participant_id,
+                    "biomarker": biomarker,
+                    "measurement": measurement,
+                    "diseased": is_diseased,
+                })
+    
+    # Save to CSV
+    df = pd.DataFrame(data)
+    filename = f"{int(healthy_ratio*n_participants)}_{n_participants}_{framework}_{stage_distribution}_{m}"
+    # filename = f"{stage_distribution}_n{n_participants}_h{healthy_ratio}_s{seed}"
+    if prefix: filename = f"{prefix}_{filename}"
+    if suffix: filename = f"{filename}_{suffix}"
+    df.to_csv(os.path.join(output_dir, f"{filename}.csv"), index=False)
+    return df
 
 def generate(
-    biomarker_order: Dict[str, int],
-    real_theta_phi_file: str,
-    js: List[int],
-    rs: List[float],
-    num_of_datasets_per_combination: int,
+    framework: str = 'discrete', # either 'discrete' or 'sigmoid'
+    params_file: str = 'params.json',
+    js: List[int] = [50, 200, 500],
+    rs: List[float] = [0.1, 0.25, 0.5, 0.75, 0.9],
+    num_of_datasets_per_combination: int = 50,
     output_dir: str = 'data',
     seed: Optional[int] = None,
-    stage_distribution: Optional[str] = 'dirichlet',
+    stage_distribution: Optional[str] = 'discrete_dirichlet',
+    dirichlet_alpha: Optional[List[float]] = None,
+    beta_dist_alpha: Optional[float] = 2.0, # beta distribution for continuous stages generation
+    beta_dist_beta: Optional[float] = 5.0, # beta distribution for continuous stages generation
     prefix: Optional[str] = None,
     suffix: Optional[str] = None,
     keep_all_cols: Optional[bool] = False 
@@ -174,21 +184,25 @@ def generate(
     Generates datasets for multiple combinations of participants, healthy ratios, and datasets.
 
     Args:
-    biomarker_order (Dict[str, int]): Biomarker names and their orders
-    real_theta_phi_file (str): Path to the JSON file containing theta and phi values.
+    framework (str): either 'discrete' or 'sigmoid'
+    params_file (str): Directory of the params.json 
     js (List[int]): List of numbers of participants.
     rs (List[float]): List of healthy ratios.
     num_of_datasets_per_combination (int): Number of datasets to generate per combination.
     output_dir (str): Directory to save the generated datasets.
     seed (Optional[int]): Global seed for reproducibility. If None, a random seed is used.
-    stage_distribution (Optional[str]), either 'uniform' or 'dirichlet'
+    stage_distribution (Optional[str]), chooose from "continuous_uniform", "continuous_beta",
+        "discrete_uniform", and "discrete_dirichlet"
+    dirichlet_alpha (Optional[List[float]]): the dirichlet distribution alpha vector. Default to be None
+    beta_dist_alpha (Optional[float] = 2.0): beta distribution for continuous stages generation
+    beta_dist_beta (Optional[float] = 5.0): beta distribution for continuous stages generation
     prefix (Optional[str]): Optional prefix of filename
     suffix (Optional[str]): Optional suffix of filename
-    keep_all_cols (Optional[bool]): if False, drop ['k_j', 'S_n', 'affected_or_not']
+    keep_all_cols (Optional[bool]): if False, drop ['k_j', 'order', 'affected']
     """
     # Ensure output directory exists
-    if not os.path.exists(output_dir):
-        os.makedirs(output_dir)
+    # Won't clear the folder if it already exists
+    os.makedirs(output_dir, exist_ok=True)
 
     if seed is None:
         seed = np.random.SeedSequence().entropy 
@@ -196,17 +210,20 @@ def generate(
 
     for j in js:
         for r in rs:
-            for m in range(num_of_datasets_per_combination):
+            for variant in range(num_of_datasets_per_combination):
                 sub_seed = rng.integers(0, 1_000_000)
-                generate_data_from_ebm(
+                generate_data(
+                    framework=framework,
+                    params_file=params_file,
                     n_participants=j,
-                    biomarker_order=biomarker_order,
-                    real_theta_phi_file=real_theta_phi_file,
                     healthy_ratio=r,
                     output_dir=output_dir,
-                    m=m,
+                    m=variant,
                     seed=sub_seed,
                     stage_distribution=stage_distribution,
+                    dirichlet_alpha = dirichlet_alpha,
+                    beta_dist_alpha=beta_dist_alpha,
+                    beta_dist_beta=beta_dist_beta,
                     prefix=prefix,
                     suffix=suffix,
                     keep_all_cols = keep_all_cols

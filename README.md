@@ -58,6 +58,11 @@ pip install alabebm
     - Change data filename from 50|100_1 to 50_100_1. 
     - Modified the `mle` algorithm to make sure the output does not contain `np.nan` (by using the fallback).
 
+- 2025-03-30 (V 0.9.2)
+    - Completed changed `generate_data.py`. Now incorporates the modified data generation model based on DEBM2019.
+    - Rank the original order by the value (ascending), if original order exists. 
+    - Able to skip saving traceplots and/or heatmaps.
+
 ## Generate Random Data
 
 ```py

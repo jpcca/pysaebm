@@ -1,0 +1,13 @@
+2025-03-30 20:44:20,164 - INFO - Running hard kmeans for file: 100_200_sigmoid_discrete_dirichlet_5
+2025-03-30 20:44:20,165 - INFO - Number of biomarkers: 10
+2025-03-30 20:44:21,095 - INFO - Iteration 20/200, Acceptance Ratio: 35.00%, Log Likelihood: -5562.7112, Current Accepted Order: dict_values([6, 8, 1, 4, 2, 10, 7, 5, 3, 9]), 
+2025-03-30 20:44:21,327 - INFO - Iteration 40/200, Acceptance Ratio: 22.50%, Log Likelihood: -5542.5119, Current Accepted Order: dict_values([7, 8, 1, 5, 2, 10, 6, 4, 3, 9]), 
+2025-03-30 20:44:21,557 - INFO - Iteration 60/200, Acceptance Ratio: 18.33%, Log Likelihood: -5534.9744, Current Accepted Order: dict_values([7, 8, 1, 5, 2, 6, 10, 3, 4, 9]), 
+2025-03-30 20:44:21,786 - INFO - Iteration 80/200, Acceptance Ratio: 18.75%, Log Likelihood: -5479.0229, Current Accepted Order: dict_values([7, 8, 1, 5, 3, 6, 4, 2, 10, 9]), 
+2025-03-30 20:44:22,015 - INFO - Iteration 100/200, Acceptance Ratio: 16.00%, Log Likelihood: -5460.1763, Current Accepted Order: dict_values([7, 8, 1, 5, 3, 4, 6, 2, 10, 9]), 
+2025-03-30 20:44:22,245 - INFO - Iteration 120/200, Acceptance Ratio: 13.33%, Log Likelihood: -5460.1763, Current Accepted Order: dict_values([7, 8, 1, 5, 3, 4, 6, 2, 10, 9]), 
+2025-03-30 20:44:22,473 - INFO - Iteration 140/200, Acceptance Ratio: 12.14%, Log Likelihood: -5460.2042, Current Accepted Order: dict_values([8, 7, 1, 5, 3, 4, 6, 2, 10, 9]), 
+2025-03-30 20:44:22,702 - INFO - Iteration 160/200, Acceptance Ratio: 11.25%, Log Likelihood: -5457.0342, Current Accepted Order: dict_values([7, 8, 1, 5, 3, 4, 6, 2, 10, 9]), 
+2025-03-30 20:44:22,931 - INFO - Iteration 180/200, Acceptance Ratio: 10.00%, Log Likelihood: -5457.0342, Current Accepted Order: dict_values([7, 8, 1, 5, 3, 4, 6, 2, 10, 9]), 
+2025-03-30 20:44:23,160 - INFO - Iteration 200/200, Acceptance Ratio: 9.00%, Log Likelihood: -5457.0342, Current Accepted Order: dict_values([7, 8, 1, 5, 3, 4, 6, 2, 10, 9]), 
+2025-03-30 20:44:23,566 - INFO - Results saved to hard_kmeans/results/100_200_sigmoid_discrete_dirichlet_5_results.json

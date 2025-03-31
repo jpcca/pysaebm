@@ -25,6 +25,8 @@ def run_ebm(
     correct_ordering: Optional[Dict[str, int]] = None,
     plot_title_detail: Optional[str] = "",
     fname_prefix: Optional[str] = "",
+    skip_heatmap: Optional[bool] = False,
+    skip_traceplot: Optional[bool] = False,
 ) -> Dict[str, float]:
     """
     Run the metropolis hastings algorithm and save results 
@@ -40,6 +42,8 @@ def run_ebm(
         plot_title_detail (Optional[str]): optional string to add to plot title. 
         fname_prefix (Optional[str]): the prefix of heatmap, traceplot, results.json, and logs file, e.g., 5_50_0_heatmap_conjugate_priors.png
             In the example, there are no prefix strings. 
+        skip_heatmap (Optional[bool]): whether to save heatmaps. True if want to save space.
+        skip_traceplot (Optional[bool]): whether to save traceplots. True if want to save space.
 
     Returns:
         Dict[str, float]: Results including Kendall's tau and p-value.
@@ -102,7 +106,6 @@ def run_ebm(
     if correct_ordering:
         # Sort both dicts by the key to make sure they are comparable
         correct_ordering = dict(sorted(correct_ordering.items()))
-        original_order = correct_ordering.copy()
         tau2, p_value2 = kendalltau(
             list(order_with_higest_ll.values()), 
             list(correct_ordering.values()))
@@ -128,32 +131,38 @@ def run_ebm(
         raise
 
     # Save heatmap
-    try:
-        save_heatmap(
-            accepted_order_dicts,
-            burn_in,
-            thinning,
-            folder_name=heatmap_folder,
-            file_name=f"{fname_prefix}{fname}_heatmap_{algorithm}",
-            title=f"Heatmap of {fname_prefix}{fname} Using {algorithm}, {plot_title_detail}",
-            best_order = most_likely_order_dic
-        )
-    except Exception as e:
-        logging.error(f"Error generating heatmap: {e}")
-        raise
+    if not skip_heatmap:
+        try:
+            save_heatmap(
+                accepted_order_dicts,
+                burn_in,
+                thinning,
+                folder_name=heatmap_folder,
+                file_name=f"{fname_prefix}{fname}_heatmap_{algorithm}",
+                title=f"Heatmap of {fname_prefix}{fname} Using {algorithm}, {plot_title_detail}",
+                best_order = most_likely_order_dic
+            )
+        except Exception as e:
+            logging.error(f"Error generating heatmap: {e}")
+            raise
 
     # Save trace plot
-    try:
-        save_traceplot(
-            log_likelihoods, 
-            folder_name = traceplot_folder, 
-            file_name = f"{fname_prefix}{fname}_traceplot_{algorithm}",
-            title = f"Traceplot of Log Likelihoods" 
-        )
-    except Exception as e:
-        logging.error(f"Error generating trace plot: {e}")
-        raise 
+    if not skip_traceplot:
+        try:
+            save_traceplot(
+                log_likelihoods, 
+                folder_name = traceplot_folder, 
+                file_name = f"{fname_prefix}{fname}_traceplot_{algorithm}",
+                title = f"Traceplot of Log Likelihoods" 
+            )
+        except Exception as e:
+            logging.error(f"Error generating trace plot: {e}")
+            raise 
 
+    if correct_ordering:
+        original_order = dict(sorted(correct_ordering.items(), key=lambda item:item[1]))
+    else:
+        original_order = correct_ordering
     # Save results 
     results = {
         "n_iter": n_iter,

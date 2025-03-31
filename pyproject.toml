@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "alabebm"
-version = "0.8.9"
+version = "0.9.2"
 description = "Implementation of event-based models for degenerative diseases."
 readme = "README.md"
 authors = [
@@ -35,4 +35,4 @@ Homepage = "https://github.com/hongtaoh/alab-ebm"
 include-package-data = true
 
 [tool.setuptools.package-data]
-"alabebm" = ["data/samples/*.csv", "data/real_theta_phi.json", "data/biomarker_order.json"]
+"alabebm" = ["data/samples/*.csv", "data/params.json"]
