@@ -1,0 +1,13 @@
+2025-03-31 22:02:48,488 - INFO - Running conjugate priors for file: 50_200_sigmoid_discrete_uniform_8
+2025-03-31 22:02:48,489 - INFO - Number of biomarkers: 10
+2025-03-31 22:02:49,732 - INFO - Iteration 20/200, Acceptance Ratio: 25.00%, Log Likelihood: -4855.4249, Current Accepted Order: dict_values([6, 7, 2, 5, 4, 9, 8, 3, 10, 1]), 
+2025-03-31 22:02:50,368 - INFO - Iteration 40/200, Acceptance Ratio: 12.50%, Log Likelihood: -4855.4249, Current Accepted Order: dict_values([6, 7, 2, 5, 4, 9, 8, 3, 10, 1]), 
+2025-03-31 22:02:51,020 - INFO - Iteration 60/200, Acceptance Ratio: 11.67%, Log Likelihood: -4848.2770, Current Accepted Order: dict_values([6, 7, 5, 2, 1, 9, 8, 3, 10, 4]), 
+2025-03-31 22:02:51,662 - INFO - Iteration 80/200, Acceptance Ratio: 8.75%, Log Likelihood: -4848.2770, Current Accepted Order: dict_values([6, 7, 5, 2, 1, 9, 8, 3, 10, 4]), 
+2025-03-31 22:02:52,298 - INFO - Iteration 100/200, Acceptance Ratio: 11.00%, Log Likelihood: -4843.8216, Current Accepted Order: dict_values([6, 7, 2, 5, 1, 10, 8, 3, 9, 4]), 
+2025-03-31 22:02:52,933 - INFO - Iteration 120/200, Acceptance Ratio: 9.17%, Log Likelihood: -4843.8216, Current Accepted Order: dict_values([6, 7, 2, 5, 1, 10, 8, 3, 9, 4]), 
+2025-03-31 22:02:53,568 - INFO - Iteration 140/200, Acceptance Ratio: 9.29%, Log Likelihood: -4845.4884, Current Accepted Order: dict_values([6, 7, 3, 5, 1, 10, 8, 4, 9, 2]), 
+2025-03-31 22:02:54,202 - INFO - Iteration 160/200, Acceptance Ratio: 8.75%, Log Likelihood: -4842.4348, Current Accepted Order: dict_values([6, 7, 5, 3, 1, 10, 8, 4, 9, 2]), 
+2025-03-31 22:02:54,835 - INFO - Iteration 180/200, Acceptance Ratio: 9.44%, Log Likelihood: -4835.0346, Current Accepted Order: dict_values([6, 7, 4, 5, 1, 10, 8, 2, 9, 3]), 
+2025-03-31 22:02:55,470 - INFO - Iteration 200/200, Acceptance Ratio: 8.50%, Log Likelihood: -4835.0346, Current Accepted Order: dict_values([6, 7, 4, 5, 1, 10, 8, 2, 9, 3]), 
+2025-03-31 22:02:55,476 - INFO - Results saved to conjugate_priors/results/50_200_sigmoid_discrete_uniform_8_results.json

@@ -1,0 +1,109 @@
+{
+    "n_iter": 200,
+    "n_shuffle": 2,
+    "burn_in": 100,
+    "thinning": 10,
+    "most_likely_order": {
+        "HIP-FCI": 1,
+        "FUS-FCI": 2,
+        "PCC-FCI": 3,
+        "AB": 4,
+        "AVLT-Sum": 5,
+        "MMSE": 6,
+        "ADAS": 7,
+        "P-Tau": 8,
+        "HIP-GMI": 9,
+        "FUS-GMI": 10
+    },
+    "kendalls_tau": 0.37777777777777777,
+    "p_value": 0.1557418430335097,
+    "original_order": {
+        "HIP-FCI": 1,
+        "PCC-FCI": 2,
+        "AB": 3,
+        "P-Tau": 4,
+        "MMSE": 5,
+        "ADAS": 6,
+        "HIP-GMI": 7,
+        "AVLT-Sum": 8,
+        "FUS-GMI": 9,
+        "FUS-FCI": 10
+    },
+    "order_with_higest_ll": {
+        "HIP-FCI": 1,
+        "FUS-FCI": 2,
+        "PCC-FCI": 3,
+        "AB": 4,
+        "AVLT-Sum": 5,
+        "MMSE": 6,
+        "ADAS": 7,
+        "HIP-GMI": 8,
+        "P-Tau": 9,
+        "FUS-GMI": 10
+    },
+    "kendalls_tau2": 0.3333333333333333,
+    "p_value2": 0.21637345679012346,
+    "final_theta_phi_params": {
+        "AB": {
+            "theta_mean": 160.99857389007946,
+            "theta_std": 44.92160467322988,
+            "phi_mean": 234.64948259856422,
+            "phi_std": 48.10255983241058
+        },
+        "ADAS": {
+            "theta_mean": -15.43637822644807,
+            "theta_std": 4.470726800162587,
+            "phi_mean": -6.205759721952405,
+            "phi_std": 1.3773056632478515
+        },
+        "AVLT-Sum": {
+            "theta_mean": 31.57399757023548,
+            "theta_std": 16.092654922194004,
+            "phi_mean": 42.853143523283244,
+            "phi_std": 14.212853532819262
+        },
+        "FUS-FCI": {
+            "theta_mean": -11.588472831390993,
+            "theta_std": 3.02394875679568,
+            "phi_mean": -10.119865357907564,
+            "phi_std": 3.1361470205058413
+        },
+        "FUS-GMI": {
+            "theta_mean": 0.7112184156852872,
+            "theta_std": 0.0023232978686921813,
+            "phi_mean": 0.5876766495856974,
+            "phi_std": 0.07249404330625199
+        },
+        "HIP-FCI": {
+            "theta_mean": -4.417404918099822,
+            "theta_std": 2.4383702811107955,
+            "phi_mean": 5.187152372562348,
+            "phi_std": 1.2769351113760805
+        },
+        "HIP-GMI": {
+            "theta_mean": 0.3447917897835513,
+            "theta_std": 0.23708855450449945,
+            "phi_mean": 0.4305721621394423,
+            "phi_std": 0.23886974646336148
+        },
+        "MMSE": {
+            "theta_mean": 22.86477798474245,
+            "theta_std": 1.3415230262466211,
+            "phi_mean": 27.977760260874092,
+            "phi_std": 0.6940612226406113
+        },
+        "P-Tau": {
+            "theta_mean": -52.46260353657666,
+            "theta_std": 13.782350525274001,
+            "phi_mean": -25.999384433187082,
+            "phi_std": 15.855257014681385
+        },
+        "PCC-FCI": {
+            "theta_mean": 4.389478165384742,
+            "theta_std": 3.628912575577496,
+            "phi_mean": 11.978786180004782,
+            "phi_std": 3.5129284754239296
+        }
+    },
+    "stage_likelihood_posterior": {
+        "1": 

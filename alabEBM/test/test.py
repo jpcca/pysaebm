@@ -25,9 +25,11 @@ for algorithm in ['hard_kmeans', 'mle', 'conjugate_priors', 'em']:
         results = run_ebm(
             data_file= os.path.join(data_dir, data_file),
             algorithm=algorithm,
-            n_iter=2000,
+            n_iter=200,
             n_shuffle=2,
-            burn_in=1000,
+            burn_in=100,
             thinning=10,
-            correct_ordering=correct_ordering
+            correct_ordering=correct_ordering,
+            skip_heatmap=True,
+            skip_traceplot=True
         )

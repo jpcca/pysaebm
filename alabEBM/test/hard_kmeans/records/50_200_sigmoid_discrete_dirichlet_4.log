@@ -1,0 +1,13 @@
+2025-03-31 21:45:06,941 - INFO - Running hard kmeans for file: 50_200_sigmoid_discrete_dirichlet_4
+2025-03-31 21:45:06,944 - INFO - Number of biomarkers: 10
+2025-03-31 21:45:07,922 - INFO - Iteration 20/200, Acceptance Ratio: 40.00%, Log Likelihood: -5381.7590, Current Accepted Order: dict_values([6, 5, 3, 4, 1, 7, 8, 9, 2, 10]), 
+2025-03-31 21:45:08,224 - INFO - Iteration 40/200, Acceptance Ratio: 27.50%, Log Likelihood: -5269.6618, Current Accepted Order: dict_values([6, 5, 3, 4, 1, 10, 9, 2, 8, 7]), 
+2025-03-31 21:45:08,560 - INFO - Iteration 60/200, Acceptance Ratio: 20.00%, Log Likelihood: -5263.5070, Current Accepted Order: dict_values([6, 5, 3, 4, 1, 10, 9, 2, 7, 8]), 
+2025-03-31 21:45:08,859 - INFO - Iteration 80/200, Acceptance Ratio: 16.25%, Log Likelihood: -5259.0080, Current Accepted Order: dict_values([6, 5, 2, 4, 1, 10, 9, 3, 7, 8]), 
+2025-03-31 21:45:09,154 - INFO - Iteration 100/200, Acceptance Ratio: 15.00%, Log Likelihood: -5255.6211, Current Accepted Order: dict_values([5, 6, 3, 4, 1, 10, 9, 2, 7, 8]), 
+2025-03-31 21:45:09,448 - INFO - Iteration 120/200, Acceptance Ratio: 13.33%, Log Likelihood: -5255.8317, Current Accepted Order: dict_values([5, 6, 3, 4, 1, 9, 10, 2, 7, 8]), 
+2025-03-31 21:45:09,742 - INFO - Iteration 140/200, Acceptance Ratio: 12.14%, Log Likelihood: -5248.6651, Current Accepted Order: dict_values([5, 6, 3, 4, 1, 10, 9, 2, 7, 8]), 
+2025-03-31 21:45:10,036 - INFO - Iteration 160/200, Acceptance Ratio: 10.62%, Log Likelihood: -5248.6651, Current Accepted Order: dict_values([5, 6, 3, 4, 1, 10, 9, 2, 7, 8]), 
+2025-03-31 21:45:10,331 - INFO - Iteration 180/200, Acceptance Ratio: 9.44%, Log Likelihood: -5248.6651, Current Accepted Order: dict_values([5, 6, 3, 4, 1, 10, 9, 2, 7, 8]), 
+2025-03-31 21:45:10,629 - INFO - Iteration 200/200, Acceptance Ratio: 8.50%, Log Likelihood: -5248.6651, Current Accepted Order: dict_values([5, 6, 3, 4, 1, 10, 9, 2, 7, 8]), 
+2025-03-31 21:45:10,633 - INFO - Results saved to hard_kmeans/results/50_200_sigmoid_discrete_dirichlet_4_results.json

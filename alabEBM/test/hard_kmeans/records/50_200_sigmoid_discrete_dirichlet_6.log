@@ -1,0 +1,4 @@
+2025-03-31 21:45:32,805 - INFO - Running hard kmeans for file: 50_200_sigmoid_discrete_dirichlet_6
+2025-03-31 21:45:32,807 - INFO - Number of biomarkers: 10
+2025-03-31 21:45:33,728 - INFO - Iteration 20/200, Acceptance Ratio: 55.00%, Log Likelihood: -5515.2685, Current Accepted Order: dict_values([7, 10, 8, 5, 1, 4, 6, 2, 9, 3]), 
+2025-03-31 21:45:34,026 - INFO - Iteration 40/200, Acceptance Ratio: 32.50%, Log Likelihood: -5506.3499, Current Accepted Order: dict_values([8, 10, 7, 5, 1, 4, 6, 3, 9, 2]), 

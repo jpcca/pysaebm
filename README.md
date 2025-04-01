@@ -63,6 +63,9 @@ pip install alabebm
     - Rank the original order by the value (ascending), if original order exists. 
     - Able to skip saving traceplots and/or heatmaps.
 
+- 2025-03-31 (V 0.9.4)
+    - Able to store final theta phi estimates and the final stage likelihood posteior to results.json
+
 ## Generate Random Data
 
 ```py

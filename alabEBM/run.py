@@ -17,7 +17,7 @@ from alabebm.algorithms import metropolis_hastings
 
 def run_ebm(
     data_file: str,
-    algorithm: str, 
+    algorithm: str = 'conjugate_priors', 
     n_iter: int = 2000,
     n_shuffle: int = 2,
     burn_in: int = 1000,
@@ -27,13 +27,15 @@ def run_ebm(
     fname_prefix: Optional[str] = "",
     skip_heatmap: Optional[bool] = False,
     skip_traceplot: Optional[bool] = False,
+    prior_n: float = 1.0,    # Strength of the prior belief in prior estimate of the mean (μ), set to 1 as default
+    prior_v: float = 1.0     # Prior degrees of freedom, influencing the certainty of prior estimate of the variance (σ²), set to 1 as default
 ) -> Dict[str, float]:
     """
     Run the metropolis hastings algorithm and save results 
 
     Args:
         data_file (str): Path to the input CSV file with biomarker data.
-        algorithm (str): Choose from 'hard_kmeans', 'mle', and 'conjugate_priors'.
+        algorithm (str): Choose from 'hard_kmeans', 'mle', 'me', and 'conjugate_priors' (default).
         n_iter (int): Number of iterations for the Metropolis-Hastings algorithm.
         n_shuffle (int): Number of shuffles per iteration.
         burn_in (int): Burn-in period for the MCMC chain.
@@ -68,8 +70,10 @@ def run_ebm(
     results_folder = os.path.join(output_dir, "results")
     logs_folder = os.path.join(output_dir, "records")
 
-    os.makedirs(heatmap_folder, exist_ok=True)
-    os.makedirs(traceplot_folder, exist_ok=True)
+    if not skip_heatmap:
+        os.makedirs(heatmap_folder, exist_ok=True)
+    if not skip_traceplot:
+        os.makedirs(traceplot_folder, exist_ok=True)
     os.makedirs(results_folder, exist_ok=True)
     os.makedirs(logs_folder, exist_ok=True)
 
@@ -94,7 +98,8 @@ def run_ebm(
 
     # Run the Metropolis-Hastings algorithm
     try:
-        accepted_order_dicts, log_likelihoods = metropolis_hastings(data, n_iter, n_shuffle, algorithm)
+        accepted_order_dicts, log_likelihoods, final_theta_phi_params, final_stage_post = metropolis_hastings(
+            data, n_iter, n_shuffle, algorithm, prior_n=prior_n, prior_v=prior_v)
     except Exception as e:
         logging.error(f"Error in Metropolis-Hastings algorithm: {e}")
         raise
@@ -175,7 +180,9 @@ def run_ebm(
         "original_order": original_order,
         "order_with_higest_ll": {k: int(v) for k, v in sorted(order_with_higest_ll.items(), key=lambda item: item[1])},
         "kendalls_tau2": tau2,
-        "p_value2": p_value2
+        "p_value2": p_value2,
+        "final_theta_phi_params": final_theta_phi_params,
+        "stage_likelihood_posterior": {str(k): v.tolist() for k, v in final_stage_post.items()}
     }
     try:
         with open(f"{results_folder}/{fname_prefix}{fname}_results.json", "w") as f:

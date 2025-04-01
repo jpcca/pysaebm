@@ -1,0 +1,13 @@
+2025-03-31 22:02:27,121 - INFO - Running conjugate priors for file: 50_200_sigmoid_discrete_uniform_6
+2025-03-31 22:02:27,123 - INFO - Number of biomarkers: 10
+2025-03-31 22:02:28,384 - INFO - Iteration 20/200, Acceptance Ratio: 70.00%, Log Likelihood: -4847.1387, Current Accepted Order: dict_values([6, 3, 5, 4, 2, 8, 9, 1, 7, 10]), 
+2025-03-31 22:02:29,024 - INFO - Iteration 40/200, Acceptance Ratio: 60.00%, Log Likelihood: -4817.4561, Current Accepted Order: dict_values([8, 9, 4, 10, 2, 6, 1, 3, 5, 7]), 
+2025-03-31 22:02:29,696 - INFO - Iteration 60/200, Acceptance Ratio: 46.67%, Log Likelihood: -4808.5469, Current Accepted Order: dict_values([8, 9, 5, 10, 1, 6, 4, 3, 7, 2]), 
+2025-03-31 22:02:30,342 - INFO - Iteration 80/200, Acceptance Ratio: 37.50%, Log Likelihood: -4808.9192, Current Accepted Order: dict_values([8, 10, 5, 9, 1, 6, 7, 3, 4, 2]), 
+2025-03-31 22:02:30,983 - INFO - Iteration 100/200, Acceptance Ratio: 32.00%, Log Likelihood: -4811.6023, Current Accepted Order: dict_values([9, 10, 5, 8, 1, 6, 4, 3, 7, 2]), 
+2025-03-31 22:02:31,623 - INFO - Iteration 120/200, Acceptance Ratio: 27.50%, Log Likelihood: -4812.4579, Current Accepted Order: dict_values([8, 10, 5, 9, 1, 6, 4, 3, 7, 2]), 
+2025-03-31 22:02:32,263 - INFO - Iteration 140/200, Acceptance Ratio: 26.43%, Log Likelihood: -4809.6348, Current Accepted Order: dict_values([8, 9, 5, 10, 1, 4, 6, 3, 7, 2]), 
+2025-03-31 22:02:32,905 - INFO - Iteration 160/200, Acceptance Ratio: 23.12%, Log Likelihood: -4809.6348, Current Accepted Order: dict_values([8, 9, 5, 10, 1, 4, 6, 3, 7, 2]), 
+2025-03-31 22:02:33,550 - INFO - Iteration 180/200, Acceptance Ratio: 20.56%, Log Likelihood: -4809.6348, Current Accepted Order: dict_values([8, 9, 5, 10, 1, 4, 6, 3, 7, 2]), 
+2025-03-31 22:02:34,193 - INFO - Iteration 200/200, Acceptance Ratio: 18.50%, Log Likelihood: -4809.6348, Current Accepted Order: dict_values([8, 9, 5, 10, 1, 4, 6, 3, 7, 2]), 
+2025-03-31 22:02:34,199 - INFO - Results saved to conjugate_priors/results/50_200_sigmoid_discrete_uniform_6_results.json

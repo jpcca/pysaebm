@@ -1,0 +1,13 @@
+2025-03-31 21:45:25,553 - INFO - Running hard kmeans for file: 50_200_sigmoid_discrete_uniform_3
+2025-03-31 21:45:25,555 - INFO - Number of biomarkers: 10
+2025-03-31 21:45:26,479 - INFO - Iteration 20/200, Acceptance Ratio: 55.00%, Log Likelihood: -5434.6443, Current Accepted Order: dict_values([9, 8, 4, 6, 3, 7, 5, 2, 10, 1]), 
+2025-03-31 21:45:26,777 - INFO - Iteration 40/200, Acceptance Ratio: 32.50%, Log Likelihood: -5420.8722, Current Accepted Order: dict_values([9, 8, 4, 7, 3, 6, 5, 1, 10, 2]), 
+2025-03-31 21:45:27,080 - INFO - Iteration 60/200, Acceptance Ratio: 26.67%, Log Likelihood: -5394.2250, Current Accepted Order: dict_values([8, 9, 4, 6, 2, 7, 5, 1, 10, 3]), 
+2025-03-31 21:45:27,381 - INFO - Iteration 80/200, Acceptance Ratio: 23.75%, Log Likelihood: -5374.1936, Current Accepted Order: dict_values([8, 9, 4, 7, 2, 1, 6, 5, 10, 3]), 
+2025-03-31 21:45:27,676 - INFO - Iteration 100/200, Acceptance Ratio: 20.00%, Log Likelihood: -5366.9629, Current Accepted Order: dict_values([8, 9, 4, 7, 2, 1, 6, 3, 10, 5]), 
+2025-03-31 21:45:27,971 - INFO - Iteration 120/200, Acceptance Ratio: 18.33%, Log Likelihood: -5362.4874, Current Accepted Order: dict_values([8, 9, 4, 7, 2, 1, 6, 3, 10, 5]), 
+2025-03-31 21:45:28,266 - INFO - Iteration 140/200, Acceptance Ratio: 16.43%, Log Likelihood: -5356.1632, Current Accepted Order: dict_values([8, 9, 4, 6, 2, 1, 7, 3, 10, 5]), 
+2025-03-31 21:45:28,559 - INFO - Iteration 160/200, Acceptance Ratio: 15.00%, Log Likelihood: -5357.4866, Current Accepted Order: dict_values([8, 9, 4, 6, 1, 2, 7, 3, 10, 5]), 
+2025-03-31 21:45:28,851 - INFO - Iteration 180/200, Acceptance Ratio: 14.44%, Log Likelihood: -5341.9338, Current Accepted Order: dict_values([8, 9, 5, 6, 1, 2, 7, 4, 10, 3]), 
+2025-03-31 21:45:29,141 - INFO - Iteration 200/200, Acceptance Ratio: 14.00%, Log Likelihood: -5334.4865, Current Accepted Order: dict_values([7, 9, 5, 6, 1, 2, 8, 3, 10, 4]), 
+2025-03-31 21:45:29,145 - INFO - Results saved to hard_kmeans/results/50_200_sigmoid_discrete_uniform_3_results.json

@@ -1,0 +1,13 @@
+2025-03-31 22:03:08,224 - INFO - Running em for file: 50_200_sigmoid_discrete_uniform_9
+2025-03-31 22:03:08,226 - INFO - Number of biomarkers: 10
+2025-03-31 22:03:09,413 - INFO - Iteration 20/200, Acceptance Ratio: 45.00%, Log Likelihood: -4869.3360, Current Accepted Order: dict_values([8, 6, 4, 7, 1, 3, 9, 10, 5, 2]), 
+2025-03-31 22:03:09,976 - INFO - Iteration 40/200, Acceptance Ratio: 42.50%, Log Likelihood: -4859.7166, Current Accepted Order: dict_values([8, 9, 3, 7, 1, 6, 10, 4, 5, 2]), 
+2025-03-31 22:03:10,541 - INFO - Iteration 60/200, Acceptance Ratio: 33.33%, Log Likelihood: -4863.3851, Current Accepted Order: dict_values([8, 9, 3, 7, 1, 4, 10, 6, 5, 2]), 
+2025-03-31 22:03:11,110 - INFO - Iteration 80/200, Acceptance Ratio: 35.00%, Log Likelihood: -4850.7787, Current Accepted Order: dict_values([8, 9, 4, 7, 2, 6, 10, 1, 5, 3]), 
+2025-03-31 22:03:11,677 - INFO - Iteration 100/200, Acceptance Ratio: 33.00%, Log Likelihood: -4851.2609, Current Accepted Order: dict_values([9, 8, 4, 5, 1, 10, 6, 3, 7, 2]), 
+2025-03-31 22:03:12,247 - INFO - Iteration 120/200, Acceptance Ratio: 27.50%, Log Likelihood: -4851.2609, Current Accepted Order: dict_values([9, 8, 4, 5, 1, 10, 6, 3, 7, 2]), 
+2025-03-31 22:03:12,807 - INFO - Iteration 140/200, Acceptance Ratio: 23.57%, Log Likelihood: -4851.2609, Current Accepted Order: dict_values([9, 8, 4, 5, 1, 10, 6, 3, 7, 2]), 
+2025-03-31 22:03:13,373 - INFO - Iteration 160/200, Acceptance Ratio: 20.62%, Log Likelihood: -4851.2609, Current Accepted Order: dict_values([9, 8, 4, 5, 1, 10, 6, 3, 7, 2]), 
+2025-03-31 22:03:13,940 - INFO - Iteration 180/200, Acceptance Ratio: 18.33%, Log Likelihood: -4851.2609, Current Accepted Order: dict_values([9, 8, 4, 5, 1, 10, 6, 3, 7, 2]), 
+2025-03-31 22:03:14,504 - INFO - Iteration 200/200, Acceptance Ratio: 16.50%, Log Likelihood: -4851.2609, Current Accepted Order: dict_values([9, 8, 4, 5, 1, 10, 6, 3, 7, 2]), 
+2025-03-31 22:03:14,509 - INFO - Results saved to em/results/50_200_sigmoid_discrete_uniform_9_results.json

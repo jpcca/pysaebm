@@ -1,0 +1,13 @@
+2025-03-31 21:45:10,634 - INFO - Running hard kmeans for file: 50_200_sigmoid_discrete_uniform_0
+2025-03-31 21:45:10,636 - INFO - Number of biomarkers: 10
+2025-03-31 21:45:11,576 - INFO - Iteration 20/200, Acceptance Ratio: 40.00%, Log Likelihood: -5532.0923, Current Accepted Order: dict_values([7, 8, 3, 5, 2, 10, 4, 6, 1, 9]), 
+2025-03-31 21:45:11,880 - INFO - Iteration 40/200, Acceptance Ratio: 25.00%, Log Likelihood: -5493.4073, Current Accepted Order: dict_values([7, 8, 6, 4, 2, 10, 5, 3, 1, 9]), 
+2025-03-31 21:45:12,188 - INFO - Iteration 60/200, Acceptance Ratio: 21.67%, Log Likelihood: -5448.3536, Current Accepted Order: dict_values([7, 6, 5, 4, 1, 10, 8, 3, 2, 9]), 
+2025-03-31 21:45:12,491 - INFO - Iteration 80/200, Acceptance Ratio: 21.25%, Log Likelihood: -5412.5037, Current Accepted Order: dict_values([6, 7, 4, 5, 1, 10, 9, 2, 3, 8]), 
+2025-03-31 21:45:12,821 - INFO - Iteration 100/200, Acceptance Ratio: 17.00%, Log Likelihood: -5412.5037, Current Accepted Order: dict_values([6, 7, 4, 5, 1, 10, 9, 2, 3, 8]), 
+2025-03-31 21:45:13,128 - INFO - Iteration 120/200, Acceptance Ratio: 14.17%, Log Likelihood: -5412.5037, Current Accepted Order: dict_values([6, 7, 4, 5, 1, 10, 9, 2, 3, 8]), 
+2025-03-31 21:45:13,429 - INFO - Iteration 140/200, Acceptance Ratio: 12.14%, Log Likelihood: -5412.5037, Current Accepted Order: dict_values([6, 7, 4, 5, 1, 10, 9, 2, 3, 8]), 
+2025-03-31 21:45:13,736 - INFO - Iteration 160/200, Acceptance Ratio: 10.62%, Log Likelihood: -5412.5037, Current Accepted Order: dict_values([6, 7, 4, 5, 1, 10, 9, 2, 3, 8]), 
+2025-03-31 21:45:14,042 - INFO - Iteration 180/200, Acceptance Ratio: 9.44%, Log Likelihood: -5412.5037, Current Accepted Order: dict_values([6, 7, 4, 5, 1, 10, 9, 2, 3, 8]), 
+2025-03-31 21:45:14,368 - INFO - Iteration 200/200, Acceptance Ratio: 8.50%, Log Likelihood: -5412.5037, Current Accepted Order: dict_values([6, 7, 4, 5, 1, 10, 9, 2, 3, 8]), 
+2025-03-31 21:45:14,380 - INFO - Results saved to hard_kmeans/results/50_200_sigmoid_discrete_uniform_0_results.json

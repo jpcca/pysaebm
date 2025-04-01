@@ -2,6 +2,7 @@
 build/
 dist/
 *.egg-info/
+test/*/
 
 # Ignore log files
 # *.log
