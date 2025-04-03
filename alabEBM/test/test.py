@@ -19,8 +19,8 @@ correct_ordering = {}
 for bm, bm_params in biomarker_params.items():
     correct_ordering[bm] = bm_params['order']
 
-for algorithm in ['hard_kmeans', 'mle', 'conjugate_priors', 'em']:
-# for algorithm in ['hard_kmeans']:
+# for algorithm in ['hard_kmeans', 'mle', 'conjugate_priors', 'em', 'kde']:
+for algorithm in ['kde']:
     for data_file in data_files:
         results = run_ebm(
             data_file= os.path.join(data_dir, data_file),
@@ -31,5 +31,5 @@ for algorithm in ['hard_kmeans', 'mle', 'conjugate_priors', 'em']:
             thinning=10,
             correct_ordering=correct_ordering,
             skip_heatmap=True,
-            skip_traceplot=True
+            skip_traceplot=False
         )

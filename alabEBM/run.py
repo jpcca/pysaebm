@@ -9,8 +9,10 @@ import re
 # Import utility functions
 from alabebm.utils.visualization import save_heatmap, save_traceplot 
 from alabebm.utils.logging_utils import setup_logging 
-from alabebm.utils.data_processing import get_theta_phi_estimates, obtain_most_likely_order_dic
+from alabebm.utils.data_processing import obtain_most_likely_order_dic
 from alabebm.utils.runners import extract_fname, cleanup_old_files
+from alabebm.utils.fast_kde import FastKDE
+from alabebm.utils.save_kde_dict import kde_dict_to_json_serializable
 
 # Import algorithms
 from alabebm.algorithms import metropolis_hastings
@@ -28,14 +30,15 @@ def run_ebm(
     skip_heatmap: Optional[bool] = False,
     skip_traceplot: Optional[bool] = False,
     prior_n: float = 1.0,    # Strength of the prior belief in prior estimate of the mean (μ), set to 1 as default
-    prior_v: float = 1.0     # Prior degrees of freedom, influencing the certainty of prior estimate of the variance (σ²), set to 1 as default
+    prior_v: float = 1.0,     # Prior degrees of freedom, influencing the certainty of prior estimate of the variance (σ²), set to 1 as default
+    weight_change_threshold: float = 0.01
 ) -> Dict[str, float]:
     """
     Run the metropolis hastings algorithm and save results 
 
     Args:
         data_file (str): Path to the input CSV file with biomarker data.
-        algorithm (str): Choose from 'hard_kmeans', 'mle', 'me', and 'conjugate_priors' (default).
+        algorithm (str): Choose from 'hard_kmeans', 'mle', 'me', 'kde', and 'conjugate_priors' (default).
         n_iter (int): Number of iterations for the Metropolis-Hastings algorithm.
         n_shuffle (int): Number of shuffles per iteration.
         burn_in (int): Burn-in period for the MCMC chain.
@@ -46,11 +49,15 @@ def run_ebm(
             In the example, there are no prefix strings. 
         skip_heatmap (Optional[bool]): whether to save heatmaps. True if want to save space.
         skip_traceplot (Optional[bool]): whether to save traceplots. True if want to save space.
+        prior_n (strength of belief in prior of mean)
+        prior_v (prior degree of freedom) are the weakly infomred priors. 
+        weight_change_threshold (float): Threshold for kde weights (if np.mean(new_weights - old_weights)) > threshold, then recalculate
+            otherwise use the new kde and weights
 
     Returns:
         Dict[str, float]: Results including Kendall's tau and p-value.
     """
-    allowed_algorithms = {'hard_kmeans', 'mle', 'conjugate_priors', 'em'}  # Using a set for faster lookup
+    allowed_algorithms = {'hard_kmeans', 'mle', 'conjugate_priors', 'em', 'kde'}  # Using a set for faster lookup
     if algorithm not in allowed_algorithms:
         raise ValueError(f"Invalid algorithm '{algorithm}'. Must be one of {allowed_algorithms}")
 
@@ -99,7 +106,7 @@ def run_ebm(
     # Run the Metropolis-Hastings algorithm
     try:
         accepted_order_dicts, log_likelihoods, final_theta_phi_params, final_stage_post = metropolis_hastings(
-            data, n_iter, n_shuffle, algorithm, prior_n=prior_n, prior_v=prior_v)
+            data, n_iter, n_shuffle, algorithm, prior_n=prior_n, prior_v=prior_v, weight_change_threshold = weight_change_threshold)
     except Exception as e:
         logging.error(f"Error in Metropolis-Hastings algorithm: {e}")
         raise
@@ -168,6 +175,10 @@ def run_ebm(
         original_order = dict(sorted(correct_ordering.items(), key=lambda item:item[1]))
     else:
         original_order = correct_ordering
+    
+    if algorithm == 'kde':
+        final_theta_phi_params = kde_dict_to_json_serializable(final_theta_phi_params)
+
     # Save results 
     results = {
         "n_iter": n_iter,

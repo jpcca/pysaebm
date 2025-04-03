@@ -1,0 +1,13 @@
+2025-04-02 20:52:22,777 - INFO - Running kde for file: 50_200_sigmoid_discrete_uniform_8
+2025-04-02 20:52:22,779 - INFO - Number of biomarkers: 10
+2025-04-02 20:52:25,320 - INFO - Iteration 20/200, Acceptance Ratio: 30.00%, Log Likelihood: -6905.4918, Current Accepted Order: dict_values([10, 8, 2, 3, 4, 5, 9, 1, 6, 7]), 
+2025-04-02 20:52:27,808 - INFO - Iteration 40/200, Acceptance Ratio: 27.50%, Log Likelihood: -6712.4612, Current Accepted Order: dict_values([9, 10, 1, 4, 3, 5, 8, 2, 7, 6]), 
+2025-04-02 20:52:30,304 - INFO - Iteration 60/200, Acceptance Ratio: 23.33%, Log Likelihood: -6691.7458, Current Accepted Order: dict_values([9, 7, 1, 4, 3, 5, 8, 2, 10, 6]), 
+2025-04-02 20:52:32,808 - INFO - Iteration 80/200, Acceptance Ratio: 25.00%, Log Likelihood: -6503.1293, Current Accepted Order: dict_values([7, 9, 3, 5, 2, 8, 6, 1, 10, 4]), 
+2025-04-02 20:52:35,308 - INFO - Iteration 100/200, Acceptance Ratio: 22.00%, Log Likelihood: -6344.0839, Current Accepted Order: dict_values([7, 9, 4, 5, 1, 8, 6, 2, 10, 3]), 
+2025-04-02 20:52:37,811 - INFO - Iteration 120/200, Acceptance Ratio: 20.00%, Log Likelihood: -6321.8743, Current Accepted Order: dict_values([6, 9, 4, 5, 1, 8, 7, 3, 10, 2]), 
+2025-04-02 20:52:40,315 - INFO - Iteration 140/200, Acceptance Ratio: 18.57%, Log Likelihood: -6274.5476, Current Accepted Order: dict_values([6, 8, 4, 5, 1, 9, 7, 2, 10, 3]), 
+2025-04-02 20:52:42,839 - INFO - Iteration 160/200, Acceptance Ratio: 17.50%, Log Likelihood: -6243.2267, Current Accepted Order: dict_values([7, 8, 4, 5, 1, 9, 6, 3, 10, 2]), 
+2025-04-02 20:52:45,400 - INFO - Iteration 180/200, Acceptance Ratio: 15.56%, Log Likelihood: -6243.2267, Current Accepted Order: dict_values([7, 8, 4, 5, 1, 9, 6, 3, 10, 2]), 
+2025-04-02 20:52:47,915 - INFO - Iteration 200/200, Acceptance Ratio: 14.00%, Log Likelihood: -6243.2267, Current Accepted Order: dict_values([7, 8, 4, 5, 1, 9, 6, 3, 10, 2]), 
+2025-04-02 20:52:47,994 - INFO - Results saved to kde/results/50_200_sigmoid_discrete_uniform_8_results.json

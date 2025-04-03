@@ -2,29 +2,91 @@ from typing import List, Optional, Tuple, Dict
 import pandas as pd
 import numpy as np
 import os
+from sklearn.cluster import KMeans
+from scipy.stats import mode
+from numba import njit
 import sys 
 from collections import defaultdict
-from scipy.spatial import cKDTree
-from numba import njit, prange
-from alabebm.utils.kmeans import get_two_clusters_with_kmeans
-from alabebm.utils.fast_kde import FastKDE, get_initial_kde_estimates, update_kde_for_biomarker_em, compute_ln_likelihood_kde_fast
+
+def compute_initial_theta_phi_for_biomarker(biomarker_df, max_attempt = 100, seed = None):
+    """get initial theta and phi parameters for this biomarker using seeded k-means (semi-supervised KMeans)
+    input: 
+        - biomarker_df: a pd.dataframe of a specific biomarker
+    output: 
+        - a tuple: theta_mean, theta_std, phi_mean, phi_std
+    """
+    if seed is not None:
+        # Set the seed for numpy's random number generator
+        rng = np.random.default_rng(seed)
+    else:
+        rng = np.random
+
+    n_clusters = 2
+    measurements = np.array(biomarker_df['measurement']).reshape(-1, 1)
+    healthy_df = biomarker_df[biomarker_df['diseased'] == False]
+
+    # Initialize centroids
+    healthy_seed = np.mean(measurements[healthy_df.index])
+    diseased_seed = np.mean(measurements[np.setdiff1d(np.arange(len(measurements)), healthy_df.index)])
+    init_centers = np.array([[healthy_seed], [diseased_seed]])
+
+    curr_attempt = 0
+    n_init_value = 50
+    clustering_setup = KMeans(n_clusters=n_clusters, n_init=n_init_value, init = init_centers)
+    
+    while curr_attempt < max_attempt:
+        clustering_result = clustering_setup.fit(measurements)
+        predictions = clustering_result.labels_
+        cluster_counts = np.bincount(predictions) # array([3, 2])
+        
+        # Exit if exactly two clusters and both have two or more elements
+        if len(cluster_counts) == n_clusters and all(c > 1 for c in cluster_counts):
+            break 
+        curr_attempt += 1
+    else:
+        print(f"KMeans failed. Will go ahead and randomize the predictions.")
+        predictions = rng.choice([0, 1], size=len(measurements))
+        # After randomization, make sure healthy participants are in the same group. 
+        predictions[healthy_df.index] = 0
+        cluster_counts = np.bincount(predictions)
+        # Check if two non-empty clusters exist:
+        if len(cluster_counts) != n_clusters or not all(c > 1 for c in cluster_counts):
+            raise ValueError(f"KMeans clustering failed to find valid clusters within max_attempt.")
+    
+    healthy_predictions = predictions[healthy_df.index]
+    mode_result = mode(healthy_predictions, keepdims=False).mode
+    phi_cluster_idx = mode_result[0] if isinstance(mode_result, np.ndarray) else mode_result
+    theta_cluster_idx = 1 - phi_cluster_idx
+
+    # Empty clusters to strore measurements
+    clustered_measurements = [[] for _ in range(n_clusters)]
+    # Store measurements into their cluster
+    for i, prediction in enumerate(predictions):
+        clustered_measurements[prediction].append(measurements[i][0])
+    
+    # Calculate means and standard deviations
+    # Use ddof=1 for unbiased sample standard deviation
+    theta_mean, theta_std = np.mean(
+        clustered_measurements[theta_cluster_idx]), np.std(
+            clustered_measurements[theta_cluster_idx], ddof=1)
+    phi_mean, phi_std = np.mean(
+        clustered_measurements[phi_cluster_idx]), np.std(
+            clustered_measurements[phi_cluster_idx], ddof=1)
+    
+    if any(np.isnan(v) for v in [theta_std, phi_std, theta_mean, phi_mean]):
+        raise ValueError("Invalid value (NaN) in estimates.")
+
+    return theta_mean, theta_std, phi_mean, phi_std
 
 def get_initial_theta_phi_estimates(
     data: pd.DataFrame,
-    prior_n: float,
-    prior_v: float,
 ) -> Dict[str, Dict[str, float]]:
     """
-    Obtain initial theta and phi estimates (mean and standard deviation) for each biomarker.
-    (get the clusters using seeded k-means (semi-supervised KMeans);
-     estimate the parameters using conjugate priors
-    )
+    Obtain theta and phi estimates (mean and standard deviation) for each biomarker.
 
     Args:
     data (pd.DataFrame): DataFrame containing participant data with columns 'participant', 
         'biomarker', 'measurement', and 'diseased'.
-    prior_n (float):  Weak prior (not data-dependent)
-    prior_v (float):  Weak prior (not data-dependent)
 
     Returns:
     Dict[str, Dict[str, float]]: A dictionary where each key is a biomarker name,
@@ -38,17 +100,10 @@ def get_initial_theta_phi_estimates(
     for biomarker in biomarkers:
         # Filter data for the current biomarker
         # reset_index is necessary here because we will use healthy_df.index later
-        biomarker_df = data[data['biomarker']== biomarker].reset_index(drop=True)
-        theta_measurements, phi_measurements = get_two_clusters_with_kmeans(biomarker_df)
-        # Use MLE to calculate the fallback (also to provide the m0 and s0_sq)
-        fallback_params = {
-            'theta_mean': np.mean(theta_measurements),
-            'theta_std': np.std(theta_measurements, ddof=1),
-            'phi_mean': np.mean(phi_measurements),
-            'phi_std': np.std(phi_measurements, ddof=1),
-        }
-        theta_mean, theta_std, phi_mean, phi_std = compute_theta_phi_biomarker_conjugate_priors(
-                theta_measurements, phi_measurements, fallback_params, prior_n, prior_v)
+        biomarker_df = data[data['biomarker']
+                            == biomarker].reset_index(drop=True)
+        theta_mean, theta_std, phi_mean, phi_std = compute_initial_theta_phi_for_biomarker(
+            biomarker_df)
         estimates[biomarker] = {
             'theta_mean': theta_mean,
             'theta_std': theta_std,
@@ -56,7 +111,6 @@ def get_initial_theta_phi_estimates(
             'phi_std': phi_std
         }
     return estimates
-
 
 def estimate_params_exact(
     m0: float, 
@@ -101,7 +155,7 @@ def estimate_params_exact(
 
     return mu_estimation, std_estimation
 
-def update_theta_phi_biomarker_em(
+def compute_theta_phi_biomarker_em(
     participants: np.ndarray,
     measurements: np.ndarray,
     diseased: np.ndarray,
@@ -111,10 +165,8 @@ def update_theta_phi_biomarker_em(
     ) -> Tuple[float, float, float, float]:
     """ Obtain biomarker's parameters using soft kmeans
     """
+
     # Obtain two responsibilites
-    # Responsibilities of affected cluster
-    # an array; each float means the prob of each measurement in affected cluster
-    # Essentially, they are weights
     resp_affected = [
         sum(stage_likelihoods_posteriors[p][disease_stages >= curr_order]) if is_diseased else 0.0
         for p, is_diseased in zip(participants, diseased)
@@ -142,8 +194,7 @@ def update_theta_phi_estimates(
     disease_stages:np.ndarray,
     algorithm: str,
     prior_n: float,    # Weak prior (not data-dependent)
-    prior_v: float,     # Weak prior (not data-dependent)
-    weight_change_threshold: float,
+    prior_v: float     # Weak prior (not data-dependent)
     ) -> Dict[str, Dict[str, float]]:
     """Update theta and phi params for all biomarkers.
 
@@ -155,29 +206,17 @@ def update_theta_phi_estimates(
         curr_order, measurements, participants, diseased) in biomarker_data.items():
         dic = {'biomarker': biomarker}
         theta_phi_current_biomarker = theta_phi_current[biomarker]
-        if algorithm not in ['conjugate_priors', "mle", 'em', 'kde']:
+        if algorithm not in ['conjugate_priors', "mle", 'em']:
             raise ValueError('Algorithm should be chosen among conjugate_priors, em, and mle! Check your spelling!')
         if algorithm == 'em': 
-            theta_mean, theta_std, phi_mean, phi_std = update_theta_phi_biomarker_em(
+            theta_mean, theta_std, phi_mean, phi_std = compute_theta_phi_biomarker_em(
             participants,
             measurements,
             diseased,
             stage_likelihoods_posteriors,
             disease_stages,
             curr_order,
-        )
-        elif algorithm == 'kde':
-            theta_kde, theta_weights, phi_kde, phi_weights = update_kde_for_biomarker_em(
-                biomarker,
-                participants,
-                measurements,
-                diseased,
-                stage_likelihoods_posteriors,
-                theta_phi_current,
-                disease_stages,
-                curr_order,
-                weight_change_threshold = weight_change_threshold
-        )
+            )
         else:
             affected_cluster, non_affected_cluster = obtain_affected_and_non_clusters(
                 participants,
@@ -190,24 +229,16 @@ def update_theta_phi_estimates(
             if algorithm == 'conjugate_priors':
                 theta_mean, theta_std, phi_mean, phi_std = compute_theta_phi_biomarker_conjugate_priors(
                     affected_cluster, non_affected_cluster, theta_phi_current_biomarker, prior_n, prior_v)
-            elif algorithm == 'mle':
-                theta_mean, theta_std, phi_mean, phi_std = update_theta_phi_biomarker_mle(
+            else:
+                theta_mean, theta_std, phi_mean, phi_std = compute_theta_phi_biomarker_mle(
                     affected_cluster, non_affected_cluster, theta_phi_current_biomarker)
-        
-        if algorithm == 'kde':
-            updated_params[biomarker] = {
-                'theta_kde': theta_kde,
-                'theta_weights': theta_weights,
-                'phi_kde': phi_kde,
-                'phi_weights': phi_weights   
-            }
-        else:
-            updated_params[biomarker] = {
-                'theta_mean': theta_mean,
-                'theta_std': theta_std,
-                'phi_mean': phi_mean,
-                'phi_std': phi_std,
-            }
+
+        updated_params[biomarker] = {
+            'theta_mean': theta_mean,
+            'theta_std': theta_std,
+            'phi_mean': phi_mean,
+            'phi_std': phi_std,
+        }
     return updated_params
 
 def obtain_affected_and_non_clusters(
@@ -310,7 +341,7 @@ def compute_theta_phi_biomarker_conjugate_priors(
         )
     return theta_mean, theta_std, phi_mean, phi_std
 
-def update_theta_phi_biomarker_mle(
+def compute_theta_phi_biomarker_mle(
     affected_cluster: List[float],
     non_affected_cluster: List[float],
     theta_phi_current_biomarker: Dict[str, float], # Current state’s θ/φ
@@ -395,10 +426,9 @@ def preprocess_biomarker_data(
     return biomarker_data
 
 def compute_total_ln_likelihood_and_stage_likelihoods(
-    algorithm:str,
     participant_data: Dict[int, Tuple[np.ndarray, np.ndarray, np.ndarray]],
     non_diseased_ids: np.ndarray,
-    theta_phi: Dict[str, Dict],
+    theta_phi: Dict[str, Dict[str, float]],
     current_pi: np.ndarray,
     disease_stages: np.ndarray
     ) -> Tuple[float, Dict[int, np.ndarray]]:
@@ -413,29 +443,16 @@ def compute_total_ln_likelihood_and_stage_likelihoods(
     for participant, (measurements, S_n, biomarkers) in participant_data.items():
         if participant in non_diseased_ids:
             # Non-diseased participant (fixed k=0)
-            if algorithm == 'kde':
-                ln_likelihood = compute_ln_likelihood_kde_fast(
-                    measurements, S_n, biomarkers, k_j = 0, kde_dict = theta_phi
-                )
-            else:
-                ln_likelihood = compute_ln_likelihood(
-                    measurements, S_n, biomarkers, k_j = 0, theta_phi = theta_phi)
+            ln_likelihood = compute_ln_likelihood(
+                measurements, S_n, biomarkers, k_j = 0, theta_phi = theta_phi)
         else:
             # Diseased participant (sum over possible stages)
-            if algorithm == 'kde':
-                ln_stage_likelihoods = np.array([
-                    compute_ln_likelihood_kde_fast(
-                        measurements, S_n, biomarkers, k_j = k_j, kde_dict=theta_phi
-                    ) + np.log(current_pi[k_j-1])
-                    for k_j in disease_stages
-                ])
-            else:
-                ln_stage_likelihoods = np.array([
-                    compute_ln_likelihood(
-                        measurements, S_n, biomarkers, k_j = k_j, theta_phi=theta_phi
-                    ) + np.log(current_pi[k_j-1])
-                    for k_j in disease_stages
-                ])
+            ln_stage_likelihoods = np.array([
+                compute_ln_likelihood(
+                    measurements, S_n, biomarkers, k_j = k_j, theta_phi=theta_phi
+                ) + np.log(current_pi[k_j-1])
+                for k_j in disease_stages
+            ])
             # Use log-sum-exp trick for numerical stability
             max_ln_likelihood = np.max(ln_stage_likelihoods)
             stage_likelihoods = np.exp(ln_stage_likelihoods - max_ln_likelihood)
@@ -460,7 +477,6 @@ def compute_total_ln_likelihood_and_stage_likelihoods(
 
         total_ln_likelihood += ln_likelihood
     return total_ln_likelihood, stage_likelihoods_posteriors
-
 
 @njit
 def _compute_ln_likelihood_core(measurements, mus, stds):

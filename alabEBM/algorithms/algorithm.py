@@ -1,9 +1,10 @@
 import numpy as np 
 import pandas as pd 
 import alabebm.utils.data_processing as data_utils 
-from typing import List, Dict, Tuple
+from typing import List, Dict, Tuple, Union
 import logging 
 from collections import defaultdict 
+from alabebm.utils.fast_kde import FastKDE 
 
 def metropolis_hastings(
     data_we_have: pd.DataFrame,
@@ -12,7 +13,8 @@ def metropolis_hastings(
     algorithm: str,
     prior_n: float,
     prior_v: float,
-) -> Tuple[List[Dict], List[float], Dict[str, float], Dict[int, np.ndarray]]:
+    weight_change_threshold: float = 0.01
+) -> Tuple[List[Dict], List[float], Dict[str, Dict], Dict[int, np.ndarray]]:
     """
     Perform Metropolis-Hastings sampling with conjugate priors to estimate biomarker orderings.
 
@@ -21,11 +23,13 @@ def metropolis_hastings(
         iterations (int): Number of iterations for the algorithm.
         n_shuffle (int): Number of swaps to perform when shuffling the order.
         algorithm (str): 'hard_kmeans', 'conjugate_priors', 'mle', 'em'
-        prior_n (float):  Weak prior (not data-dependent)
-        prior_v (float):  Weak prior (not data-dependent)
+        prior_n (strength of belief in prior of mean)
+        prior_v (prior degree of freedom) are the weakly infomred priors. 
+        weight_change_threshold (float): Threshold for kde weights (if np.mean(new_weights - old_weights)) > threshold, then recalculate
+            otherwise use the new kde and weights
 
     Returns:
-        Tuple[List[Dict], List[float], Dict[str, float]]: 
+        Tuple[List[Dict], List[float], Dict[str, Dict], Dict[int, np.ndarray]]: 
             - List of accepted biomarker orderings at each iteration.
             - List of log likelihoods at each iteration.
             - Final theta phi estimates
@@ -38,7 +42,11 @@ def metropolis_hastings(
     n_disease_stages = n_stages - 1
     non_diseased_ids = data_we_have.loc[data_we_have.diseased == False].participant.unique()
 
-    theta_phi_default = data_utils.get_theta_phi_estimates(data_we_have)
+    if algorithm == 'kde':
+        theta_phi_default = data_utils.get_initial_kde_estimates(data_we_have)
+    else:
+        theta_phi_default = data_utils.get_initial_theta_phi_estimates(data_we_have, prior_n, prior_v)
+    
     current_theta_phi = theta_phi_default.copy()
 
     # initialize an ordering and likelihood
@@ -84,6 +92,7 @@ def metropolis_hastings(
             # --- Compute stage posteriors with OLD θ/φ ---
             # Only diseased participants have stage likelihoods 
             _, stage_post_old = data_utils.compute_total_ln_likelihood_and_stage_likelihoods(
+                algorithm,
                 participant_data,
                 non_diseased_ids,
                 current_theta_phi,
@@ -100,19 +109,23 @@ def metropolis_hastings(
                 algorithm = algorithm,
                 prior_n = prior_n, 
                 prior_v = prior_v,
+                weight_change_threshold = weight_change_threshold
             )
 
             # Recompute new_ln_likelihood using the new theta_phi_estimates
             new_ln_likelihood, stage_post_new = data_utils.compute_total_ln_likelihood_and_stage_likelihoods(
+                algorithm,
                 participant_data,
                 non_diseased_ids,
                 new_theta_phi,
                 current_pi,
                 disease_stages
             )
+
         else:
             # If hard kmeans, it will use `current_theta_phi = theta_phi_default.copy()` defined above
             new_ln_likelihood, stage_post_new = data_utils.compute_total_ln_likelihood_and_stage_likelihoods(
+                algorithm,
                 participant_data,
                 non_diseased_ids,
                 current_theta_phi,

@@ -66,6 +66,10 @@ pip install alabebm
 - 2025-03-31 (V 0.9.4)
     - Able to store final theta phi estimates and the final stage likelihood posteior to results.json
 
+- 2025-04-02 (V 0.9.5)
+    - Added `kde` algorithm. 
+    - Initial kmeans used seeded Kmeans + conjugate priors. 
+
 ## Generate Random Data
 
 ```py
