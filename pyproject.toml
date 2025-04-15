@@ -3,9 +3,9 @@ requires = ["setuptools>=61.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "sa_ebm"
-version = "1.11"
-description = "Implementation of event-based models for degenerative diseases."
+name = "pysaebm"
+version = "1.13"
+description = "Stage-Aware Event-Based Modeling for Disease Progression"
 readme = "README.md"
 authors = [
   {name = "Hongtao Hao and Joseph Austerweil", email = "hongtaoh@cs.wisc.edu"}
@@ -27,7 +27,7 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/hongtaoh/alab-ebm"
+Homepage = "https://github.com/hongtaoh/pysaebm"
 
 [tool.setuptools.packages.find]
 

@@ -1,27 +1,27 @@
-# `sa_ebm`
+# `saebm`
 
 
-`sa_ebm` is the `python` package for the paper of "Stage-Aware Event-Based Modeling (SA-EBM) for Disease Progression"
+`saebm` is the `python` package for the paper of "Stage-Aware Event-Based Modeling (SA-EBM) for Disease Progression"
 
 
 ## Installation
 
 
 ```bash
-pip install sa_ebm
+pip install saebm
 ```
 
 
 ## Data generation
 
 
-Examples of how to generate data are at [./sa_ebm/test/gen.py](./sa_ebm/test/gen.py).
+Examples of how to generate data are at [./saebm/test/gen.py](./saebm/test/gen.py).
 
 
 Because in each generation, the ordering is randomized, you will see a `true_order_and_stages.json` that tells you the corresponding true stages and true order for each output csv file.
 
 
-The source codes for data generation can be seen in [./sa_ebm/utils/generate_data.py](./sa_ebm/utils/generate_data.py).
+The source codes for data generation can be seen in [./saebm/utils/generate_data.py](./saebm/utils/generate_data.py).
 
 
 This is the full `generate` parameters:
@@ -83,7 +83,7 @@ experiment_names = [
 You can find the explanation to these terms from our paper.
 
 
-- `params_file`: The path to the parameters in json. Example is [./sa_ebm/data/params.json](./sa_ebm/data/params.json). You should specify each biomarker's `theta_mean`, `theta_std`, `phi_mean`, and `phi_std`.
+- `params_file`: The path to the parameters in json. Example is [./saebm/data/params.json](./saebm/data/params.json). You should specify each biomarker's `theta_mean`, `theta_std`, `phi_mean`, and `phi_std`.
 
 
 - `js`: An array of integers indicating the number of participants you want.
@@ -119,7 +119,7 @@ You can find the explanation to these terms from our paper.
 ## Run EBM Algorithms
 
 
-Examples of how to run algorithms and get results is at [./sa_ebm/test/test.py](./sa_ebm/test/test.py).
+Examples of how to run algorithms and get results is at [./saebm/test/test.py](./saebm/test/test.py).
 
 
 This explains the parameters well enough:
@@ -246,7 +246,7 @@ results = {
 ## Use your own data
 
 
-You are more than welcome to use your own data! That's the sole purpose of `sa_ebm`: to allow you to analyze your own data. However, you do have to make sure that the input data have at least four columns:
+You are more than welcome to use your own data! That's the sole purpose of `saebm`: to allow you to analyze your own data. However, you do have to make sure that the input data have at least four columns:
 
 
 - participant: int
@@ -255,7 +255,7 @@ You are more than welcome to use your own data! That's the sole purpose of `sa_e
 - diseased: bool
 
 
-Samples are available at [./sa_ebm/data/samples/](./sa_ebm/data/samples/).
+Samples are available at [./saebm/data/samples/](./saebm/data/samples/).
 
 
 The data should be in a [tidy format](https://vita.had.co.nz/papers/tidy-data.pdf), i.e.,
@@ -367,3 +367,7 @@ The data should be in a [tidy format](https://vita.had.co.nz/papers/tidy-data.pd
 
 - 2025-04-14 (V 1.11)
    - Updated the `fastkde.py`.
+
+- 2024-04-15 (V 1.13)
+    - Renamed the package to `pysaebm`.
+    - Reconstructed the `README` documentation. 

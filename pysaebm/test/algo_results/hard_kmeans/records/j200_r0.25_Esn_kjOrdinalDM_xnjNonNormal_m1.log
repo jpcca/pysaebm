@@ -1,0 +1,13 @@
+2025-04-15 17:37:38,899 - INFO - Running hard kmeans for file: j200_r0.25_Esn_kjOrdinalDM_xnjNonNormal_m1
+2025-04-15 17:37:38,901 - INFO - Number of biomarkers: 10
+2025-04-15 17:37:39,425 - INFO - Iteration 20/200, Acceptance Ratio: 40.00%, Log Likelihood: -6720.2097, Current Accepted Order: dict_values([8, 9, 3, 2, 1, 5, 6, 4, 10, 7]), 
+2025-04-15 17:37:39,941 - INFO - Iteration 40/200, Acceptance Ratio: 32.50%, Log Likelihood: -6599.6571, Current Accepted Order: dict_values([6, 2, 3, 1, 9, 5, 7, 8, 10, 4]), 
+2025-04-15 17:37:40,458 - INFO - Iteration 60/200, Acceptance Ratio: 23.33%, Log Likelihood: -6509.6039, Current Accepted Order: dict_values([6, 2, 3, 1, 4, 5, 7, 8, 10, 9]), 
+2025-04-15 17:37:40,969 - INFO - Iteration 80/200, Acceptance Ratio: 18.75%, Log Likelihood: -6508.4708, Current Accepted Order: dict_values([6, 2, 3, 1, 4, 5, 7, 8, 9, 10]), 
+2025-04-15 17:37:41,479 - INFO - Iteration 100/200, Acceptance Ratio: 15.00%, Log Likelihood: -6508.4708, Current Accepted Order: dict_values([6, 2, 3, 1, 4, 5, 7, 8, 9, 10]), 
+2025-04-15 17:37:41,992 - INFO - Iteration 120/200, Acceptance Ratio: 13.33%, Log Likelihood: -6495.0222, Current Accepted Order: dict_values([5, 2, 3, 1, 4, 6, 7, 8, 9, 10]), 
+2025-04-15 17:37:42,506 - INFO - Iteration 140/200, Acceptance Ratio: 11.43%, Log Likelihood: -6495.0222, Current Accepted Order: dict_values([5, 2, 3, 1, 4, 6, 7, 8, 9, 10]), 
+2025-04-15 17:37:43,018 - INFO - Iteration 160/200, Acceptance Ratio: 10.00%, Log Likelihood: -6495.0222, Current Accepted Order: dict_values([5, 2, 3, 1, 4, 6, 7, 8, 9, 10]), 
+2025-04-15 17:37:43,529 - INFO - Iteration 180/200, Acceptance Ratio: 8.89%, Log Likelihood: -6495.0222, Current Accepted Order: dict_values([5, 2, 3, 1, 4, 6, 7, 8, 9, 10]), 
+2025-04-15 17:37:44,040 - INFO - Iteration 200/200, Acceptance Ratio: 8.00%, Log Likelihood: -6495.0222, Current Accepted Order: dict_values([5, 2, 3, 1, 4, 6, 7, 8, 9, 10]), 
+2025-04-15 17:37:44,596 - INFO - Results saved to algo_results/hard_kmeans/results/j200_r0.25_Esn_kjOrdinalDM_xnjNonNormal_m1_results.json

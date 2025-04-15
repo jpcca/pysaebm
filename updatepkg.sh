@@ -1,7 +1,7 @@
 # Clean up old build artifacts
 rm -rf dist/
 rm -rf build/
-rm -rf alabebm.egg-info/
+rm -rf pysaebm.egg-info/
 
 # Build the package using the build module
 python -m pip install --upgrade build
