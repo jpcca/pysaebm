@@ -56,7 +56,7 @@ def run_ebm(
         skip_heatmap (Optional[bool]): whether to save heatmaps. True if want to skip saving heatmpas and save space.
         skip_traceplot (Optional[bool]): whether to save traceplots. True if want to skip saving traceplots and save space.
         prior_n (strength of belief in prior of mean): default to be 1.0
-        prior_v (prior degree of freedom) are the weakly infomred priors, default to be 1.0
+        prior_v (prior degree of freedom) are the weakly informative priors, default to be 1.0
         weight_change_threshold (float): Threshold for kde weights (if np.mean(new_weights - old_weights)) > threshold, then recalculate
             otherwise use the new kde and weights
 
