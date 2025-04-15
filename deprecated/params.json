@@ -1,0 +1,92 @@
+{
+  "MMSE": {
+    "order": 5,
+    "theta_mean": 22,
+    "theta_std": 2.6666666666666665,
+    "phi_mean": 28,
+    "phi_std": 0.6666666666666666,
+    "R_i": -6.0,
+    "rho_i": 2.0
+  },
+  "ADAS": {
+    "order": 6,
+    "theta_mean": -20,
+    "theta_std": 4.0,
+    "phi_mean": -6,
+    "phi_std": 1.3333333333333333,
+    "R_i": -14.0,
+    "rho_i": 1.5
+  },
+  "AB": {
+    "order": 3,
+    "theta_mean": 150,
+    "theta_std": 16.666666666666668,
+    "phi_mean": 250,
+    "phi_std": 50.0,
+    "R_i": -100.0,
+    "rho_i": 0.8
+  },
+  "P-Tau": {
+    "order": 4,
+    "theta_mean": -50,
+    "theta_std": 33.333333333333336,
+    "phi_mean": -25,
+    "phi_std": 16.666666666666668,
+    "R_i": -25.0,
+    "rho_i": 1.2
+  },
+  "HIP-FCI": {
+    "order": 1,
+    "theta_mean": -5,
+    "theta_std": 6.666666666666667,
+    "phi_mean": 5,
+    "phi_std": 1.6666666666666667,
+    "R_i": -10.0,
+    "rho_i": 2.5
+  },
+  "HIP-GMI": {
+    "order": 7,
+    "theta_mean": 0.3,
+    "theta_std": 0.3333333333333333,
+    "phi_mean": 0.4,
+    "phi_std": 0.2333333333333333,
+    "R_i": -0.1,
+    "rho_i": 5.0
+  },
+  "AVLT-Sum": {
+    "order": 8,
+    "theta_mean": 20,
+    "theta_std": 6.666666666666667,
+    "phi_mean": 40,
+    "phi_std": 15.0,
+    "R_i": -20.0,
+    "rho_i": 1.0
+  },
+  "PCC-FCI": {
+    "order": 2,
+    "theta_mean": 5,
+    "theta_std": 3.3333333333333335,
+    "phi_mean": 12,
+    "phi_std": 4.0,
+    "R_i": -7.0,
+    "rho_i": 1.8
+  },
+  "FUS-GMI": {
+    "order": 9,
+    "theta_mean": 0.5,
+    "theta_std": 0.06666666666666667,
+    "phi_mean": 0.6,
+    "phi_std": 0.06666666666666667,
+    "R_i": -0.1,
+    "rho_i": 6.0
+  },
+  "FUS-FCI": {
+    "order": 10,
+    "theta_mean": -20,
+    "theta_std": 6.0,
+    "phi_mean": -10,
+    "phi_std": 3.3333333333333335,
+    "R_i": -10.0,
+    "rho_i": 2.2
+  }
+}
