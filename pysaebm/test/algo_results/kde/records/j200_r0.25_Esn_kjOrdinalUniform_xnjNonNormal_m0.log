@@ -1,0 +1,13 @@
+2025-04-16 16:03:09,932 - INFO - Running kde for file: j200_r0.25_Esn_kjOrdinalUniform_xnjNonNormal_m0
+2025-04-16 16:03:09,934 - INFO - Number of biomarkers: 10
+2025-04-16 16:03:12,144 - INFO - Iteration 20/200, Acceptance Ratio: 40.00%, Log Likelihood: -8387.0342, Current Accepted Order: dict_values([9, 3, 1, 4, 8, 2, 6, 5, 10, 7]), 
+2025-04-16 16:03:14,286 - INFO - Iteration 40/200, Acceptance Ratio: 30.00%, Log Likelihood: -8110.1147, Current Accepted Order: dict_values([7, 5, 1, 2, 6, 4, 8, 3, 10, 9]), 
+2025-04-16 16:03:16,430 - INFO - Iteration 60/200, Acceptance Ratio: 21.67%, Log Likelihood: -8108.8000, Current Accepted Order: dict_values([7, 6, 1, 2, 5, 4, 8, 3, 10, 9]), 
+2025-04-16 16:03:18,576 - INFO - Iteration 80/200, Acceptance Ratio: 18.75%, Log Likelihood: -8097.0047, Current Accepted Order: dict_values([7, 4, 1, 2, 6, 5, 8, 3, 10, 9]), 
+2025-04-16 16:03:20,720 - INFO - Iteration 100/200, Acceptance Ratio: 17.00%, Log Likelihood: -7944.2704, Current Accepted Order: dict_values([7, 2, 3, 4, 6, 5, 8, 1, 10, 9]), 
+2025-04-16 16:03:22,859 - INFO - Iteration 120/200, Acceptance Ratio: 15.83%, Log Likelihood: -7874.9468, Current Accepted Order: dict_values([7, 3, 2, 4, 6, 5, 9, 1, 10, 8]), 
+2025-04-16 16:03:24,990 - INFO - Iteration 140/200, Acceptance Ratio: 13.57%, Log Likelihood: -7874.9468, Current Accepted Order: dict_values([7, 3, 2, 4, 6, 5, 9, 1, 10, 8]), 
+2025-04-16 16:03:27,123 - INFO - Iteration 160/200, Acceptance Ratio: 12.50%, Log Likelihood: -7873.0362, Current Accepted Order: dict_values([7, 3, 2, 4, 6, 5, 9, 8, 10, 1]), 
+2025-04-16 16:03:29,264 - INFO - Iteration 180/200, Acceptance Ratio: 11.11%, Log Likelihood: -7873.0362, Current Accepted Order: dict_values([7, 3, 2, 4, 6, 5, 9, 8, 10, 1]), 
+2025-04-16 16:03:31,397 - INFO - Iteration 200/200, Acceptance Ratio: 10.00%, Log Likelihood: -7873.0362, Current Accepted Order: dict_values([7, 3, 2, 4, 6, 5, 9, 8, 10, 1]), 
+2025-04-16 16:03:31,952 - INFO - Results saved to algo_results/kde/results/j200_r0.25_Esn_kjOrdinalUniform_xnjNonNormal_m0_results.json

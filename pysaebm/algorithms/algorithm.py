@@ -4,7 +4,6 @@ import pysaebm.utils.data_processing as data_utils
 from typing import List, Dict, Tuple, Union
 import logging 
 from collections import defaultdict 
-from pysaebm.utils.fast_kde import FastKDE 
 
 def metropolis_hastings(
     data_we_have: pd.DataFrame,

@@ -8,7 +8,6 @@ from scipy.spatial import cKDTree
 from numba import njit, prange
 from pysaebm.utils.kmeans import get_two_clusters_with_kmeans
 from pysaebm.utils.fast_kde import (
-    FastKDE,
     get_initial_kde_estimates,
     compute_ln_likelihood_kde_fast,
     update_kde_for_biomarker_em
@@ -120,6 +119,9 @@ def update_theta_phi_biomarker_em(
     # Responsibilities of affected cluster
     # an array; each float means the prob of each measurement in affected cluster
     # Essentially, they are weights
+
+    # Note that what we are doing here is different from GMM EM because we are not using 
+    # p1 and p2 when obtaining responsibilities
     resp_affected = [
         sum(stage_likelihoods_posteriors[p][disease_stages >= curr_order]) if is_diseased else 0.0
         for p, is_diseased in zip(participants, diseased)
@@ -172,7 +174,7 @@ def update_theta_phi_estimates(
             curr_order,
         )
         elif algorithm == 'kde':
-            theta_kde, phi_kde = update_kde_for_biomarker_em(
+            theta_weights, phi_weights = update_kde_for_biomarker_em(
                 biomarker,
                 participants,
                 measurements,
@@ -200,8 +202,9 @@ def update_theta_phi_estimates(
         
         if algorithm == 'kde':
             updated_params[biomarker] = {
-                'theta_kde': theta_kde,
-                'phi_kde': phi_kde,
+                'data': measurements,
+                'theta_weights': theta_weights,
+                'phi_weights': phi_weights,
             }
         else:
             updated_params[biomarker] = {

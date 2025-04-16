@@ -368,6 +368,9 @@ The data should be in a [tidy format](https://vita.had.co.nz/papers/tidy-data.pd
 - 2025-04-14 (V 1.11)
    - Updated the `fastkde.py`.
 
-- 2024-04-15 (V 1.131)
-    - Renamed the package to `pypysaebm`.
-    - Reconstructed the `README` documentation. 
+- 2025-04-15 (V 1.131)
+   - Renamed the package to `pypysaebm`.
+   - Reconstructed the `README` documentation. 
+
+- 2025-05-16 (V 1.2)
+   - Did the `fast_kde.py` on my own. Streamlined the script quite a bit. Now it's very readable and easy to follow & understand. 

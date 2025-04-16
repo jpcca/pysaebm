@@ -12,8 +12,6 @@ from pysaebm.utils.visualization import save_heatmap, save_traceplot
 from pysaebm.utils.logging_utils import setup_logging 
 from pysaebm.utils.data_processing import obtain_most_likely_order_dic
 from pysaebm.utils.runners import extract_fname, cleanup_old_files
-from pysaebm.utils.fast_kde import FastKDE
-from pysaebm.utils.save_kde_dict import kde_dict_to_json_serializable
 
 # Import algorithms
 from pysaebm.algorithms import metropolis_hastings
@@ -181,7 +179,10 @@ def run_ebm(
             raise 
     
     if algorithm == 'kde':
-        final_theta_phi_params = kde_dict_to_json_serializable(final_theta_phi_params)
+        final_theta_phi_params = {
+            str(k): {kk: vv.tolist() for kk, vv in v.items()}
+            for k, v in final_theta_phi_params.items()
+        }
 
     # Most likely stage for all participants
     ml_stages = [
