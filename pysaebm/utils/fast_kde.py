@@ -18,8 +18,8 @@ def gaussian_kernel(x: float, data_point: float, bw: float) -> float:
     return math.exp(-0.5 * z * z) / (bw * SQRT_2PI)
 
 @njit(fastmath=True)
-def calculate_bandwidth(data: np.ndarray, weights: np.ndarray) -> float:
-    """ 
+def calculate_bandwidth(data: np.ndarray, weights: np.ndarray, bw_method:str) -> float:
+    """
         - data is all the measurements for a biomarker
         - weights are either the phi or theta weights
     """
@@ -40,7 +40,10 @@ def calculate_bandwidth(data: np.ndarray, weights: np.ndarray) -> float:
         sigma = math.sqrt(var / w_sum)
         n_eff = 1.0 / max(w2_sum, EPSILON)
         n = n_eff
-    return sigma * (4.0 / (3.0 * n)) ** 0.2
+    if bw_method == "scott":
+        return sigma * n ** (-0.2)
+    elif bw_method == "silverman":
+        return sigma * (4.0 / (3.0 * n)) ** 0.2
 
 @njit(fastmath=True)
 def _compute_pdf(x: float, data: np.ndarray, weights: np.ndarray, bw: float) -> float:
@@ -53,15 +56,17 @@ def _compute_pdf(x: float, data: np.ndarray, weights: np.ndarray, bw: float) -> 
 def _compute_ln_likelihood_kde_core(
     measurements: np.ndarray, 
     kde_data: np.ndarray,        
-    kde_weights: np.ndarray,     
+    kde_weights: np.ndarray,  
+    bw_method: str
 ) -> float:
     """
     Compute KDE log PDF efficiently using Numba.
     
     Args:
-        measurements: Biomarker measurements
+        measurements: Biomarker measurements for a specific individual
         kde_data: KDE sample points
         kde_weights: KDE weights
+        bw_method
         
     Returns:
         Total log PDF value
@@ -72,7 +77,7 @@ def _compute_ln_likelihood_kde_core(
         x = measurements[i]
         bm_data = kde_data[i]  # all the measurements for this bm across all participants
         weights = kde_weights[i]
-        bw = calculate_bandwidth(bm_data, weights)
+        bw = calculate_bandwidth(bm_data, weights, bw_method)
         pdf = _compute_pdf(x, bm_data, weights, bw)
         # Handle numerical stability
         total += np.log(max(pdf, EPSILON))
@@ -83,7 +88,8 @@ def compute_ln_likelihood_kde_fast(
     S_n: np.ndarray, 
     biomarkers: np.ndarray, 
     k_j: int, 
-    kde_dict: Dict[str, np.ndarray]
+    kde_dict: Dict[str, np.ndarray],
+    bw_method: str
 ) -> float:
     """
     Optimized KDE likelihood computation.
@@ -93,7 +99,8 @@ def compute_ln_likelihood_kde_fast(
         S_n: Stage thresholds
         biomarkers: Biomarker identifiers
         k_j: Stage value
-        kde_dict: Dictionary of KDE objects for each biomarker
+        kde_dict: Dictionary of KDE objects for each biomarker,
+        bw_method: method for bandwidth selection
         
     Returns:
         Log likelihood value
@@ -115,9 +122,10 @@ def compute_ln_likelihood_kde_fast(
     
     # Compute log likelihood
     return _compute_ln_likelihood_kde_core(
-        measurements.astype(np.float64),
+        measurements,
         kde_data,
         kde_weights,
+        bw_method
     )
 
 def get_initial_kde_estimates(

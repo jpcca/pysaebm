@@ -1,0 +1,13 @@
+2025-05-12 15:48:20,491 - INFO - Running em for file: j200_r0.25_Esn_kjOrdinalUniform_xnjNonNormal_m2
+2025-05-12 15:48:20,492 - INFO - Number of biomarkers: 10
+2025-05-12 15:48:21,245 - INFO - Iteration 20/200, Acceptance Ratio: 45.00%, Log Likelihood: -5807.2141, Current Accepted Order: dict_values([10, 7, 2, 4, 9, 5, 1, 6, 8, 3]), 
+2025-05-12 15:48:21,976 - INFO - Iteration 40/200, Acceptance Ratio: 37.50%, Log Likelihood: -5751.0562, Current Accepted Order: dict_values([1, 10, 2, 3, 7, 5, 6, 8, 9, 4]), 
+2025-05-12 15:48:22,709 - INFO - Iteration 60/200, Acceptance Ratio: 31.67%, Log Likelihood: -5750.4804, Current Accepted Order: dict_values([1, 4, 2, 3, 6, 5, 7, 9, 10, 8]), 
+2025-05-12 15:48:23,441 - INFO - Iteration 80/200, Acceptance Ratio: 25.00%, Log Likelihood: -5748.1164, Current Accepted Order: dict_values([1, 4, 2, 3, 6, 7, 5, 9, 10, 8]), 
+2025-05-12 15:48:24,174 - INFO - Iteration 100/200, Acceptance Ratio: 22.00%, Log Likelihood: -5746.2707, Current Accepted Order: dict_values([1, 4, 2, 3, 6, 7, 5, 9, 10, 8]), 
+2025-05-12 15:48:24,907 - INFO - Iteration 120/200, Acceptance Ratio: 19.17%, Log Likelihood: -5744.6780, Current Accepted Order: dict_values([1, 4, 2, 3, 6, 7, 8, 9, 10, 5]), 
+2025-05-12 15:48:25,637 - INFO - Iteration 140/200, Acceptance Ratio: 16.43%, Log Likelihood: -5744.6780, Current Accepted Order: dict_values([1, 4, 2, 3, 6, 7, 8, 9, 10, 5]), 
+2025-05-12 15:48:26,361 - INFO - Iteration 160/200, Acceptance Ratio: 16.25%, Log Likelihood: -5741.2882, Current Accepted Order: dict_values([1, 4, 2, 3, 5, 6, 7, 9, 10, 8]), 
+2025-05-12 15:48:27,083 - INFO - Iteration 180/200, Acceptance Ratio: 14.44%, Log Likelihood: -5741.2882, Current Accepted Order: dict_values([1, 4, 2, 3, 5, 6, 7, 9, 10, 8]), 
+2025-05-12 15:48:27,800 - INFO - Iteration 200/200, Acceptance Ratio: 13.00%, Log Likelihood: -5741.2882, Current Accepted Order: dict_values([1, 4, 2, 3, 5, 6, 7, 9, 10, 8]), 
+2025-05-12 15:48:28,234 - INFO - Results saved to algo_results/em/results/j200_r0.25_Esn_kjOrdinalUniform_xnjNonNormal_m2_results.json

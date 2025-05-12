@@ -1,23 +1,10 @@
-from typing import List, Optional, Tuple, Dict, Union, Any
+from typing import List, Optional, Tuple, Dict, Any
 import json 
 import pandas as pd 
 import numpy as np 
 import os 
-from collections import Counter, defaultdict
+from collections import defaultdict
 from bisect import bisect_right
-
-# List of supported experiment configurations
-experiment_names = [
-    "sn_kjOrdinalDM_xnjNormal",     # Experiment 1: Ordinal kj with Dirichlet-Multinomial, Normal Xnj
-    "sn_kjOrdinalDM_xnjNonNormal",  # Experiment 2: Ordinal kj with Dirichlet-Multinomial, Non-Normal Xnj
-    "sn_kjOrdinalUniform_xnjNormal", # Experiment 3: Ordinal kj with Uniform distribution, Normal Xnj
-    "sn_kjOrdinalUniform_xnjNonNormal", # Experiment 4: Ordinal kj with Uniform distribution, Non-Normal Xnj
-    "sn_kjContinuousUniform",       # Experiment 5: Continuous kj with Uniform distribution
-    "sn_kjContinuousBeta",          # Experiment 6: Continuous kj with Beta distribution
-    "xiNearNormal_kjContinuousUniform", # Experiment 7: Near-normal Xi with Continuous Uniform kj
-    "xiNearNormal_kjContinuousBeta", # Experiment 8: Near-normal Xi with Continuous Beta kj
-    "xiNearNormalWithNoise_kjContinuousBeta", # Experiment 9: Same as Exp 8 but with noises to xi
-]
 
 # Rank continuous kjs
 def get_rank(sorted_et:np.ndarray, val:float):
@@ -201,7 +188,8 @@ def generate_measurements_kjContinuous(
     shuffled_biomarkers: np.ndarray,
     params: Dict[str, Dict[str, float]],
     keep_all_cols: bool,
-    rng: Optional[np.random.Generator] = None
+    noise_std_parameter:float,
+    rng: Optional[np.random.Generator] = None,
 ) -> List[Dict[str, Any]]:
     """
     Generate measurements for the continuous kj experiment types.
@@ -243,7 +231,7 @@ def generate_measurements_kjContinuous(
         # If with noise, generate noises here
         max_stage = len(shuffled_biomarkers)
         if experiment_name.startswith('xiNearNormalWithNoise'):
-            noise_std = np.sqrt(max_stage * 0.025)
+            noise_std = np.sqrt(max_stage * noise_std_parameter)
             noises = rng.normal(0, noise_std, size=max_stage)
         for biomarker_idx, biomarker in enumerate(shuffled_biomarkers):
             event_time = event_time_dict[biomarker] 
@@ -290,7 +278,7 @@ def generate_measurements_kjContinuous(
 
 def generate_data(
     experiment_name: str,
-    params_file: str,
+    params: Dict[str, Dict[str, float]],
     n_participants: int,
     healthy_ratio: float,
     output_dir: str,
@@ -301,6 +289,8 @@ def generate_data(
     prefix: Optional[str],
     suffix: Optional[str],
     keep_all_cols: bool,
+    fixed_biomarker_order: bool,
+    noise_std_parameter:float,
     true_order_and_stages_dict: Dict[str, Dict[str, int]],
 ) -> pd.DataFrame:
     """
@@ -312,7 +302,7 @@ def generate_data(
 
     Args:
         experiment_name: Identifier for the experiment type
-        params_file: Path to the JSON file containing biomarker parameters
+        params: params: Dictionary of biomarker parameters
         n_participants: Total number of participants to simulate
         healthy_ratio: Proportion of participants to be simulated as healthy
         output_dir: Directory to save the resulting CSV
@@ -323,6 +313,7 @@ def generate_data(
         prefix: Optional prefix for the output filename
         suffix: Optional suffix for the output filename
         keep_all_cols: Whether to include additional metadata columns in the output
+        fixed_biomarker_order: If True, will use the order as in params_file. If False, will randomize the ordering.
         true_order_and_stages_dict: Dictionary to store the true biomarker ordering for evaluation
     
     Returns:
@@ -331,18 +322,19 @@ def generate_data(
     # Parameter validation
     assert n_participants > 0, "Number of participants must be greater than 0."
     assert 0 <= healthy_ratio <= 1, "Healthy ratio must be between 0 and 1."
-    assert experiment_name in experiment_names, "Wrong experiment name!"
 
     # Initialize random number generator
     rng = np.random.default_rng(seed)
 
-    # Load biomarker parameters from file
-    with open(params_file) as f:
-        params = json.load(f)
-
     # Randomly shuffle biomarkers to create a ground truth ordering
     # This is correct. Biomarkers are shuffled and initial event_times are 1 to max_stage
-    shuffled_biomarkers = rng.permutation(np.array(list(params.keys())))
+
+    # If fixed biomarker order, I'll use the order as in the params
+    if fixed_biomarker_order:
+        shuffled_biomarkers = np.array(list(params.keys()))
+    # Otherwise, randomize the order
+    else:
+        shuffled_biomarkers = rng.permutation(np.array(list(params.keys())))
     max_stage = len(shuffled_biomarkers)
     event_times = np.arange(1, max_stage+1)
 
@@ -369,10 +361,15 @@ def generate_data(
             else:
                 dirichlet_alphas = dirichlet_alpha['uniform']
             stage_probs = rng.dirichlet(dirichlet_alphas)
+            # # Integer division
+            # stage_counts = [n_diseased // max_stage] * max_stage
+            # remainder = n_diseased % max_stage
+            # for i in range(remainder):
+            #     stage_counts[i] += 1  # distribute the leftover
         else:
             # Use multinomial Dirichlet prior (custom stage distribution)
             stage_probs = rng.dirichlet(dirichlet_alpha['multinomial'])
-            
+
         # Sample from multinomial to get actual stage counts
         stage_counts = rng.multinomial(n_diseased, stage_probs)
         
@@ -443,7 +440,8 @@ def generate_data(
 
         # Generate measurements using continuous disease progression model
         data = generate_measurements_kjContinuous(
-            experiment_name, event_time_dict, all_kjs, all_diseased, shuffled_biomarkers, params, keep_all_cols, rng=rng)
+            experiment_name, event_time_dict, all_kjs, all_diseased, 
+            shuffled_biomarkers, params, keep_all_cols, noise_std_parameter=noise_std_parameter, rng=rng)
         
         sorted_event_times = sorted(event_times)
         true_stages = [get_rank(sorted_event_times, x) for x in all_kjs]
@@ -498,7 +496,9 @@ def generate(
     },
     prefix: Optional[str] = None,
     suffix: Optional[str] = None,
-    keep_all_cols: bool = False 
+    keep_all_cols: bool = False ,
+    fixed_biomarker_order: bool = False,
+    noise_std_parameter: float = 0.05
 ) -> Dict[str, Dict[str, int]]:
     """
     Generate multiple datasets for different experimental configurations.
@@ -525,12 +525,21 @@ def generate(
         prefix: Optional prefix for all filenames
         suffix: Optional suffix for all filenames
         keep_all_cols: Whether to include additional metadata columns (k_j, event_time, affected)
+        fixed_biomarker_order: If True, will use the order as in params_file. If False, will randomize the ordering. 
+        noise_std_parameter: the parameter in N(0, N \cdot noise_std_parameter) in experiment 9
         
     Returns:
         Dict mapping filenames to dictionaries of biomarker event time orderings
     """
     # Ensure output directory exists
     os.makedirs(output_dir, exist_ok=True)
+
+    # Load biomarker parameters from file
+    with open(params_file) as f:
+        params = json.load(f)
+
+    if len(params) != len(dirichlet_alpha['multinomial']):
+        raise ValueError("Your dirichlet_alpha multinomial must have the same length as your number of biomarkers!")
 
     # Initialize master random number generator
     if seed is None:
@@ -551,7 +560,7 @@ def generate(
                 # Generate a single dataset with the current parameter combination
                 generate_data(
                     experiment_name=experiment_name,
-                    params_file=params_file,
+                    params = params,
                     n_participants=participant_count,
                     healthy_ratio=healthy_ratio,
                     output_dir=output_dir,
@@ -562,6 +571,8 @@ def generate(
                     prefix=prefix,
                     suffix=suffix,
                     keep_all_cols=keep_all_cols,
+                    fixed_biomarker_order = fixed_biomarker_order,
+                    noise_std_parameter = noise_std_parameter,
                     true_order_and_stages_dict=true_order_and_stages_dict,
                 )
                 

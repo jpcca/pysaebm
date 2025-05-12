@@ -2,16 +2,17 @@ import json
 import pandas as pd
 import os
 import logging
-from typing import List, Dict, Optional
+from typing import List, Dict, Optional, Union
 from scipy.stats import kendalltau
 import re 
 import math 
+import numpy as np 
 
 # Import utility functions
 from pysaebm.utils.visualization import save_heatmap, save_traceplot 
 from pysaebm.utils.logging_utils import setup_logging 
-from pysaebm.utils.data_processing import obtain_most_likely_order_dic
 from pysaebm.utils.runners import extract_fname, cleanup_old_files
+import pysaebm.utils.data_processing as data_utils
 
 # Import algorithms
 from pysaebm.algorithms import metropolis_hastings
@@ -33,8 +34,9 @@ def run_ebm(
     skip_traceplot: Optional[bool] = False,
     prior_n: float = 1.0,    # Strength of the prior belief in prior estimate of the mean (μ), set to 1 as default
     prior_v: float = 1.0,     # Prior degrees of freedom, influencing the certainty of prior estimate of the variance (σ²), set to 1 as default
-    weight_change_threshold: float = 0.01
-) -> Dict[str, float]:
+    weight_change_threshold: float = 0.01,
+    bw_method: str = 'scott'
+) -> Dict[str, Union[str, int, float, Dict, List]]:
     """
     Run the metropolis hastings algorithm and save results 
 
@@ -57,9 +59,10 @@ def run_ebm(
         prior_v (prior degree of freedom) are the weakly informative priors, default to be 1.0
         weight_change_threshold (float): Threshold for kde weights (if np.mean(new_weights - old_weights)) > threshold, then recalculate
             otherwise use the new kde and weights
+        bw_method (str): bandwidth selection method in kde
 
     Returns:
-        Dict[str, float]: Results including Kendall's tau and p-value.
+        Dict[str, Union[str, int, float, Dict, List]]: Results including everything, e.g., Kendall's tau and p-value.
     """
     allowed_algorithms = {'hard_kmeans', 'mle', 'conjugate_priors', 'em', 'kde'}  # Using a set for faster lookup
     if algorithm not in allowed_algorithms:
@@ -107,13 +110,14 @@ def run_ebm(
     n_biomarkers = len(data.biomarker.unique())
     logging.info(f"Number of biomarkers: {n_biomarkers}")
 
-    # Determine the number of biomarkers
     n_participants = len(data.participant.unique())
+    non_diseased_ids = data.loc[data.diseased == False].participant.unique()
+    diseased_ids = data.loc[data.diseased == True].participant.unique()
 
     # Run the Metropolis-Hastings algorithm
     try:
-        accepted_order_dicts, log_likelihoods, final_theta_phi_params, final_stage_post = metropolis_hastings(
-            data, n_iter, n_shuffle, algorithm, prior_n=prior_n, prior_v=prior_v, weight_change_threshold = weight_change_threshold)
+        accepted_order_dicts, log_likelihoods, final_theta_phi_params, final_stage_post, current_pi = metropolis_hastings(
+            data, n_iter, n_shuffle, algorithm, prior_n=prior_n, prior_v=prior_v, weight_change_threshold = weight_change_threshold, bw_method=bw_method)
     except Exception as e:
         logging.error(f"Error in Metropolis-Hastings algorithm: {e}")
         raise
@@ -133,7 +137,7 @@ def run_ebm(
 
     # Calculate the most likely order
     try:
-        most_likely_order_dic = obtain_most_likely_order_dic(
+        most_likely_order_dic = data_utils.obtain_most_likely_order_dic(
             accepted_order_dicts, burn_in, thinning
         )
         most_likely_order_dic = dict(sorted(most_likely_order_dic.items()))
@@ -152,14 +156,17 @@ def run_ebm(
     # Save heatmap
     if not skip_heatmap:
         try:
+            pretty_name = algorithm.replace("_", " ").title()
+
             save_heatmap(
                 accepted_order_dicts,
                 burn_in,
                 thinning,
                 folder_name=heatmap_folder,
                 file_name=f"{fname_prefix}{fname}_heatmap_{algorithm}",
-                title=f"Heatmap of {fname_prefix}{fname} Using {algorithm}, {plot_title_detail}",
-                best_order = most_likely_order_dic
+                title=f"{pretty_name} Ordering Result",
+                # title=f"Heatmap of {fname_prefix}{fname} Using {algorithm}",
+                best_order = order_with_higest_ll
             )
         except Exception as e:
             logging.error(f"Error generating heatmap: {e}")
@@ -184,23 +191,57 @@ def run_ebm(
             for k, v in final_theta_phi_params.items()
         }
 
-    # Most likely stage for all participants
-    ml_stages = [
-        max(enumerate(final_stage_post[pid]), key=lambda x: x[1])[0]
-        if pid in final_stage_post else 0
-        for pid in range(n_participants)
+    # Most likely stage for diseased participants
+    ml_stages_diseased = [
+        np.random.choice(len(final_stage_post[pid]), p=final_stage_post[pid]) + 1
+        for pid in diseased_ids
     ]
+
+    # Whole dataset
+    participant_data = data_utils.preprocess_participant_data(data, order_with_higest_ll)
+    healthy_ratio = len(non_diseased_ids)/n_participants
+    updated_pi = [healthy_ratio] + [(1 - healthy_ratio) * x for x in current_pi]
+    final_stage_post2 = data_utils.obtain_unbaised_stage_likelihood_posteriors(
+                algorithm,
+                participant_data,
+                final_theta_phi_params,
+                updated_pi,
+                bw_method = bw_method
+            )
+    ml_stages = [
+            np.random.choice(len(final_stage_post2[pid]), p=final_stage_post2[pid])
+            for pid in range(n_participants)
+        ]
     
     qwk = None 
     mae = None
     mse = None
     rmse = None
+    qwk2 = None 
+    mae2 = None
+    mse2 = None
+    rmse2 = None
+    true_stages_diseased = None
 
     if true_stages:
+        # Whole dataset
         qwk = cohen_kappa_score(true_stages, ml_stages, weights='quadratic')
         mae = mean_absolute_error(true_stages, ml_stages)
         mse = mean_squared_error(true_stages, ml_stages)
         rmse = math.sqrt(mse)
+
+        # Diseased only
+        true_stages_diseased = [true_stages[x] for x in diseased_ids]
+        qwk2 = cohen_kappa_score(true_stages_diseased, ml_stages_diseased, weights='quadratic')
+        mae2 = mean_absolute_error(true_stages_diseased, ml_stages_diseased)
+        mse2 = mean_squared_error(true_stages_diseased, ml_stages_diseased)
+        rmse2 = math.sqrt(mse2)
+
+
+    if true_order_dict:
+        true_order_result = {k:int(v) for k, v in true_order_dict.items()}
+    else:
+        true_order_result = None
 
     # Save results 
     results = {
@@ -209,20 +250,32 @@ def run_ebm(
         "n_shuffle": n_shuffle, 
         "burn_in": burn_in,
         "thinning": thinning,
+        'healthy_ratio': healthy_ratio,
+        "kendalls_tau2": tau2,
+        "p_value2": p_value2,
         "kendalls_tau": tau, 
         "p_value": p_value,
         "quadratic_weighted_kappa": qwk,
         "mean_absolute_error": mae,
         "mean_squared_error": mse,
         "root_mean_squared_error": rmse,
-        'true_order': {k:int(v) for k, v in true_order_dict.items()},
+        "quadratic_weighted_kappa_diseased": qwk2,
+        "mean_absolute_error_diseased": mae2,
+        "mean_squared_error_diseased": mse2,
+        "root_mean_squared_error_diseased": rmse2,
+        'current_pi': current_pi.tolist(),
+        # updated pi is the pi for all stages, including 0
+        'updated_pi': updated_pi,
+        'true_order': true_order_result,
         'ml_order': {k:int(v) for k, v in most_likely_order_dic.items()},
         "order_with_higest_ll": {k: int(v) for k, v in order_with_higest_ll.items()},
-        "kendalls_tau2": tau2,
-        "p_value2": p_value2,
         "true_stages": true_stages,
         'ml_stages': ml_stages,
-        "stage_likelihood_posterior": {str(k): v.tolist() for k, v in final_stage_post.items()},
+        # stages diseased only contains stage prediction for diseased patients
+        "true_stages_diseased": true_stages_diseased,
+        'ml_stages_diseased': ml_stages_diseased,
+        "stage_likelihood_posterior": {str(k): v.tolist() for k, v in final_stage_post2.items()},
+        "stage_likelihood_posterior_diseased": {str(k): v.tolist() for k, v in final_stage_post.items()},
         "final_theta_phi_params": final_theta_phi_params,
     }
     try:

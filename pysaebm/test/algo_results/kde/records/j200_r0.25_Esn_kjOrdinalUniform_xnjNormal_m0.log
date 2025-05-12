@@ -1,0 +1,13 @@
+2025-05-12 15:48:46,789 - INFO - Running kde for file: j200_r0.25_Esn_kjOrdinalUniform_xnjNormal_m0
+2025-05-12 15:48:46,790 - INFO - Number of biomarkers: 10
+2025-05-12 15:48:48,516 - INFO - Iteration 20/200, Acceptance Ratio: 25.00%, Log Likelihood: -7122.1889, Current Accepted Order: dict_values([1, 2, 3, 4, 8, 5, 7, 9, 10, 6]), 
+2025-05-12 15:48:50,224 - INFO - Iteration 40/200, Acceptance Ratio: 15.00%, Log Likelihood: -7074.6304, Current Accepted Order: dict_values([1, 2, 3, 4, 8, 5, 6, 9, 10, 7]), 
+2025-05-12 15:48:51,932 - INFO - Iteration 60/200, Acceptance Ratio: 11.67%, Log Likelihood: -7012.2749, Current Accepted Order: dict_values([1, 2, 3, 4, 7, 5, 6, 9, 10, 8]), 
+2025-05-12 15:48:53,640 - INFO - Iteration 80/200, Acceptance Ratio: 8.75%, Log Likelihood: -7012.2749, Current Accepted Order: dict_values([1, 2, 3, 4, 7, 5, 6, 9, 10, 8]), 
+2025-05-12 15:48:55,347 - INFO - Iteration 100/200, Acceptance Ratio: 7.00%, Log Likelihood: -7012.2749, Current Accepted Order: dict_values([1, 2, 3, 4, 7, 5, 6, 9, 10, 8]), 
+2025-05-12 15:48:57,037 - INFO - Iteration 120/200, Acceptance Ratio: 6.67%, Log Likelihood: -6968.2720, Current Accepted Order: dict_values([1, 2, 3, 4, 6, 5, 7, 9, 10, 8]), 
+2025-05-12 15:48:58,730 - INFO - Iteration 140/200, Acceptance Ratio: 6.43%, Log Likelihood: -6964.6100, Current Accepted Order: dict_values([1, 2, 3, 4, 5, 6, 7, 9, 10, 8]), 
+2025-05-12 15:49:00,433 - INFO - Iteration 160/200, Acceptance Ratio: 5.62%, Log Likelihood: -6964.6100, Current Accepted Order: dict_values([1, 2, 3, 4, 5, 6, 7, 9, 10, 8]), 
+2025-05-12 15:49:02,128 - INFO - Iteration 180/200, Acceptance Ratio: 5.00%, Log Likelihood: -6964.6100, Current Accepted Order: dict_values([1, 2, 3, 4, 5, 6, 7, 9, 10, 8]), 
+2025-05-12 15:49:03,815 - INFO - Iteration 200/200, Acceptance Ratio: 4.50%, Log Likelihood: -6964.6100, Current Accepted Order: dict_values([1, 2, 3, 4, 5, 6, 7, 9, 10, 8]), 
+2025-05-12 15:49:04,454 - INFO - Results saved to algo_results/kde/results/j200_r0.25_Esn_kjOrdinalUniform_xnjNormal_m0_results.json

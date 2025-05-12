@@ -1,9 +1,9 @@
 import numpy as np 
 import pandas as pd 
 import pysaebm.utils.data_processing as data_utils 
-from typing import List, Dict, Tuple, Union
+import pysaebm.utils.ucl_gmm as gmm
+from typing import List, Dict, Tuple
 import logging 
-from collections import defaultdict 
 
 def metropolis_hastings(
     data_we_have: pd.DataFrame,
@@ -12,7 +12,8 @@ def metropolis_hastings(
     algorithm: str,
     prior_n: float,
     prior_v: float,
-    weight_change_threshold: float = 0.01
+    weight_change_threshold: float = 0.01,
+    bw_method: str = 'scott'
 ) -> Tuple[List[Dict], List[float], Dict[str, Dict], Dict[int, np.ndarray]]:
     """
     Perform Metropolis-Hastings sampling with conjugate priors to estimate biomarker orderings.
@@ -26,6 +27,7 @@ def metropolis_hastings(
         prior_v (prior degree of freedom) are the weakly infomred priors. 
         weight_change_threshold (float): Threshold for kde weights (if np.mean(new_weights - old_weights)) > threshold, then recalculate
             otherwise use the new kde and weights
+        bw_method (str): bandwidth selection method in kde
 
     Returns:
         Tuple[List[Dict], List[float], Dict[str, Dict], Dict[int, np.ndarray]]: 
@@ -34,7 +36,6 @@ def metropolis_hastings(
             - Final theta phi estimates
             - Stage likelihood posterior 
     """
-    n_participants = len(data_we_have.participant.unique())
     biomarkers = data_we_have.biomarker.unique()
     n_stages = len(biomarkers) + 1
     disease_stages = np.arange(start=1, stop=n_stages, step=1)
@@ -84,7 +85,7 @@ def metropolis_hastings(
         """
         If conjugate priors or MLE, update theta_phi_estimates
         """
-        if algorithm != 'hard_kmeans':
+        if algorithm not in ['hard_kmeans']:
 
             biomarker_data = data_utils.preprocess_biomarker_data(data_we_have, new_order_dict)
 
@@ -96,7 +97,8 @@ def metropolis_hastings(
                 non_diseased_ids,
                 current_theta_phi,
                 current_pi,
-                disease_stages
+                disease_stages,
+                bw_method
             )
 
             # Compute the new theta_phi_estimates based on new_order
@@ -118,18 +120,20 @@ def metropolis_hastings(
                 non_diseased_ids,
                 new_theta_phi,
                 current_pi,
-                disease_stages
+                disease_stages,
+                bw_method
             )
 
         else:
-            # If hard kmeans, it will use `current_theta_phi = theta_phi_default.copy()` defined above
+            # If hard kmeans or gmm, it will use `current_theta_phi = theta_phi_default.copy()` defined above
             new_ln_likelihood, stage_post_new = data_utils.compute_total_ln_likelihood_and_stage_likelihoods(
                 algorithm,
                 participant_data,
                 non_diseased_ids,
                 current_theta_phi,
                 current_pi,
-                disease_stages
+                disease_stages,
+                bw_method
             )
 
         # Compute acceptance probability
@@ -142,7 +146,7 @@ def metropolis_hastings(
             current_order_dict = new_order_dict
             current_ln_likelihood = new_ln_likelihood
             current_stage_post = stage_post_new
-            if algorithm != 'hard_kmeans':
+            if algorithm not in ['hard_kmeans']:
                 current_theta_phi = new_theta_phi
             acceptance_count += 1
 
@@ -164,5 +168,5 @@ def metropolis_hastings(
                 f"Current Accepted Order: {current_order_dict.values()}, "
                 # f"Current Theta and Phi Parameters: {theta_phi_estimates.items()} "
             )
-        
-    return all_accepted_orders, log_likelihoods, current_theta_phi, current_stage_post
+
+    return all_accepted_orders, log_likelihoods, current_theta_phi, current_stage_post, current_pi

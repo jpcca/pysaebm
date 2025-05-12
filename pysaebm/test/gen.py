@@ -8,8 +8,8 @@ params_file = get_params_path()
 
 experiment_names = [
     # "sn_kjOrdinalDM_xnjNormal",     # Experiment 1: Ordinal kj with Dirichlet-Multinomial, Normal Xnj
-    "sn_kjOrdinalDM_xnjNonNormal",  # Experiment 2: Ordinal kj with Dirichlet-Multinomial, Non-Normal Xnj
-    # "sn_kjOrdinalUniform_xnjNormal", # Experiment 3: Ordinal kj with Uniform distribution, Normal Xnj
+    # "sn_kjOrdinalDM_xnjNonNormal",  # Experiment 2: Ordinal kj with Dirichlet-Multinomial, Non-Normal Xnj
+    "sn_kjOrdinalUniform_xnjNormal", # Experiment 3: Ordinal kj with Uniform distribution, Normal Xnj
     "sn_kjOrdinalUniform_xnjNonNormal", # Experiment 4: Ordinal kj with Uniform distribution, Non-Normal Xnj
     # "sn_kjContinuousUniform",       # Experiment 5: Continuous kj with Uniform distribution
     # "sn_kjContinuousBeta",          # Experiment 6: Continuous kj with Beta distribution
@@ -37,6 +37,7 @@ def convert_np_types(obj):
 all_exp_dicts = []
 
 for exp_name in experiment_names:
+    # biomarker event time dict
     bm_et_dict = generate(
             experiment_name = exp_name,
             params_file=params_file,
@@ -46,6 +47,7 @@ for exp_name in experiment_names:
             output_dir='my_data',
             seed=42,
             keep_all_cols = False,
+            fixed_biomarker_order = False
         )
     all_exp_dicts.append(bm_et_dict)
 

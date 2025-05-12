@@ -405,7 +405,8 @@ def compute_total_ln_likelihood_and_stage_likelihoods(
     non_diseased_ids: np.ndarray,
     theta_phi: Dict[str, Dict],
     current_pi: np.ndarray,
-    disease_stages: np.ndarray
+    disease_stages: np.ndarray,
+    bw_method: str
     ) -> Tuple[float, Dict[int, np.ndarray]]:
     """Calculate the total log likelihood across all participants 
         and obtain stage_likelihoods_posteriors
@@ -420,7 +421,7 @@ def compute_total_ln_likelihood_and_stage_likelihoods(
             # Non-diseased participant (fixed k=0)
             if algorithm == 'kde':
                 ln_likelihood = compute_ln_likelihood_kde_fast(
-                    measurements, S_n, biomarkers, k_j = 0, kde_dict = theta_phi
+                    measurements, S_n, biomarkers, k_j = 0, kde_dict = theta_phi, bw_method=bw_method
                 )
             else:
                 ln_likelihood = compute_ln_likelihood(
@@ -430,7 +431,7 @@ def compute_total_ln_likelihood_and_stage_likelihoods(
             if algorithm == 'kde':
                 ln_stage_likelihoods = np.array([
                     compute_ln_likelihood_kde_fast(
-                        measurements, S_n, biomarkers, k_j = k_j, kde_dict=theta_phi
+                        measurements, S_n, biomarkers, k_j = k_j, kde_dict=theta_phi, bw_method=bw_method
                     ) + np.log(current_pi[k_j-1])
                     for k_j in disease_stages
                 ])
@@ -466,6 +467,41 @@ def compute_total_ln_likelihood_and_stage_likelihoods(
         total_ln_likelihood += ln_likelihood
     return total_ln_likelihood, stage_likelihoods_posteriors
 
+def obtain_unbaised_stage_likelihood_posteriors(
+        algorithm:str,
+        participant_data: Dict[int, Tuple[np.ndarray, np.ndarray, np.ndarray]],
+        theta_phi: Dict[str, Dict],
+        current_pi: np.ndarray,
+        bw_method: str
+        ) -> Dict[int, np.ndarray]:
+    """Obtain stage_likelihoods_posteriors while ignoring the diagnosis label or diseased or not. 
+    """
+    stage_likelihoods_posteriors = {}
+
+    for participant, (measurements, S_n, biomarkers) in participant_data.items():
+        
+        if algorithm == 'kde':
+            ln_stage_likelihoods = np.array([
+                compute_ln_likelihood_kde_fast(
+                    measurements, S_n, biomarkers, k_j = k_j, kde_dict=theta_phi, bw_method=bw_method
+                ) + np.log(current_pi[k_j-1])
+                for k_j in range(0, len(theta_phi) + 1)
+            ])
+        else:
+            ln_stage_likelihoods = np.array([
+                compute_ln_likelihood(
+                    measurements, S_n, biomarkers, k_j = k_j, theta_phi=theta_phi
+                ) + np.log(current_pi[k_j-1])
+                for k_j in range(0, len(theta_phi) + 1)
+            ])
+        # Use log-sum-exp trick for numerical stability
+        max_ln_likelihood = np.max(ln_stage_likelihoods)
+        stage_likelihoods = np.exp(ln_stage_likelihoods - max_ln_likelihood)
+        likelihood_sum = np.sum(stage_likelihoods)
+
+        stage_likelihoods_posteriors[participant] = stage_likelihoods/likelihood_sum
+
+    return stage_likelihoods_posteriors
 
 @njit
 def _compute_ln_likelihood_core(measurements, mus, stds):

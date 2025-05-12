@@ -1,0 +1,13 @@
+2025-05-12 15:45:57,105 - INFO - Running mle for file: j200_r0.25_Esn_kjOrdinalUniform_xnjNormal_m2
+2025-05-12 15:45:57,107 - INFO - Number of biomarkers: 10
+2025-05-12 15:45:57,957 - INFO - Iteration 20/200, Acceptance Ratio: 45.00%, Log Likelihood: -5292.8027, Current Accepted Order: dict_values([1, 10, 2, 6, 7, 3, 5, 4, 8, 9]), 
+2025-05-12 15:45:58,787 - INFO - Iteration 40/200, Acceptance Ratio: 35.00%, Log Likelihood: -5258.3762, Current Accepted Order: dict_values([1, 10, 2, 4, 6, 3, 7, 5, 8, 9]), 
+2025-05-12 15:45:59,612 - INFO - Iteration 60/200, Acceptance Ratio: 31.67%, Log Likelihood: -5197.8889, Current Accepted Order: dict_values([1, 10, 2, 3, 5, 4, 7, 8, 6, 9]), 
+2025-05-12 15:46:00,445 - INFO - Iteration 80/200, Acceptance Ratio: 23.75%, Log Likelihood: -5197.8889, Current Accepted Order: dict_values([1, 10, 2, 3, 5, 4, 7, 8, 6, 9]), 
+2025-05-12 15:46:01,282 - INFO - Iteration 100/200, Acceptance Ratio: 19.00%, Log Likelihood: -5197.8889, Current Accepted Order: dict_values([1, 10, 2, 3, 5, 4, 7, 8, 6, 9]), 
+2025-05-12 15:46:02,119 - INFO - Iteration 120/200, Acceptance Ratio: 18.33%, Log Likelihood: -5185.1206, Current Accepted Order: dict_values([1, 10, 2, 3, 5, 4, 6, 8, 7, 9]), 
+2025-05-12 15:46:02,944 - INFO - Iteration 140/200, Acceptance Ratio: 17.14%, Log Likelihood: -5177.8775, Current Accepted Order: dict_values([1, 10, 2, 3, 5, 4, 6, 8, 7, 9]), 
+2025-05-12 15:46:03,762 - INFO - Iteration 160/200, Acceptance Ratio: 15.62%, Log Likelihood: -5174.2679, Current Accepted Order: dict_values([1, 10, 2, 3, 5, 4, 6, 7, 8, 9]), 
+2025-05-12 15:46:04,581 - INFO - Iteration 180/200, Acceptance Ratio: 15.56%, Log Likelihood: -5173.7386, Current Accepted Order: dict_values([10, 1, 2, 3, 4, 6, 5, 7, 8, 9]), 
+2025-05-12 15:46:05,399 - INFO - Iteration 200/200, Acceptance Ratio: 15.00%, Log Likelihood: -5169.8872, Current Accepted Order: dict_values([1, 10, 2, 3, 4, 5, 6, 7, 8, 9]), 
+2025-05-12 15:46:05,833 - INFO - Results saved to algo_results/mle/results/j200_r0.25_Esn_kjOrdinalUniform_xnjNormal_m2_results.json

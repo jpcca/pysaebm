@@ -1,8 +1,6 @@
 # `pysaebm`
 
 
-`pysaebm` is the `python` package for the paper of "Stage-Aware Event-Based Modeling (SA-EBM) for Disease Progression"
-
 
 ## Installation
 
@@ -17,15 +15,11 @@ pip install pysaebm
 
 Examples of how to generate data are at [./pysaebm/test/gen.py](./pysaebm/test/gen.py).
 
-
 Because in each generation, the ordering is randomized, you will see a `true_order_and_stages.json` that tells you the corresponding true stages and true order for each output csv file.
-
 
 The source codes for data generation can be seen in [./pysaebm/utils/generate_data.py](./pysaebm/utils/generate_data.py).
 
-
 This is the full `generate` parameters:
-
 
 ```py
 generate(
@@ -56,14 +50,13 @@ generate(
    },
    prefix: Optional[str] = None,
    suffix: Optional[str] = None,
-   keep_all_cols: bool = False
+   keep_all_cols: bool = False,
+   fixed_biomarker_order: bool = False,
 )
 ```
 
-
 Explanations:
 - `experiment_name` should be one of the these:
-
 
 ```py
 experiment_names = [
@@ -79,41 +72,21 @@ experiment_names = [
 ]
 ```
 
-
 You can find the explanation to these terms from our paper.
 
-
 - `params_file`: The path to the parameters in json. Example is [./pysaebm/data/params.json](./pysaebm/data/params.json). You should specify each biomarker's `theta_mean`, `theta_std`, `phi_mean`, and `phi_std`.
-
-
 - `js`: An array of integers indicating the number of participants you want.
-
-
 - `rs`: An array of floats indicating the number of healthy ratios.
-
-
 - `num_of_datasets_per_combination`: The number of repetitions for each j-r combination.
-
-
 - `output_dir`: The directory where you want to save the generated data.
-
-
 - `seed`: An integer serving as the seed for the randomness.
-
-
 - `dirichlet_alpha`: This should be a dictionary where keys are `uniform` and `multinomial`. They correspond to `kjOrdinalUniform` and `kjOrdinalDM`.
-
-
 - `beta_params`: A dictionary where keys are `near_normal`, `uniform`, and `regular`, corresponding to `xiNearNormal`, `kjContinuousUniform` and `kjContinuousBeta`.
-
-
 - `prefix`: Optional prefix for the output csv file names.
-
-
 - `suffix`: Optional suffix for the output csv file names.
-
-
 - `keep_all_cols`: Whether to include additional metadata columns (k_j, event_time, affected)
+
+Note that you need to make sure the `dirichlet_alpha['multinomial']` has the same length as your params dict (as in your `params_file`).
 
 
 ## Run EBM Algorithms
@@ -245,8 +218,7 @@ results = {
 
 ## Use your own data
 
-
-You are more than welcome to use your own data! That's the sole purpose of `pysaebm`: to allow you to analyze your own data. However, you do have to make sure that the input data have at least four columns:
+You are more than welcome to use your own data. After all, the very purpose of `pysaebm` is: to allow you to analyze your own data. However, you do have to make sure that the input data have at least four columns:
 
 
 - participant: int
@@ -254,9 +226,9 @@ You are more than welcome to use your own data! That's the sole purpose of `pysa
 - measurement: float
 - diseased: bool
 
+The `participant` column should be intergers from 0 to `J-1` where `J` is the number of participants. 
 
 Samples are available at [./pysaebm/data/samples/](./pysaebm/data/samples/).
-
 
 The data should be in a [tidy format](https://vita.had.co.nz/papers/tidy-data.pdf), i.e.,
 
@@ -355,7 +327,6 @@ The data should be in a [tidy format](https://vita.had.co.nz/papers/tidy-data.pd
    - Reorganized the results.json
    - Allow `output_dir` in `run_ebm`.
 
-
 - 2025-04-08 (V 1.00)
    - Modify the FastKDE implementation.
    - Reorganized the `results.json`.
@@ -372,5 +343,46 @@ The data should be in a [tidy format](https://vita.had.co.nz/papers/tidy-data.pd
    - Renamed the package to `pypysaebm`.
    - Reconstructed the `README` documentation. 
 
-- 2025-05-16 (V 1.2)
+- 2025-04-16 (V 2.0.1)
    - Did the `fast_kde.py` on my own. Streamlined the script quite a bit. Now it's very readable and easy to follow & understand. 
+   - Used scott for bandwidth selection
+
+- 2025-04-16 (V 2.0.2)
+   - Checked whether the length of params is the same as the dirichlet_alpha multinomial. 
+   - Added an option to use fixed biomarker order in data generation. 
+
+- 2025-04-19 (V 2.0.3)
+   - Anonymize the readme on Pypi
+
+- 2025-04-20
+   - Modify the format of the result of run.py to be `Dict[str, Union[str, int, float, Dict, List]]`.
+
+- 2025-04-21
+   - Use `np.random.choice(len(final_stage_post[pid]), p=final_stage_post[pid]) + 1` to obtain `ml_stages` instead of `argmax`.
+
+- 2025-04-27 (V 2.0.2)
+   - Make the noise std as a parameter in experiment 9. 
+   - Added `current_pi` to the output results json. 
+
+- 2025-04-30 (V 2.0.3)
+   - Added `gmm` algorithm. 
+
+- 2025-05-01 (V 2.0.5)
+   - True uniform kjs now in data generation.
+
+- 2025-05-02 (V 2.0.6)
+   - Distinguished between 'gmm' and 'gmm_dm_prior'.
+
+- 2025-05-03 (V 2.0.9)
+   - Distinguished between 'conjugate_priors' and "conjugate_priors_gm_prior".
+
+- 2025-05-07 (V 2.1.0)
+   - Kept only the original five algorithms. 
+   - In `run.py`, make sure to check whether true_order exists or not before saving to json. 
+
+- 2025-05-11 (V 2.1.1)
+   - Updated data generation, now using approximate uniform in kj generation.
+
+- 2025-05-12 (V 2.1.2)
+   - Added stage prediction for healthy participants as well, which means for each and every participant, when referencing stage, all stages (including 0) will be tested. 
+   - Updated heatmap visualization design; using blues color map now. 

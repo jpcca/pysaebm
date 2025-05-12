@@ -1,0 +1,38 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pysaebm"
+version = "2.0.2"
+description = "Stage-Aware Event-Based Modeling for Disease Progression"
+readme = "README.md"
+authors = [
+  {name = "Hongtao Hao and Joseph Austerweil", email = "hongtaoh@cs.wisc.edu"}
+]
+requires-python = ">=3.7"
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: OS Independent"
+]
+dependencies = [
+  "pandas",
+  "numpy",
+  "scipy",
+  "matplotlib",
+  "seaborn",
+  "scikit-learn",
+  "numba"
+]
+
+[project.urls]
+Homepage = "https://github.com/hongtaoh/pysaebm"
+
+[tool.setuptools.packages.find]
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.package-data]
+"sa_ebm" = ["data/samples/*.csv", "data/params.json"]

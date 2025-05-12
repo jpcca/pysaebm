@@ -42,13 +42,18 @@ def save_heatmap(
     
     plt.figure(figsize=(fig_width, 8))  # Increase width to accommodate long names
     
-    sns.heatmap(biomarker_stage_probability_df,
-                annot=True, cmap="Greys", linewidths=.5,
-                cbar_kws={'label': 'Probability'},
-                fmt=".1f"
+    sns.heatmap(
+        biomarker_stage_probability_df,
+        annot=True, 
+        cmap="Blues", 
+        linewidths=.5,
+        cbar_kws={'label': 'Probability'},
+        fmt=".2f",
+        vmin=0,
+        vmax=1
     )
     
-    plt.xlabel('Stage')
+    plt.xlabel('Stage Position')
     plt.ylabel('Biomarker')
     plt.title(title)
     

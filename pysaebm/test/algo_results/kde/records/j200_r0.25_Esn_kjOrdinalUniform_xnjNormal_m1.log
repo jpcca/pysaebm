@@ -1,0 +1,13 @@
+2025-05-12 15:49:04,454 - INFO - Running kde for file: j200_r0.25_Esn_kjOrdinalUniform_xnjNormal_m1
+2025-05-12 15:49:04,456 - INFO - Number of biomarkers: 10
+2025-05-12 15:49:06,303 - INFO - Iteration 20/200, Acceptance Ratio: 50.00%, Log Likelihood: -7588.3109, Current Accepted Order: dict_values([3, 1, 2, 4, 5, 7, 8, 6, 9, 10]), 
+2025-05-12 15:49:08,017 - INFO - Iteration 40/200, Acceptance Ratio: 35.00%, Log Likelihood: -7337.1995, Current Accepted Order: dict_values([9, 2, 3, 4, 5, 6, 8, 7, 1, 10]), 
+2025-05-12 15:49:09,733 - INFO - Iteration 60/200, Acceptance Ratio: 23.33%, Log Likelihood: -7337.1995, Current Accepted Order: dict_values([9, 2, 3, 4, 5, 6, 8, 7, 1, 10]), 
+2025-05-12 15:49:11,423 - INFO - Iteration 80/200, Acceptance Ratio: 17.50%, Log Likelihood: -7337.1995, Current Accepted Order: dict_values([9, 2, 3, 4, 5, 6, 8, 7, 1, 10]), 
+2025-05-12 15:49:13,111 - INFO - Iteration 100/200, Acceptance Ratio: 14.00%, Log Likelihood: -7337.1995, Current Accepted Order: dict_values([9, 2, 3, 4, 5, 6, 8, 7, 1, 10]), 
+2025-05-12 15:49:14,824 - INFO - Iteration 120/200, Acceptance Ratio: 12.50%, Log Likelihood: -7327.6500, Current Accepted Order: dict_values([9, 2, 3, 4, 5, 6, 7, 8, 1, 10]), 
+2025-05-12 15:49:16,524 - INFO - Iteration 140/200, Acceptance Ratio: 10.71%, Log Likelihood: -7327.6500, Current Accepted Order: dict_values([9, 2, 3, 4, 5, 6, 7, 8, 1, 10]), 
+2025-05-12 15:49:18,206 - INFO - Iteration 160/200, Acceptance Ratio: 9.38%, Log Likelihood: -7327.6500, Current Accepted Order: dict_values([9, 2, 3, 4, 5, 6, 7, 8, 1, 10]), 
+2025-05-12 15:49:19,866 - INFO - Iteration 180/200, Acceptance Ratio: 8.33%, Log Likelihood: -7327.6500, Current Accepted Order: dict_values([9, 2, 3, 4, 5, 6, 7, 8, 1, 10]), 
+2025-05-12 15:49:21,533 - INFO - Iteration 200/200, Acceptance Ratio: 7.50%, Log Likelihood: -7327.6500, Current Accepted Order: dict_values([9, 2, 3, 4, 5, 6, 7, 8, 1, 10]), 
+2025-05-12 15:49:22,169 - INFO - Results saved to algo_results/kde/results/j200_r0.25_Esn_kjOrdinalUniform_xnjNormal_m1_results.json
