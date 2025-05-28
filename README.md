@@ -383,6 +383,19 @@ The data should be in a [tidy format](https://vita.had.co.nz/papers/tidy-data.pd
 - 2025-05-11 (V 2.1.1)
    - Updated data generation, now using approximate uniform in kj generation.
 
-- 2025-05-12 (V 2.1.2)
+- 2025-05-12 (V 2.1.3)
    - Added stage prediction for healthy participants as well, which means for each and every participant, when referencing stage, all stages (including 0) will be tested. 
    - Updated heatmap visualization design; using blues color map now. 
+   - Save both png and pdf for heatmap. 
+
+- 2025-05-13 (V 2.1.4)
+   - Added PDF for traceplot save. 
+   - Improved heatmap title. 
+
+- 2025-05-18 (V 2.1.6)
+   - ml_stages, both for all and for diseased only, are based on `participant_data` that is using `order_with_highest_ll`. 
+   - Flipped the sign of mean of phi and theta for adas, p-tau, hip-fci, and fus-fci in `data/params.json`. 
+
+- 2025-05-28 (V 2.2.0)
+   - Added algorithm name in the title of traceplots. 
+   - Added runtime in `results.json`. 

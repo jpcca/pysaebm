@@ -1,13 +1,13 @@
-2025-05-12 15:47:49,594 - INFO - Running em for file: j200_r0.25_Esn_kjOrdinalUniform_xnjNormal_m0
-2025-05-12 15:47:49,596 - INFO - Number of biomarkers: 10
-2025-05-12 15:47:50,334 - INFO - Iteration 20/200, Acceptance Ratio: 50.00%, Log Likelihood: -5273.4137, Current Accepted Order: dict_values([3, 10, 1, 6, 4, 7, 2, 9, 5, 8]), 
-2025-05-12 15:47:51,056 - INFO - Iteration 40/200, Acceptance Ratio: 45.00%, Log Likelihood: -5163.0314, Current Accepted Order: dict_values([2, 5, 3, 6, 4, 1, 9, 7, 8, 10]), 
-2025-05-12 15:47:51,782 - INFO - Iteration 60/200, Acceptance Ratio: 35.00%, Log Likelihood: -5152.2893, Current Accepted Order: dict_values([1, 6, 3, 4, 5, 2, 9, 7, 8, 10]), 
-2025-05-12 15:47:52,501 - INFO - Iteration 80/200, Acceptance Ratio: 27.50%, Log Likelihood: -5153.9822, Current Accepted Order: dict_values([1, 9, 3, 4, 5, 2, 6, 7, 8, 10]), 
-2025-05-12 15:47:53,225 - INFO - Iteration 100/200, Acceptance Ratio: 24.00%, Log Likelihood: -5114.2557, Current Accepted Order: dict_values([1, 2, 3, 4, 5, 6, 9, 7, 8, 10]), 
-2025-05-12 15:47:53,948 - INFO - Iteration 120/200, Acceptance Ratio: 20.83%, Log Likelihood: -5113.9694, Current Accepted Order: dict_values([1, 2, 3, 4, 6, 5, 9, 7, 8, 10]), 
-2025-05-12 15:47:54,670 - INFO - Iteration 140/200, Acceptance Ratio: 18.57%, Log Likelihood: -5116.6923, Current Accepted Order: dict_values([1, 2, 3, 4, 6, 5, 9, 8, 7, 10]), 
-2025-05-12 15:47:55,392 - INFO - Iteration 160/200, Acceptance Ratio: 17.50%, Log Likelihood: -5112.5455, Current Accepted Order: dict_values([1, 2, 3, 4, 6, 5, 8, 7, 9, 10]), 
-2025-05-12 15:47:56,113 - INFO - Iteration 180/200, Acceptance Ratio: 16.11%, Log Likelihood: -5109.7358, Current Accepted Order: dict_values([1, 2, 3, 4, 5, 6, 8, 7, 9, 10]), 
-2025-05-12 15:47:56,832 - INFO - Iteration 200/200, Acceptance Ratio: 14.50%, Log Likelihood: -5109.7358, Current Accepted Order: dict_values([1, 2, 3, 4, 5, 6, 8, 7, 9, 10]), 
-2025-05-12 15:47:57,267 - INFO - Results saved to algo_results/em/results/j200_r0.25_Esn_kjOrdinalUniform_xnjNormal_m0_results.json
+2025-05-28 15:21:38,471 - INFO - Running em for file: j200_r0.25_Esn_kjOrdinalUniform_xnjNormal_m0
+2025-05-28 15:21:38,472 - INFO - Number of biomarkers: 10
+2025-05-28 15:21:39,269 - INFO - Iteration 20/200, Acceptance Ratio: 45.00%, Log Likelihood: -5136.6044, Current Accepted Order: dict_values([2, 1, 4, 9, 5, 7, 8, 6, 10, 3]), 
+2025-05-28 15:21:40,003 - INFO - Iteration 40/200, Acceptance Ratio: 32.50%, Log Likelihood: -5110.9039, Current Accepted Order: dict_values([2, 1, 4, 7, 9, 6, 5, 8, 10, 3]), 
+2025-05-28 15:21:40,721 - INFO - Iteration 60/200, Acceptance Ratio: 25.00%, Log Likelihood: -5104.4788, Current Accepted Order: dict_values([2, 3, 4, 7, 9, 6, 8, 5, 10, 1]), 
+2025-05-28 15:21:41,437 - INFO - Iteration 80/200, Acceptance Ratio: 20.00%, Log Likelihood: -5104.9039, Current Accepted Order: dict_values([2, 3, 4, 6, 9, 7, 8, 5, 10, 1]), 
+2025-05-28 15:21:42,157 - INFO - Iteration 100/200, Acceptance Ratio: 18.00%, Log Likelihood: -5104.6611, Current Accepted Order: dict_values([2, 1, 4, 6, 9, 8, 7, 5, 10, 3]), 
+2025-05-28 15:21:42,878 - INFO - Iteration 120/200, Acceptance Ratio: 17.50%, Log Likelihood: -5099.3672, Current Accepted Order: dict_values([2, 3, 4, 7, 8, 9, 6, 5, 10, 1]), 
+2025-05-28 15:21:43,607 - INFO - Iteration 140/200, Acceptance Ratio: 18.57%, Log Likelihood: -5094.3164, Current Accepted Order: dict_values([2, 3, 4, 6, 8, 9, 7, 5, 10, 1]), 
+2025-05-28 15:21:44,340 - INFO - Iteration 160/200, Acceptance Ratio: 16.25%, Log Likelihood: -5094.3164, Current Accepted Order: dict_values([2, 3, 4, 6, 8, 9, 7, 5, 10, 1]), 
+2025-05-28 15:21:45,073 - INFO - Iteration 180/200, Acceptance Ratio: 14.44%, Log Likelihood: -5094.3164, Current Accepted Order: dict_values([2, 3, 4, 6, 8, 9, 7, 5, 10, 1]), 
+2025-05-28 15:21:45,815 - INFO - Iteration 200/200, Acceptance Ratio: 13.00%, Log Likelihood: -5094.3164, Current Accepted Order: dict_values([2, 3, 4, 6, 8, 9, 7, 5, 10, 1]), 
+2025-05-28 15:21:46,700 - INFO - Results saved to algo_results/em/results/j200_r0.25_Esn_kjOrdinalUniform_xnjNormal_m0_results.json

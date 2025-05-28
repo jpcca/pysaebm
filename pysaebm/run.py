@@ -4,7 +4,7 @@ import os
 import logging
 from typing import List, Dict, Optional, Union
 from scipy.stats import kendalltau
-import re 
+import time
 import math 
 import numpy as np 
 
@@ -64,6 +64,7 @@ def run_ebm(
     Returns:
         Dict[str, Union[str, int, float, Dict, List]]: Results including everything, e.g., Kendall's tau and p-value.
     """
+    start_time = time.time()
     allowed_algorithms = {'hard_kmeans', 'mle', 'conjugate_priors', 'em', 'kde'}  # Using a set for faster lookup
     if algorithm not in allowed_algorithms:
         raise ValueError(f"Invalid algorithm '{algorithm}'. Must be one of {allowed_algorithms}")
@@ -110,6 +111,8 @@ def run_ebm(
     n_biomarkers = len(data.biomarker.unique())
     logging.info(f"Number of biomarkers: {n_biomarkers}")
 
+    n_stages = n_biomarkers + 1
+    disease_stages = np.arange(start=1, stop=n_stages, step=1)
     n_participants = len(data.participant.unique())
     non_diseased_ids = data.loc[data.diseased == False].participant.unique()
     diseased_ids = data.loc[data.diseased == True].participant.unique()
@@ -123,14 +126,14 @@ def run_ebm(
         raise
 
     # Get the order associated with the highet log likelihoods
-    order_with_higest_ll = accepted_order_dicts[log_likelihoods.index(max(log_likelihoods))]
+    order_with_highest_ll = accepted_order_dicts[log_likelihoods.index(max(log_likelihoods))]
     # Sort by keys in an ascending order
-    order_with_higest_ll = dict(sorted(order_with_higest_ll.items()))
+    order_with_highest_ll = dict(sorted(order_with_highest_ll.items()))
     if true_order_dict:
         # Sort both dicts by the key to make sure they are comparable
         true_order_dict = dict(sorted(true_order_dict.items()))
         tau2, p_value2 = kendalltau(
-            list(order_with_higest_ll.values()), 
+            list(order_with_highest_ll.values()), 
             list(true_order_dict.values()))
     else:
         tau2, p_value2 = None, None
@@ -153,11 +156,22 @@ def run_ebm(
         logging.error(f"Error calculating Kendall's tau: {e}")
         raise
 
+    pretty_algo_name_dict = {
+        'conjugate_priors': 'Conjugate Priors',
+        'hard_kmeans': 'Hard K-Means',
+        'kde': 'KDE',
+        'mle': 'MLE',
+        'em': 'EM'
+    }
+
+    try:
+        pretty_name = pretty_algo_name_dict[algorithm]
+    except:
+        pretty_name = algorithm.replace("_", " ").title()
+
     # Save heatmap
     if not skip_heatmap:
         try:
-            pretty_name = algorithm.replace("_", " ").title()
-
             save_heatmap(
                 accepted_order_dicts,
                 burn_in,
@@ -166,7 +180,7 @@ def run_ebm(
                 file_name=f"{fname_prefix}{fname}_heatmap_{algorithm}",
                 title=f"{pretty_name} Ordering Result",
                 # title=f"Heatmap of {fname_prefix}{fname} Using {algorithm}",
-                best_order = order_with_higest_ll
+                best_order = order_with_highest_ll
             )
         except Exception as e:
             logging.error(f"Error generating heatmap: {e}")
@@ -179,7 +193,7 @@ def run_ebm(
                 log_likelihoods, 
                 folder_name = traceplot_folder, 
                 file_name = f"{fname_prefix}{fname}_traceplot_{algorithm}",
-                title = f"Traceplot of Log Likelihoods" 
+                title = f"Traceplot of Log Likelihoods ({pretty_name})" 
             )
         except Exception as e:
             logging.error(f"Error generating trace plot: {e}")
@@ -191,16 +205,27 @@ def run_ebm(
             for k, v in final_theta_phi_params.items()
         }
 
+    # Whole dataset
+    participant_data = data_utils.preprocess_participant_data(data, order_with_highest_ll)
+    _, final_stage_post1 =  data_utils.compute_total_ln_likelihood_and_stage_likelihoods(
+                algorithm,
+                participant_data,
+                non_diseased_ids,
+                final_theta_phi_params,
+                current_pi,
+                disease_stages,
+                bw_method
+            )
+    
     # Most likely stage for diseased participants
     ml_stages_diseased = [
-        np.random.choice(len(final_stage_post[pid]), p=final_stage_post[pid]) + 1
+        np.random.choice(len(final_stage_post1[pid]), p=final_stage_post1[pid]) + 1
         for pid in diseased_ids
     ]
 
-    # Whole dataset
-    participant_data = data_utils.preprocess_participant_data(data, order_with_higest_ll)
     healthy_ratio = len(non_diseased_ids)/n_participants
     updated_pi = [healthy_ratio] + [(1 - healthy_ratio) * x for x in current_pi]
+
     final_stage_post2 = data_utils.obtain_unbaised_stage_likelihood_posteriors(
                 algorithm,
                 participant_data,
@@ -243,9 +268,11 @@ def run_ebm(
     else:
         true_order_result = None
 
+    end_time = time.time()
     # Save results 
     results = {
         "algorithm": algorithm,
+        "runtime": end_time - start_time,
         "N_MCMC": n_iter,
         "n_shuffle": n_shuffle, 
         "burn_in": burn_in,
@@ -268,7 +295,7 @@ def run_ebm(
         'updated_pi': updated_pi,
         'true_order': true_order_result,
         'ml_order': {k:int(v) for k, v in most_likely_order_dic.items()},
-        "order_with_higest_ll": {k: int(v) for k, v in order_with_higest_ll.items()},
+        "order_with_highest_ll": {k: int(v) for k, v in order_with_highest_ll.items()},
         "true_stages": true_stages,
         'ml_stages': ml_stages,
         # stages diseased only contains stage prediction for diseased patients

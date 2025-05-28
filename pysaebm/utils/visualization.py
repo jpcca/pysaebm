@@ -67,6 +67,7 @@ def save_heatmap(
     
     # Save figure with padding to ensure labels are not cut off
     plt.savefig(f"{folder_name}/{file_name}.png", bbox_inches="tight", dpi=300)
+    plt.savefig(f"{folder_name}/{file_name}.pdf", bbox_inches="tight", dpi=300)
     plt.close()
 
 def save_traceplot(
@@ -94,5 +95,6 @@ def save_traceplot(
     plt.title(title)
     plt.legend()
     plt.grid(True)
-    plt.savefig(f"{folder_name}/{file_name}.png")
+    plt.savefig(f"{folder_name}/{file_name}.png", dpi=300)
+    plt.savefig(f"{folder_name}/{file_name}.pdf", dpi=300)
     plt.close()
