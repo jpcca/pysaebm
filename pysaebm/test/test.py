@@ -20,8 +20,8 @@ with open(params_file) as f:
 with open(f"{cwd}/pysaebm/test/true_order_and_stages.json", "r") as f:
     true_order_and_stages = json.load(f)
 
-for algorithm in ['hard_kmeans', 'mle', 'conjugate_priors', 'em', 'kde']:
-# for algorithm in ['conjugate_priors']:
+# for algorithm in ['hard_kmeans', 'mle', 'conjugate_priors', 'em', 'kde']:
+for algorithm in ['conjugate_priors']:
     for data_file in data_files:
         fname = data_file.replace('.csv', '')
         true_order_dict = true_order_and_stages[fname]['true_order']
@@ -37,5 +37,6 @@ for algorithm in ['hard_kmeans', 'mle', 'conjugate_priors', 'em', 'kde']:
             true_order_dict=true_order_dict,
             true_stages = true_stages,
             skip_heatmap=False,
-            skip_traceplot=False
+            skip_traceplot=False,
+            seed = 42
         )

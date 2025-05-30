@@ -35,7 +35,8 @@ def run_ebm(
     prior_n: float = 1.0,    # Strength of the prior belief in prior estimate of the mean (μ), set to 1 as default
     prior_v: float = 1.0,     # Prior degrees of freedom, influencing the certainty of prior estimate of the variance (σ²), set to 1 as default
     weight_change_threshold: float = 0.01,
-    bw_method: str = 'scott'
+    bw_method: str = 'scott',
+    seed: int = 42,
 ) -> Dict[str, Union[str, int, float, Dict, List]]:
     """
     Run the metropolis hastings algorithm and save results 
@@ -120,7 +121,7 @@ def run_ebm(
     # Run the Metropolis-Hastings algorithm
     try:
         accepted_order_dicts, log_likelihoods, final_theta_phi_params, final_stage_post, current_pi = metropolis_hastings(
-            data, n_iter, n_shuffle, algorithm, prior_n=prior_n, prior_v=prior_v, weight_change_threshold = weight_change_threshold, bw_method=bw_method)
+            data, n_iter, n_shuffle, algorithm, prior_n=prior_n, prior_v=prior_v, weight_change_threshold = weight_change_threshold, bw_method=bw_method, seed=seed)
     except Exception as e:
         logging.error(f"Error in Metropolis-Hastings algorithm: {e}")
         raise

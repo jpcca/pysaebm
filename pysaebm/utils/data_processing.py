@@ -559,7 +559,7 @@ def compute_ln_likelihood(
 
     return _compute_ln_likelihood_core(measurements, mus, stds)
 
-def shuffle_order(arr: np.ndarray, n_shuffle: int) -> None:
+def shuffle_order(arr: np.ndarray, n_shuffle: int, rng: np.random.Generator) -> None:
 
     """
     Randomly shuffle a specified number of elements in an array.
@@ -577,11 +577,11 @@ def shuffle_order(arr: np.ndarray, n_shuffle: int) -> None:
         return 
 
     # Select indices and extract elements
-    indices = np.random.choice(len(arr), size=n_shuffle, replace=False)
+    indices = rng.choice(len(arr), size=n_shuffle, replace=False)
     original_indices = indices.copy()
     
     while True:
-        shuffled_indices = np.random.permutation(original_indices)
+        shuffled_indices = rng.permutation(original_indices)
         # Full derangement: make sure no indice stays in its original place
         if not np.any(shuffled_indices == original_indices):
             break 

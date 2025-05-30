@@ -398,4 +398,8 @@ The data should be in a [tidy format](https://vita.had.co.nz/papers/tidy-data.pd
 
 - 2025-05-28 (V 2.2.0)
    - Added algorithm name in the title of traceplots. 
-   - Added runtime in `results.json`. 
+   - Added runtime in `results.json`.
+
+- 2025-05-29 (V 2.2.2)
+   - Added seed in `run.py` to enable reproducibility of the ordering results. 
+   - Added `rng` in random shuffling. 

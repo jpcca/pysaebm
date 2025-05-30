@@ -13,7 +13,8 @@ def metropolis_hastings(
     prior_n: float,
     prior_v: float,
     weight_change_threshold: float = 0.01,
-    bw_method: str = 'scott'
+    bw_method: str = 'scott',
+    seed: int = 42,
 ) -> Tuple[List[Dict], List[float], Dict[str, Dict], Dict[int, np.ndarray]]:
     """
     Perform Metropolis-Hastings sampling with conjugate priors to estimate biomarker orderings.
@@ -28,6 +29,7 @@ def metropolis_hastings(
         weight_change_threshold (float): Threshold for kde weights (if np.mean(new_weights - old_weights)) > threshold, then recalculate
             otherwise use the new kde and weights
         bw_method (str): bandwidth selection method in kde
+        seed (int): for reproducibility
 
     Returns:
         Tuple[List[Dict], List[float], Dict[str, Dict], Dict[int, np.ndarray]]: 
@@ -36,6 +38,9 @@ def metropolis_hastings(
             - Final theta phi estimates
             - Stage likelihood posterior 
     """
+    # Initialize random number generator
+    rng = np.random.default_rng(seed)
+
     biomarkers = data_we_have.biomarker.unique()
     n_stages = len(biomarkers) + 1
     disease_stages = np.arange(start=1, stop=n_stages, step=1)
@@ -50,11 +55,11 @@ def metropolis_hastings(
     current_theta_phi = theta_phi_default.copy()
 
     # initialize an ordering and likelihood
-    current_order = np.random.permutation(np.arange(1, n_stages))
+    current_order = rng.permutation(np.arange(1, n_stages))
     current_order_dict = dict(zip(biomarkers, current_order))
     current_ln_likelihood = -np.inf
     alpha_prior = [1.0]* (n_disease_stages)
-    current_pi = np.random.dirichlet(alpha_prior) # Sample from uniform dirichlet dist.
+    current_pi = rng.dirichlet(alpha_prior) # Sample from uniform dirichlet dist.
     current_stage_post = {}
     acceptance_count = 0
 
@@ -67,7 +72,7 @@ def metropolis_hastings(
         log_likelihoods.append(current_ln_likelihood)
 
         new_order = current_order.copy()
-        data_utils.shuffle_order(new_order, n_shuffle)
+        data_utils.shuffle_order(new_order, n_shuffle, rng)
         new_order_dict = dict(zip(biomarkers, new_order))
 
         """
@@ -113,6 +118,9 @@ def metropolis_hastings(
                 weight_change_threshold = weight_change_threshold
             )
 
+            # NOTE THAT WE CANNOT RECOMPUTE P(K_J) BASED ON THIS NEW THETA PHI. 
+            # THIS IS BECAUSE IN MCMC, WE CAN ONLY GET NEW THINGS THAT ARE SOLELY CONDITIONED ON THE NEWLY PROPOSED S'
+
             # Recompute new_ln_likelihood using the new theta_phi_estimates
             new_ln_likelihood, stage_post_new = data_utils.compute_total_ln_likelihood_and_stage_likelihoods(
                 algorithm,
@@ -141,7 +149,7 @@ def metropolis_hastings(
         prob_accept = 1.0 if delta > 0 else np.exp(delta)
 
         # Accept or reject the new state
-        if np.random.rand() < prob_accept:
+        if rng.random() < prob_accept:
             current_order = new_order
             current_order_dict = new_order_dict
             current_ln_likelihood = new_ln_likelihood
@@ -154,7 +162,7 @@ def metropolis_hastings(
             # participant, array of stage likelihoods
             for p, stage_probs in stage_post_new.items():
                 stage_counts += stage_probs # Soft counts 
-            current_pi = np.random.dirichlet(alpha_prior + stage_counts)
+            current_pi = rng.dirichlet(alpha_prior + stage_counts)
 
         all_accepted_orders.append(current_order_dict.copy())
 
