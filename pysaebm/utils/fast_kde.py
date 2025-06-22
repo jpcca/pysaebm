@@ -29,7 +29,7 @@ def calculate_bandwidth(data: np.ndarray, weights: np.ndarray, bw_method:str) ->
     if weights is None or weights.size == 0:
         sigma = max(np.std(data), EPSILON)
     else:
-        w_sum = max(np.sum(weights), EPSILON)
+        w_sum = max(np.sum(weights), EPSILON) # lower bound of sigma
         w_mean = np.sum(weights * data) / w_sum
         var = 0.0
         w2_sum = 0.0
@@ -37,7 +37,7 @@ def calculate_bandwidth(data: np.ndarray, weights: np.ndarray, bw_method:str) ->
             diff = data[i] - w_mean
             var += weights[i] * diff * diff
             w2_sum += weights[i] * weights[i]
-        sigma = math.sqrt(var / w_sum)
+        sigma = max(math.sqrt(var / w_sum), EPSILON) # lower bound of sigma
         n_eff = 1.0 / max(w2_sum, EPSILON)
         n = n_eff
     if bw_method == "scott":

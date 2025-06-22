@@ -403,3 +403,6 @@ The data should be in a [tidy format](https://vita.had.co.nz/papers/tidy-data.pd
 - 2025-05-29 (V 2.2.2)
    - Added seed in `run.py` to enable reproducibility of the ordering results. 
    - Added `rng` in random shuffling. 
+
+- 2025-06-21 (V 2.2.3)
+   - Made sure that for kde, in `calculate_bandwidth`, set a lower bound for sigma. 

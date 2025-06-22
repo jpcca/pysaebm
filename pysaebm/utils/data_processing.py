@@ -105,43 +105,6 @@ def estimate_params_exact(
 
     return mu_estimation, std_estimation
 
-def update_theta_phi_biomarker_em(
-    participants: np.ndarray,
-    measurements: np.ndarray,
-    diseased: np.ndarray,
-    stage_likelihoods_posteriors: Dict[int, np.ndarray],
-    disease_stages: np.ndarray,
-    curr_order: int,
-    ) -> Tuple[float, float, float, float]:
-    """ Obtain biomarker's parameters using soft kmeans
-    """
-    # Obtain two responsibilites
-    # Responsibilities of affected cluster
-    # an array; each float means the prob of each measurement in affected cluster
-    # Essentially, they are weights
-
-    # Note that what we are doing here is different from GMM EM because we are not using 
-    # p1 and p2 when obtaining responsibilities
-    resp_affected = [
-        sum(stage_likelihoods_posteriors[p][disease_stages >= curr_order]) if is_diseased else 0.0
-        for p, is_diseased in zip(participants, diseased)
-    ]
-
-    resp_affected = np.array(resp_affected)
-    resp_nonaffected = 1 - resp_affected
-
-    sum_affected = max(np.sum(resp_affected), 1e-9)
-    sum_nonaffected = max(np.sum(resp_nonaffected), 1e-9)
-
-    # Weighted average
-    theta_mean = np.sum(resp_affected*measurements)/sum_affected
-    phi_mean = np.sum(resp_nonaffected*measurements)/sum_nonaffected
-
-    # Weighted STD
-    theta_std = np.sqrt(np.sum(resp_affected*(measurements - theta_mean)**2) / sum_affected)
-    phi_std = np.sqrt(np.sum(resp_nonaffected*(measurements - phi_mean)**2) / sum_nonaffected)
-    return theta_mean, theta_std, phi_mean, phi_std
-
 def update_theta_phi_estimates(
     biomarker_data: Dict[str, Tuple[int, np.ndarray, np.ndarray, bool]],
     theta_phi_current: Dict[str, Dict[str, float]], # Current state’s θ/φ
@@ -214,6 +177,43 @@ def update_theta_phi_estimates(
                 'phi_std': phi_std,
             }
     return updated_params
+
+def update_theta_phi_biomarker_em(
+    participants: np.ndarray,
+    measurements: np.ndarray,
+    diseased: np.ndarray,
+    stage_likelihoods_posteriors: Dict[int, np.ndarray],
+    disease_stages: np.ndarray,
+    curr_order: int,
+    ) -> Tuple[float, float, float, float]:
+    """ Obtain biomarker's parameters using soft kmeans
+    """
+    # Obtain two responsibilites
+    # Responsibilities of affected cluster
+    # an array; each float means the prob of each measurement in affected cluster
+    # Essentially, they are weights
+
+    # Note that what we are doing here is different from GMM EM because we are not using 
+    # p1 and p2 when obtaining responsibilities
+    resp_affected = [
+        sum(stage_likelihoods_posteriors[p][disease_stages >= curr_order]) if is_diseased else 0.0
+        for p, is_diseased in zip(participants, diseased)
+    ]
+
+    resp_affected = np.array(resp_affected)
+    resp_nonaffected = 1 - resp_affected
+
+    sum_affected = max(np.sum(resp_affected), 1e-9)
+    sum_nonaffected = max(np.sum(resp_nonaffected), 1e-9)
+
+    # Weighted average
+    theta_mean = np.sum(resp_affected*measurements)/sum_affected
+    phi_mean = np.sum(resp_nonaffected*measurements)/sum_nonaffected
+
+    # Weighted STD
+    theta_std = np.sqrt(np.sum(resp_affected*(measurements - theta_mean)**2) / sum_affected)
+    phi_std = np.sqrt(np.sum(resp_nonaffected*(measurements - phi_mean)**2) / sum_nonaffected)
+    return theta_mean, theta_std, phi_mean, phi_std
 
 def obtain_affected_and_non_clusters(
     participants: np.ndarray,

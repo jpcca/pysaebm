@@ -59,6 +59,7 @@ def metropolis_hastings(
     current_order_dict = dict(zip(biomarkers, current_order))
     current_ln_likelihood = -np.inf
     alpha_prior = [1.0]* (n_disease_stages)
+    # current_pi is the prior distribution of N disease stages. 
     current_pi = rng.dirichlet(alpha_prior) # Sample from uniform dirichlet dist.
     current_stage_post = {}
     acceptance_count = 0

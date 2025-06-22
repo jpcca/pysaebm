@@ -371,18 +371,25 @@ def generate_data(
             stage_probs = rng.dirichlet(dirichlet_alpha['multinomial'])
 
         # Sample from multinomial to get actual stage counts
+        # The sum of stage counts is n_diseased. 
+        # An example of stage_counts: [4, 4, 2, 1] means that 4 participants fall into stage1, 
+        # 4 into stage2, 2 in stage3 and 1 in stage4.
         stage_counts = rng.multinomial(n_diseased, stage_probs)
         
         # Create array of stages (1 to max_stage) for diseased participants
+        # For example, np.repeat([1, 2, 3, 4], [4, 4, 2, 1])
+        # will generate a sequence of [1,1,1,1,2,2,2,2,3,3,4]
         disease_stages = np.repeat(np.arange(1, max_stage + 1), stage_counts)
         
         # Combine with healthy participants (stage 0)
         all_kjs = np.concatenate([np.zeros(n_healthy), disease_stages])
+        # looks like [False, False, ..., True, True, True, ..., True]
         all_diseased = all_kjs > 0 
 
         # Shuffle participant order
         shuffle_idx = rng.permutation(n_participants)
         all_kjs = all_kjs[shuffle_idx]
+        # all_diseased is an array of Boolean values
         all_diseased = all_diseased[shuffle_idx]
 
         # Generate measurements for all participants and biomarkers
