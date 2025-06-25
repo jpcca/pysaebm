@@ -406,3 +406,10 @@ The data should be in a [tidy format](https://vita.had.co.nz/papers/tidy-data.pd
 
 - 2025-06-21 (V 2.2.3)
    - Made sure that for kde, in `calculate_bandwidth`, set a lower bound for sigma. 
+
+- 2025-06-22 (V 2.2.5)
+   - Added mixed pathology functions in `generate_data.py`, `data_processing.py`, `algorithm.py` and `run.py`. 
+   - Added a parameter of `output_folder` in `run.py`. 
+
+- 2025-06-24 (V 2.2.6)
+   - Added `max_log_likelihood` in results json in `run.py`. 

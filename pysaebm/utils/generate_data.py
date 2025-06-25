@@ -1,9 +1,10 @@
 from typing import List, Optional, Tuple, Dict, Any
+from . import data_processing as data_utils
 import json 
 import pandas as pd 
 import numpy as np 
 import os 
-from collections import defaultdict
+from collections import defaultdict, Counter
 from bisect import bisect_right
 
 # Rank continuous kjs
@@ -277,22 +278,23 @@ def generate_measurements_kjContinuous(
     return data 
 
 def generate_data(
-    experiment_name: str,
-    params: Dict[str, Dict[str, float]],
-    n_participants: int,
-    healthy_ratio: float,
-    output_dir: str,
-    m: int,  # combstr_m
-    seed: int,
-    dirichlet_alpha: Dict[str, List[float]],
-    beta_params: Dict[str, Dict[str, float]],
-    prefix: Optional[str],
-    suffix: Optional[str],
-    keep_all_cols: bool,
-    fixed_biomarker_order: bool,
-    noise_std_parameter:float,
-    true_order_and_stages_dict: Dict[str, Dict[str, int]],
-) -> pd.DataFrame:
+        filename:str,
+        experiment_name: str,
+        params: Dict[str, Dict[str, float]],
+        n_participants: int,
+        healthy_ratio: float,
+        output_dir: str,
+        m: int,  # combstr_m
+        seed: int,
+        dirichlet_alpha: Dict[str, List[float]],
+        beta_params: Dict[str, Dict[str, float]],
+        prefix: Optional[str],
+        suffix: Optional[str],
+        keep_all_cols: bool,
+        fixed_biomarker_order: bool,
+        noise_std_parameter:float,
+        true_order_and_stages_dict: Dict[str, Dict[str, int]],
+    ) -> pd.DataFrame:
     """
     Simulate an Event-Based Model (EBM) for disease progression and generate a dataset.
     
@@ -301,8 +303,9 @@ def generate_data(
     stages, biomarker ordering, and creates measurements for each participant.
 
     Args:
+        filename: the name for this data file to be saved. 
         experiment_name: Identifier for the experiment type
-        params: params: Dictionary of biomarker parameters
+        params: Dictionary of biomarker parameters
         n_participants: Total number of participants to simulate
         healthy_ratio: Proportion of participants to be simulated as healthy
         output_dir: Directory to save the resulting CSV
@@ -368,28 +371,21 @@ def generate_data(
             #     stage_counts[i] += 1  # distribute the leftover
         else:
             # Use multinomial Dirichlet prior (custom stage distribution)
-            stage_probs = rng.dirichlet(dirichlet_alpha['multinomial'])
+            stage_probs = rng.dirichlet(dirichlet_alpha['multinomial'][:max_stage])
 
         # Sample from multinomial to get actual stage counts
-        # The sum of stage counts is n_diseased. 
-        # An example of stage_counts: [4, 4, 2, 1] means that 4 participants fall into stage1, 
-        # 4 into stage2, 2 in stage3 and 1 in stage4.
         stage_counts = rng.multinomial(n_diseased, stage_probs)
         
         # Create array of stages (1 to max_stage) for diseased participants
-        # For example, np.repeat([1, 2, 3, 4], [4, 4, 2, 1])
-        # will generate a sequence of [1,1,1,1,2,2,2,2,3,3,4]
         disease_stages = np.repeat(np.arange(1, max_stage + 1), stage_counts)
         
         # Combine with healthy participants (stage 0)
         all_kjs = np.concatenate([np.zeros(n_healthy), disease_stages])
-        # looks like [False, False, ..., True, True, True, ..., True]
         all_diseased = all_kjs > 0 
 
         # Shuffle participant order
         shuffle_idx = rng.permutation(n_participants)
         all_kjs = all_kjs[shuffle_idx]
-        # all_diseased is an array of Boolean values
         all_diseased = all_diseased[shuffle_idx]
 
         # Generate measurements for all participants and biomarkers
@@ -455,14 +451,6 @@ def generate_data(
 
     # Create DataFrame and save to CSV
     df = pd.DataFrame(data)
-    
-    # Construct filename with parameters encoded
-    filename = f"j{n_participants}_r{healthy_ratio}_E{experiment_name}_m{m}"
-    if prefix: 
-        filename = f"{prefix}_{filename}"
-    if suffix: 
-        filename = f"{filename}_{suffix}"
-    
     # Write to CSV
     df.to_csv(os.path.join(output_dir, f"{filename}.csv"), index=False)
 
@@ -475,9 +463,72 @@ def generate_data(
 
     return df
 
+def get_partial_orders(
+        params:Dict[str, Dict[str, float]], 
+        low:int, 
+        high:int, 
+        rng: np.random.Generator
+    ) -> Tuple[List[str], List[str]]:
+    # randomly pick two integers
+    numbers = rng.choice(np.arange(low, high), size=2, replace=False)
+    int1, int2 = numbers[0], numbers[1]
+
+    # all biomarkers 
+    bms = list(params.keys())
+
+    # randomly select int1 and int2 biomarkers then shuffle
+    partial_order1 = rng.choice(bms, size=int1, replace=False)
+    partial_order2 = rng.choice(bms, size=int2, replace=False)
+    rng.shuffle(partial_order1)
+    rng.shuffle(partial_order2)
+    return list(partial_order1), list(partial_order2)
+
+def get_combined_order(
+        params:Dict[str, Dict[str, float]], 
+        low:int, 
+        high:int, 
+        seed:int) -> Tuple[List[str], List[List[str]]]:
+    rng = rng = np.random.default_rng(seed)
+
+    # two partial orders
+    partial_order1, partial_order2 = get_partial_orders(params, low, high, rng)
+
+    # make sure the two partial orders are different
+    while partial_order1 == partial_order2:
+        partial_order1, partial_order2 = get_partial_orders(params, low, high, rng)
+
+    # prepare the input
+    ordering_array = [partial_order1, partial_order2]
+
+    # get combined ordering
+    mpebm_mcmc_sampler = data_utils.MCMC(ordering_array=ordering_array, rng=rng)
+    combined_order = mpebm_mcmc_sampler.obtain_sample_ordering()
+
+    return combined_order, ordering_array
+
+def get_final_params(
+        params:Dict[str, Dict[str, float]], 
+        combined_ordering:List[str], 
+        ordering_array:List[List[str]]
+    ) -> Dict[str, Dict[str, float]]:
+    final_params = {}
+    flattend_ordering_array = [item for sublist in ordering_array for item in sublist]
+    frequency_dict = dict(Counter(flattend_ordering_array))
+
+    for bm in combined_ordering:
+        final_params[bm] = params[bm].copy()
+        if frequency_dict[bm] > 1:
+            final_params[bm]['theta_mean'] /= 0.9 
+            final_params[bm]['theta_std'] /= 1.2
+
+    return final_params
+
 def generate(
+    mixed_pathology: bool=False,
     experiment_name: str = "sn_kjOrdinalDM_xnjNormal",
     params_file: str = 'params.json',
+    low: int=3,
+    high: int=10,
     js: List[int] = [50, 200, 500, 1000],
     rs: List[float] = [0.1, 0.25, 0.5, 0.75, 0.9],
     num_of_datasets_per_combination: int = 50,
@@ -517,6 +568,8 @@ def generate(
     Args:
         experiment_name: Type of experiment to run (see experiment_names for valid options)
         params_file: Path to JSON file with biomarker parameters
+        low: the lowest when generating two random intergers
+        high: the highest when generating two random intergers
         js: List of participant counts to generate data for
         rs: List of healthy ratios to generate data for
         num_of_datasets_per_combination: Number of dataset variants to generate per parameter combination
@@ -545,8 +598,8 @@ def generate(
     with open(params_file) as f:
         params = json.load(f)
 
-    if len(params) != len(dirichlet_alpha['multinomial']):
-        raise ValueError("Your dirichlet_alpha multinomial must have the same length as your number of biomarkers!")
+    if len(params) > len(dirichlet_alpha['multinomial']):
+        raise ValueError(f"Your dirichlet_alpha multinomial must have the length of {len(params)}, as indicated by params.")
 
     # Initialize master random number generator
     if seed is None:
@@ -563,11 +616,35 @@ def generate(
             for variant in range(num_of_datasets_per_combination):
                 # Generate a unique seed for each dataset
                 sub_seed = rng.integers(0, 1_000_000)
+
+                # Construct filename with parameters encoded
+                filename = f"j{participant_count}_r{healthy_ratio}_E{experiment_name}_m{variant}"
+                if prefix: 
+                    filename = f"{prefix}_{filename}"
+                if suffix: 
+                    filename = f"{filename}_{suffix}"
+
+                """The goal here is use codes to automatically the final orderings, partial orderings, and their distribution parameters
+
+                My idea is this: we have the original `params.json` for the ten biomarkers. I can
+
+                - randomly pick two integers between 2-7, 
+                - randomly select int1 and int2 biomarkers from `params.json`. Then shuffle them and use them as partial orderings.
+                - generate a combined ordering based on the two partial orderings
+                - Define a formula to determin the theta parameters for overlapping biomarkers. 
+                - Generate data based on the combined ordering and the parameters, using pysaebm package as usual. 
+                - Remember to save the two partial orderings to the `true_order_and_stages.json`. 
+                """
+                if mixed_pathology:
+                    combined_ordering, ordering_array = get_combined_order(params, low, high, seed=sub_seed)
+                    final_params = get_final_params(params, combined_ordering, ordering_array)
+                    true_order_and_stages_dict[filename]['ordering_array'] = ordering_array
                 
                 # Generate a single dataset with the current parameter combination
                 generate_data(
+                    filename=filename,
                     experiment_name=experiment_name,
-                    params = params,
+                    params = final_params,
                     n_participants=participant_count,
                     healthy_ratio=healthy_ratio,
                     output_dir=output_dir,

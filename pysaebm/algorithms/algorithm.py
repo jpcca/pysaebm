@@ -1,25 +1,26 @@
 import numpy as np 
 import pandas as pd 
 import pysaebm.utils.data_processing as data_utils 
-import pysaebm.utils.ucl_gmm as gmm
-from typing import List, Dict, Tuple
+from typing import List, Dict, Tuple, Optional
 import logging 
 
 def metropolis_hastings(
-    data_we_have: pd.DataFrame,
-    iterations: int,
-    n_shuffle: int,
-    algorithm: str,
-    prior_n: float,
-    prior_v: float,
-    weight_change_threshold: float = 0.01,
-    bw_method: str = 'scott',
-    seed: int = 42,
+        order_array: Optional[List[List[str]]],
+        data_we_have: pd.DataFrame,
+        iterations: int,
+        n_shuffle: int,
+        algorithm: str,
+        prior_n: float,
+        prior_v: float,
+        weight_change_threshold: float = 0.01,
+        bw_method: str = 'scott',
+        seed: int = 42,
 ) -> Tuple[List[Dict], List[float], Dict[str, Dict], Dict[int, np.ndarray]]:
     """
     Perform Metropolis-Hastings sampling with conjugate priors to estimate biomarker orderings.
 
     Args:
+        order_array (List[List[str]]): The list of partial orderings
         data_we_have (pd.DataFrame): Raw participant data.
         iterations (int): Number of iterations for the algorithm.
         n_shuffle (int): Number of swaps to perform when shuffling the order.
@@ -40,6 +41,10 @@ def metropolis_hastings(
     """
     # Initialize random number generator
     rng = np.random.default_rng(seed)
+
+    if order_array:
+        # Get weights 
+        mpebm_mcmc_sampler = data_utils.MCMC(ordering_array=order_array, rng=rng)
 
     biomarkers = data_we_have.biomarker.unique()
     n_stages = len(biomarkers) + 1
@@ -144,7 +149,11 @@ def metropolis_hastings(
                 disease_stages,
                 bw_method
             )
-
+        
+        if order_array:
+            # log(FullLikelihood)=log(ℓ)+log(exp(−E))=log(ℓ)−E
+            new_energy = mpebm_mcmc_sampler.obtain_energy(np.array(sorted(new_order_dict, key = new_order_dict.get)))
+            new_ln_likelihood -= new_energy
         # Compute acceptance probability
         delta = new_ln_likelihood - current_ln_likelihood
         prob_accept = 1.0 if delta > 0 else np.exp(delta)

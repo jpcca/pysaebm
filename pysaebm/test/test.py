@@ -9,13 +9,7 @@ print("Current Working Directory:", cwd)
 data_dir = f"{cwd}/pysaebm/test/my_data"
 data_files = os.listdir(data_dir) 
 
-params_file = get_params_path()
-
 OUTPUT_DIR = 'algo_results'
-
-# Load parameters
-with open(params_file) as f:
-    biomarker_params = json.load(f)
 
 with open(f"{cwd}/pysaebm/test/true_order_and_stages.json", "r") as f:
     true_order_and_stages = json.load(f)
@@ -26,14 +20,19 @@ for algorithm in ['conjugate_priors']:
         fname = data_file.replace('.csv', '')
         true_order_dict = true_order_and_stages[fname]['true_order']
         true_stages = true_order_and_stages[fname]['true_stages']
+        try:
+            order_array = true_order_and_stages[fname]['ordering_array']
+        except:
+            order_array = None
         results = run_ebm(
+            order_array=order_array,
             data_file= os.path.join(data_dir, data_file),
             algorithm=algorithm,
             output_dir=OUTPUT_DIR,
             n_iter=200,
             n_shuffle=2,
             burn_in=10,
-            thinning=5,
+            thinning=1,
             true_order_dict=true_order_dict,
             true_stages = true_stages,
             skip_heatmap=False,

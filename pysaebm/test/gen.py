@@ -39,6 +39,7 @@ all_exp_dicts = []
 for exp_name in experiment_names:
     # biomarker event time dict
     bm_et_dict = generate(
+            mixed_pathology=True,
             experiment_name = exp_name,
             params_file=params_file,
             js = [200],

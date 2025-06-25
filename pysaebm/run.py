@@ -21,6 +21,8 @@ from sklearn.metrics import cohen_kappa_score, mean_absolute_error, mean_squared
 def run_ebm(
     data_file: str,
     output_dir: str,
+    output_folder: Optional[str] = None,
+    order_array: List[List[str]] = None,
     algorithm: str = 'conjugate_priors', 
     n_iter: int = 2000,
     n_shuffle: int = 2,
@@ -44,6 +46,9 @@ def run_ebm(
     Args:
         data_file (str): Path to the input CSV file with biomarker data.
         output_dir (str): Path to the directory to store all the results.
+        output_folder (str): Optional. If not provided, all results will be saved to output_dir/algorithm. 
+            If provided, results will be saved to output_dir/output_folder
+        order_array (List[List[str]]): The list of partial orderings
         algorithm (str): Choose from 'hard_kmeans', 'mle', 'em', 'kde', and 'conjugate_priors' (default).
         n_iter (int): Number of iterations for the Metropolis-Hastings algorithm.
         n_shuffle (int): Number of shuffles per iteration.
@@ -71,7 +76,10 @@ def run_ebm(
         raise ValueError(f"Invalid algorithm '{algorithm}'. Must be one of {allowed_algorithms}")
 
     # Folder to save all outputs
-    output_dir = os.path.join(output_dir, algorithm)
+    if output_folder:
+        output_dir = os.path.join(output_dir, output_folder)
+    else:
+        output_dir = os.path.join(output_dir, algorithm)
     fname = extract_fname(data_file)
 
     # First do cleanup
@@ -121,7 +129,7 @@ def run_ebm(
     # Run the Metropolis-Hastings algorithm
     try:
         accepted_order_dicts, log_likelihoods, final_theta_phi_params, final_stage_post, current_pi = metropolis_hastings(
-            data, n_iter, n_shuffle, algorithm, prior_n=prior_n, prior_v=prior_v, weight_change_threshold = weight_change_threshold, bw_method=bw_method, seed=seed)
+            order_array, data, n_iter, n_shuffle, algorithm, prior_n=prior_n, prior_v=prior_v, weight_change_threshold = weight_change_threshold, bw_method=bw_method, seed=seed)
     except Exception as e:
         logging.error(f"Error in Metropolis-Hastings algorithm: {e}")
         raise
@@ -279,6 +287,7 @@ def run_ebm(
         "burn_in": burn_in,
         "thinning": thinning,
         'healthy_ratio': healthy_ratio,
+        "max_log_likelihood": float(max(log_likelihoods)),
         "kendalls_tau2": tau2,
         "p_value2": p_value2,
         "kendalls_tau": tau, 

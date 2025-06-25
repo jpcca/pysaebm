@@ -1,17 +1,170 @@
-import os
 from typing import List, Optional, Tuple, Dict
 import pandas as pd
 import numpy as np
-import sys 
 from collections import defaultdict
-from scipy.spatial import cKDTree
-from numba import njit, prange
+from numba import njit
 from pysaebm.utils.kmeans import get_two_clusters_with_kmeans
 from pysaebm.utils.fast_kde import (
     get_initial_kde_estimates,
     compute_ln_likelihood_kde_fast,
     update_kde_for_biomarker_em
 )
+
+class PairwisePrefences:
+    """
+    Calculates pairwise preference weights from a list of partial orderings.
+    
+    This class is responsible for computing the weights 'w_ij' which represent the
+    aggregated preference for item 'i' to appear before item 'j' across all
+    provided partial orderings.
+    """
+    def __init__(self, ordering_array:List[List[str]]):
+        """
+        Initializes the class with the input orderings.
+
+        Args:
+            ordering_array: A list of lists, where each inner list is a
+                            partial ordering of items (strings).
+        """
+        self.ordering_array: List[List[str]] = ordering_array
+        self.unique_elements: Set[str] = set(
+            [item for sublist in self.ordering_array for item in sublist])
+        self.weights: Dict[Tuple[str, str], int] = defaultdict(int)
+
+    def obtain_weights(self):
+        """
+        Computes the w_ij weights based on the input orderings.
+
+        The weight w_ij is the sum of preferences across all orderings.
+        For each input ordering, if 'i' comes before 'j', the score for (i, j)
+        increases by 1, and the score for (j, i) decreases by 1.
+        """
+        weights = defaultdict(int)
+        for ordering in self.ordering_array:
+            for i in range(0, len(ordering) - 1):
+                for j in range(i+1, len(ordering)):
+                    # For a given pair (item1, item2) where item1 precedes item2
+                    item1 = ordering[i]
+                    item2 = ordering[j]
+                    
+                    # Increment weight for i preceding j
+                    weights[(item1, item2)] += 1
+                    # Decrement weight for j preceding i
+                    weights[(item2, item1)] -= 1
+        self.weights = weights
+
+class MCMC:
+    """
+    Uses Metropolis-Hastings MCMC to sample a total ordering.
+
+    This class implements the MCMC algorithm to draw a sample from the
+    probability distribution P(σ) ∝ exp(-E(σ)), where the energy E(σ)
+    is defined by the pairwise preference weights.
+    """
+    def __init__(
+            self, ordering_array:List[List[str]], iterations:int=1000, seed:int=42, n_shuffle:int=2, rng: Optional[np.random.Generator] = None):
+        """
+        Initializes the MCMC sampler.
+
+        Args:
+            ordering_array: The list of partial orderings.
+            iterations: The number of MCMC iterations to perform.
+            seed: A random seed for reproducibility.
+            n_shuffle: The number of items to swap in each proposal step.
+                       The paper suggests a swap of 2 items.
+        """
+        # 1. Calculate the preference weights from the input data.
+        pairwise_prefs = PairwisePrefences(ordering_array)
+        pairwise_prefs.obtain_weights()
+        self.weights = pairwise_prefs.weights
+        
+        self.unique_elements_list = list(pairwise_prefs.unique_elements)
+
+        # 2. Set up the random number generator and create an initial random permutation.
+        #    This corresponds to step 1 in Algorithm 1.
+        if not rng:
+            self.rng = np.random.default_rng(seed)
+        else:
+            self.rng = rng 
+        # The result is a numpy array of strings
+        self.initial_random_ordering = self.rng.permutation(self.unique_elements_list)
+        
+        self.iterations = iterations 
+        self.n_shuffle = n_shuffle
+
+    def obtain_energy(self, ordering:np.array) -> float:
+        """
+        Calculates the energy E(σ) of a given ordering.
+
+        The energy is defined as E(σ) = -Σ w_ij * 1[i <_σ j], where 1[i <_σ j]
+        is 1 if i precedes j in the ordering σ, and 0 otherwise.
+
+        Args:
+            ordering: A numpy array representing a total ordering σ.
+
+        Returns:
+            The calculated energy of the ordering.
+        """
+        total_sum = 0 
+        for i in range(0, len(ordering) - 1):
+            for j in range(i+1, len(ordering)):
+                # Sum the weights for all pairs (i, j) where i precedes j
+                total_sum += self.weights[(ordering[i], ordering[j])]
+        return -total_sum 
+    
+    def shuffle_order(
+            self, arr: np.ndarray, n_shuffle: int, rng: np.random.Generator) -> None:
+        """
+        Proposes a new ordering (σ') by shuffling elements in the current one.
+        This is a proposal mechanism for the MCMC algorithm.
+        """
+        # (Your existing shuffle logic is valid and left unchanged)
+        if n_shuffle <= 1:
+            raise ValueError("n_shuffle must be >= 2 or =0")
+        if n_shuffle > len(arr):
+            raise ValueError("n_shuffle cannot exceed array length")
+        if n_shuffle == 0:
+            return 
+
+        indices = rng.choice(len(arr), size=n_shuffle, replace=False)
+        original_indices = indices.copy()
+        
+        while True:
+            shuffled_indices = rng.permutation(original_indices)
+            if not np.any(shuffled_indices == original_indices):
+                break 
+        arr[indices] = arr[shuffled_indices]
+
+    def obtain_sample_ordering(self) -> np.ndarray:
+        """
+        Runs the Metropolis-Hastings MCMC sampler to get a final ordering.
+
+        Returns:
+            A numpy array representing the final sampled total ordering.
+        """
+        # Start with the initial random permutation 
+        current_order = self.initial_random_ordering
+        # Calculate its energy
+        current_energy = self.obtain_energy(current_order) 
+
+        # Loop for T iterations 
+        for _ in range(self.iterations):
+            # Propose a new ordering σ' by swapping elements 
+            new_order = current_order.copy()
+            self.shuffle_order(new_order, self.n_shuffle, self.rng)
+            new_energy = self.obtain_energy(new_order)
+
+            # Calculate the acceptance probability, α = min(1, P(σ')/P(σ)).
+            # P(σ')/P(σ) = exp(-E(σ')) / exp(-E(σ)) = exp(E(σ) - E(σ'))
+            prob_accept = min(1.0, np.exp(current_energy - new_energy))
+
+            # Accept the new ordering with probability α 
+            if self.rng.random() < prob_accept:
+                current_order = new_order
+                current_energy = new_energy
+                
+        self.final_ordering = current_order
+        return self.final_ordering
 
 def get_initial_theta_phi_estimates(
     data: pd.DataFrame,
