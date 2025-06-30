@@ -14,6 +14,7 @@ def metropolis_hastings(
         prior_v: float,
         weight_change_threshold: float = 0.01,
         bw_method: str = 'scott',
+        mp_method: str = 'Mallows',
         seed: int = 42,
 ) -> Tuple[List[Dict], List[float], Dict[str, Dict], Dict[int, np.ndarray]]:
     """
@@ -44,7 +45,7 @@ def metropolis_hastings(
 
     if order_array:
         # Get weights 
-        mpebm_mcmc_sampler = data_utils.MCMC(ordering_array=order_array, rng=rng)
+        mpebm_mcmc_sampler = data_utils.MCMC(ordering_array=order_array, rng=rng, method=mp_method)
 
     biomarkers = data_we_have.biomarker.unique()
     n_stages = len(biomarkers) + 1
@@ -151,8 +152,11 @@ def metropolis_hastings(
             )
         
         if order_array:
-            # log(FullLikelihood)=log(ℓ)+log(exp(−E))=log(ℓ)−E
-            new_energy = mpebm_mcmc_sampler.obtain_energy(np.array(sorted(new_order_dict, key = new_order_dict.get)))
+            # log(ℓ * exp(−E))=log(ℓ)+log(exp(−E))=log(ℓ)−E
+            if mp_method == 'Pairwise':
+                new_energy = mpebm_mcmc_sampler.obtain_energy_pairwise(np.array(sorted(new_order_dict, key = new_order_dict.get)))
+            if mp_method == 'Mallows':
+                new_energy = mpebm_mcmc_sampler.obtain_energy_mallows(np.array(sorted(new_order_dict, key = new_order_dict.get)))
             new_ln_likelihood -= new_energy
         # Compute acceptance probability
         delta = new_ln_likelihood - current_ln_likelihood

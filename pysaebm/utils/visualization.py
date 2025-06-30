@@ -20,8 +20,7 @@ def save_heatmap(
     os.makedirs(folder_name, exist_ok=True)
     
     biomarker_stage_probability_df = data_processing.get_biomarker_stage_probability(
-        all_dicts, burn_in, thining
-    )
+        all_dicts, burn_in, thining)
 
     if best_order:
         biomarker_order = dict(sorted(best_order.items(), key=lambda item:item[1]))

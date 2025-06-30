@@ -469,6 +469,7 @@ def get_partial_orders(
         high:int, 
         rng: np.random.Generator
     ) -> Tuple[List[str], List[str]]:
+    # Get two partial orderings based on params dict
     # randomly pick two integers
     numbers = rng.choice(np.arange(low, high), size=2, replace=False)
     int1, int2 = numbers[0], numbers[1]
@@ -487,7 +488,10 @@ def get_combined_order(
         params:Dict[str, Dict[str, float]], 
         low:int, 
         high:int, 
-        seed:int) -> Tuple[List[str], List[List[str]]]:
+        seed:int,
+        method:str
+    ) -> Tuple[List[str], List[List[str]]]:
+    # Get one sample combined ordering based on MCMC sampling
     rng = rng = np.random.default_rng(seed)
 
     # two partial orders
@@ -501,7 +505,7 @@ def get_combined_order(
     ordering_array = [partial_order1, partial_order2]
 
     # get combined ordering
-    mpebm_mcmc_sampler = data_utils.MCMC(ordering_array=ordering_array, rng=rng)
+    mpebm_mcmc_sampler = data_utils.MCMC(ordering_array=ordering_array, rng=rng, method=method)
     combined_order = mpebm_mcmc_sampler.obtain_sample_ordering()
 
     return combined_order, ordering_array
@@ -556,7 +560,8 @@ def generate(
     suffix: Optional[str] = None,
     keep_all_cols: bool = False ,
     fixed_biomarker_order: bool = False,
-    noise_std_parameter: float = 0.05
+    noise_std_parameter: float = 0.05,
+    mp_method: str = "Mallows"
 ) -> Dict[str, Dict[str, int]]:
     """
     Generate multiple datasets for different experimental configurations.
@@ -636,15 +641,15 @@ def generate(
                 - Remember to save the two partial orderings to the `true_order_and_stages.json`. 
                 """
                 if mixed_pathology:
-                    combined_ordering, ordering_array = get_combined_order(params, low, high, seed=sub_seed)
-                    final_params = get_final_params(params, combined_ordering, ordering_array)
+                    combined_ordering, ordering_array = get_combined_order(params, low, high, seed=sub_seed, method=mp_method)
+                    params = get_final_params(params, combined_ordering, ordering_array)
                     true_order_and_stages_dict[filename]['ordering_array'] = ordering_array
                 
                 # Generate a single dataset with the current parameter combination
                 generate_data(
                     filename=filename,
                     experiment_name=experiment_name,
-                    params = final_params,
+                    params = params,
                     n_participants=participant_count,
                     healthy_ratio=healthy_ratio,
                     output_dir=output_dir,

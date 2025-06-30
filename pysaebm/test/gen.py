@@ -46,9 +46,11 @@ for exp_name in experiment_names:
             rs = [0.25],
             num_of_datasets_per_combination=3,
             output_dir='my_data',
-            seed=42,
+            seed=53,
             keep_all_cols = False,
-            fixed_biomarker_order = False
+            fixed_biomarker_order = False, 
+            # or Pairwise
+            mp_method='Mallows'
         )
     all_exp_dicts.append(bm_et_dict)
 
