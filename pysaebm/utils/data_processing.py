@@ -674,7 +674,7 @@ def compute_total_ln_likelihood_and_stage_likelihoods(
         total_ln_likelihood += ln_likelihood
     return total_ln_likelihood, stage_likelihoods_posteriors
 
-def obtain_unbaised_stage_likelihood_posteriors(
+def obtain_unbiased_stage_likelihood_posteriors(
         algorithm: str,
         participant_data: Dict[int, Tuple[np.ndarray, np.ndarray, np.ndarray]],
         theta_phi: Dict[str, Dict],

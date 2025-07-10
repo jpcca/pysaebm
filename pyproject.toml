@@ -3,11 +3,12 @@ requires = ["setuptools>=61.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "alabebm"
-version = "2.2.11"
-description = "I am lazy..."
+name = "pysaebm"
+version = "1.0.0"
+description = "Stage-Aware Event-Based Modeling for Disease Progression"
+readme = "README.md"
 authors = [
-  {name = "Anonymous", email = "johndoe@me.com"}
+  {name = "Hongtao Hao and Joseph Austerweil", email = "hongtaoh@cs.wisc.edu"}
 ]
 requires-python = ">=3.7"
 classifiers = [
@@ -26,7 +27,7 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://github.com"
+Homepage = "https://github.com/hongtaoh/pysaebm"
 
 [tool.setuptools.packages.find]
 

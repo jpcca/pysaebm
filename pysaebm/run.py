@@ -236,7 +236,7 @@ def run_ebm(
     healthy_ratio = len(non_diseased_ids)/n_participants
     updated_pi = [healthy_ratio] + [(1 - healthy_ratio) * x for x in current_pi]
 
-    final_stage_post2 = data_utils.obtain_unbaised_stage_likelihood_posteriors(
+    final_stage_post2 = data_utils.obtain_unbiased_stage_likelihood_posteriors(
                 algorithm,
                 participant_data,
                 final_theta_phi_params,

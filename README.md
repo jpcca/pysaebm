@@ -417,3 +417,6 @@ The data should be in a [tidy format](https://vita.had.co.nz/papers/tidy-data.pd
 - 2025-06-29 (V 2.2.11)
    - Enabled Generalized Mallows as an alternative to Pairwise Preferences in energy and combined ordering generation. 
    - Fixed the bug of `params` in generate data.
+
+- 2025-06-30 (V 2.2.12)
+   - Fixed typo: `unbiased`. 
