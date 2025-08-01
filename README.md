@@ -1,17 +1,19 @@
 # `pysaebm`
 
+`pysaebm` is a Python package for generating and analyzing biomarker data using Stage-Aware Event-Based Modeling (SA-EBM). It supports various data generation experiments and EBM algorithms to estimate biomarker orderings and disease stages. This package is designed for researchers and data scientists working with biomarker progression analysis.
 
+For detailed methodology, refer to [our paper](https://saebm.hongtaoh.com/).
 
 
 ## Installation
 
-
-
+Install `pysaebm` using pip:
 
 ```bash
 pip install pysaebm
 ```
 
+Ensure you have Python 3.8+ and the required dependencies installed. For a full list of dependencies, see `requirements.txt`.
 
 
 
