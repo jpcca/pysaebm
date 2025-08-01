@@ -20,12 +20,7 @@ for algorithm in ['conjugate_priors']:
         fname = data_file.replace('.csv', '')
         true_order_dict = true_order_and_stages[fname]['true_order']
         true_stages = true_order_and_stages[fname]['true_stages']
-        try:
-            order_array = true_order_and_stages[fname]['ordering_array']
-        except:
-            order_array = None
         results = run_ebm(
-            order_array=order_array,
             data_file= os.path.join(data_dir, data_file),
             algorithm=algorithm,
             output_dir=OUTPUT_DIR,
@@ -37,6 +32,5 @@ for algorithm in ['conjugate_priors']:
             true_stages = true_stages,
             skip_heatmap=False,
             skip_traceplot=False,
-            # mp_method='Mallows',
             seed = 53
         )

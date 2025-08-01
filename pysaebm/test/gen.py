@@ -39,7 +39,6 @@ all_exp_dicts = []
 for exp_name in experiment_names:
     # biomarker event time dict
     bm_et_dict = generate(
-            mixed_pathology=False,
             experiment_name = exp_name,
             params_file=params_file,
             js = [200],
@@ -49,8 +48,6 @@ for exp_name in experiment_names:
             seed=53,
             keep_all_cols = False,
             fixed_biomarker_order = False, 
-            # or Pairwise
-            # mp_method='Mallows'
         )
     all_exp_dicts.append(bm_et_dict)
 

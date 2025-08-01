@@ -1,13 +1,13 @@
-2025-07-09 20:16:05,865 - INFO - Running conjugate priors for file: j200_r0.25_Esn_kjOrdinalUniform_xnjNonNormal_m0
-2025-07-09 20:16:05,867 - INFO - Number of biomarkers: 10
-2025-07-09 20:16:06,744 - INFO - Iteration 20/200, Acceptance Ratio: 60.00%, Log Likelihood: -5519.6853, Current Accepted Order: dict_values([2, 1, 4, 3, 10, 7, 6, 9, 8, 5]), 
-2025-07-09 20:16:07,591 - INFO - Iteration 40/200, Acceptance Ratio: 47.50%, Log Likelihood: -5480.1494, Current Accepted Order: dict_values([2, 1, 4, 3, 10, 6, 5, 9, 7, 8]), 
-2025-07-09 20:16:08,415 - INFO - Iteration 60/200, Acceptance Ratio: 40.00%, Log Likelihood: -5450.6181, Current Accepted Order: dict_values([2, 1, 3, 4, 10, 8, 5, 6, 7, 9]), 
-2025-07-09 20:16:09,242 - INFO - Iteration 80/200, Acceptance Ratio: 30.00%, Log Likelihood: -5450.6181, Current Accepted Order: dict_values([2, 1, 3, 4, 10, 8, 5, 6, 7, 9]), 
-2025-07-09 20:16:10,073 - INFO - Iteration 100/200, Acceptance Ratio: 24.00%, Log Likelihood: -5450.6181, Current Accepted Order: dict_values([2, 1, 3, 4, 10, 8, 5, 6, 7, 9]), 
-2025-07-09 20:16:10,906 - INFO - Iteration 120/200, Acceptance Ratio: 20.00%, Log Likelihood: -5450.6181, Current Accepted Order: dict_values([2, 1, 3, 4, 10, 8, 5, 6, 7, 9]), 
-2025-07-09 20:16:11,736 - INFO - Iteration 140/200, Acceptance Ratio: 17.14%, Log Likelihood: -5450.6181, Current Accepted Order: dict_values([2, 1, 3, 4, 10, 8, 5, 6, 7, 9]), 
-2025-07-09 20:16:12,568 - INFO - Iteration 160/200, Acceptance Ratio: 15.00%, Log Likelihood: -5450.6181, Current Accepted Order: dict_values([2, 1, 3, 4, 10, 8, 5, 6, 7, 9]), 
-2025-07-09 20:16:13,403 - INFO - Iteration 180/200, Acceptance Ratio: 14.44%, Log Likelihood: -5449.2873, Current Accepted Order: dict_values([1, 2, 3, 4, 10, 8, 7, 6, 5, 9]), 
-2025-07-09 20:16:14,238 - INFO - Iteration 200/200, Acceptance Ratio: 13.50%, Log Likelihood: -5447.8366, Current Accepted Order: dict_values([1, 2, 3, 4, 10, 6, 7, 8, 5, 9]), 
-2025-07-09 20:16:14,989 - INFO - Results saved to algo_results/conjugate_priors/results/j200_r0.25_Esn_kjOrdinalUniform_xnjNonNormal_m0_results.json
+2025-08-01 11:59:36,651 - INFO - Running conjugate priors for file: j200_r0.25_Esn_kjOrdinalUniform_xnjNonNormal_m0
+2025-08-01 11:59:36,652 - INFO - Number of biomarkers: 10
+2025-08-01 11:59:37,486 - INFO - Iteration 20/200, Acceptance Ratio: 60.00%, Log Likelihood: -5519.6853, Current Accepted Order: dict_values([2, 1, 4, 3, 10, 7, 6, 9, 8, 5]), 
+2025-08-01 11:59:38,306 - INFO - Iteration 40/200, Acceptance Ratio: 47.50%, Log Likelihood: -5480.1494, Current Accepted Order: dict_values([2, 1, 4, 3, 10, 6, 5, 9, 7, 8]), 
+2025-08-01 11:59:39,118 - INFO - Iteration 60/200, Acceptance Ratio: 40.00%, Log Likelihood: -5450.6181, Current Accepted Order: dict_values([2, 1, 3, 4, 10, 8, 5, 6, 7, 9]), 
+2025-08-01 11:59:39,929 - INFO - Iteration 80/200, Acceptance Ratio: 30.00%, Log Likelihood: -5450.6181, Current Accepted Order: dict_values([2, 1, 3, 4, 10, 8, 5, 6, 7, 9]), 
+2025-08-01 11:59:40,742 - INFO - Iteration 100/200, Acceptance Ratio: 24.00%, Log Likelihood: -5450.6181, Current Accepted Order: dict_values([2, 1, 3, 4, 10, 8, 5, 6, 7, 9]), 
+2025-08-01 11:59:41,555 - INFO - Iteration 120/200, Acceptance Ratio: 20.00%, Log Likelihood: -5450.6181, Current Accepted Order: dict_values([2, 1, 3, 4, 10, 8, 5, 6, 7, 9]), 
+2025-08-01 11:59:42,366 - INFO - Iteration 140/200, Acceptance Ratio: 17.14%, Log Likelihood: -5450.6181, Current Accepted Order: dict_values([2, 1, 3, 4, 10, 8, 5, 6, 7, 9]), 
+2025-08-01 11:59:43,175 - INFO - Iteration 160/200, Acceptance Ratio: 15.00%, Log Likelihood: -5450.6181, Current Accepted Order: dict_values([2, 1, 3, 4, 10, 8, 5, 6, 7, 9]), 
+2025-08-01 11:59:43,984 - INFO - Iteration 180/200, Acceptance Ratio: 14.44%, Log Likelihood: -5449.2873, Current Accepted Order: dict_values([1, 2, 3, 4, 10, 8, 7, 6, 5, 9]), 
+2025-08-01 11:59:44,798 - INFO - Iteration 200/200, Acceptance Ratio: 13.50%, Log Likelihood: -5447.8366, Current Accepted Order: dict_values([1, 2, 3, 4, 10, 6, 7, 8, 5, 9]), 
+2025-08-01 11:59:45,547 - INFO - Results saved to algo_results/conjugate_priors/results/j200_r0.25_Esn_kjOrdinalUniform_xnjNonNormal_m0_results.json

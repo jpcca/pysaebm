@@ -5,12 +5,12 @@ import logging
 from typing import List, Dict, Optional, Union
 from scipy.stats import kendalltau
 import time
-import math 
-import numpy as np 
+import math
+import numpy as np
 
 # Import utility functions
-from pysaebm.utils.visualization import save_heatmap, save_traceplot 
-from pysaebm.utils.logging_utils import setup_logging 
+from pysaebm.utils.visualization import save_heatmap, save_traceplot
+from pysaebm.utils.logging_utils import setup_logging
 from pysaebm.utils.runners import extract_fname, cleanup_old_files
 import pysaebm.utils.data_processing as data_utils
 
@@ -18,27 +18,28 @@ import pysaebm.utils.data_processing as data_utils
 from pysaebm.algorithms import metropolis_hastings
 from sklearn.metrics import cohen_kappa_score, mean_absolute_error, mean_squared_error
 
+
 def run_ebm(
     data_file: str,
     output_dir: str,
     output_folder: Optional[str] = None,
-    order_array: Optional[List[List[str]]] = None,
-    algorithm: str = 'conjugate_priors', 
+    algorithm: str = 'conjugate_priors',
     n_iter: int = 2000,
     n_shuffle: int = 2,
     burn_in: int = 500,
-    thinning: int = 10,
+    thinning: int = 1,
     true_order_dict: Optional[Dict[str, int]] = None,
     true_stages: Optional[List[int]] = None,
     plot_title_detail: Optional[str] = "",
     fname_prefix: Optional[str] = "",
     skip_heatmap: Optional[bool] = False,
     skip_traceplot: Optional[bool] = False,
-    prior_n: float = 1.0,    # Strength of the prior belief in prior estimate of the mean (μ), set to 1 as default
-    prior_v: float = 1.0,     # Prior degrees of freedom, influencing the certainty of prior estimate of the variance (σ²), set to 1 as default
+    # Strength of the prior belief in prior estimate of the mean (μ), set to 1 as default
+    prior_n: float = 1.0,
+    # Prior degrees of freedom, influencing the certainty of prior estimate of the variance (σ²), set to 1 as default
+    prior_v: float = 1.0,
     weight_change_threshold: float = 0.01,
     bw_method: str = 'scott',
-    mp_method: Optional[str] = "Mallows",
     seed: int = 42,
 ) -> Dict[str, Union[str, int, float, Dict, List]]:
     """
@@ -49,7 +50,6 @@ def run_ebm(
         output_dir (str): Path to the directory to store all the results.
         output_folder (str): Optional. If not provided, all results will be saved to output_dir/algorithm. 
             If provided, results will be saved to output_dir/output_folder
-        order_array (List[List[str]]): The list of partial orderings
         algorithm (str): Choose from 'hard_kmeans', 'mle', 'em', 'kde', and 'conjugate_priors' (default).
         n_iter (int): Number of iterations for the Metropolis-Hastings algorithm.
         n_shuffle (int): Number of shuffles per iteration.
@@ -57,22 +57,24 @@ def run_ebm(
         thinning (int): Thinning interval for the MCMC chain.
         true_order_dict (Optional[Dict[str, int]]): biomarker name: the correct order of it (if known)
         true_stages (Optional[List[int]]): true stages for all participants (if known)
-        plot_title_detail (Optional[str]): optional string to add to plot title. 
+        plot_title_detail (Optional[str]): optional string to add to plot title, as suffix.
         fname_prefix (Optional[str]): the prefix of heatmap, traceplot, results.json, and logs file, e.g., 5_50_0_heatmap_conjugate_priors.png
             In the example, there are no prefix strings. 
-        skip_heatmap (Optional[bool]): whether to save heatmaps. True if want to skip saving heatmpas and save space.
-        skip_traceplot (Optional[bool]): whether to save traceplots. True if want to skip saving traceplots and save space.
+        skip_heatmap (Optional[bool]): whether to save heatmaps. True you want to skip saving heatmaps and save space.
+        skip_traceplot (Optional[bool]): whether to save traceplots. True if you want to skip saving traceplots and save space.
         prior_n (strength of belief in prior of mean): default to be 1.0
         prior_v (prior degree of freedom) are the weakly informative priors, default to be 1.0
         weight_change_threshold (float): Threshold for kde weights (if np.mean(new_weights - old_weights)) > threshold, then recalculate
             otherwise use the new kde and weights
         bw_method (str): bandwidth selection method in kde
+        seed (int): for reproducibility
 
     Returns:
         Dict[str, Union[str, int, float, Dict, List]]: Results including everything, e.g., Kendall's tau and p-value.
     """
     start_time = time.time()
-    allowed_algorithms = {'hard_kmeans', 'mle', 'conjugate_priors', 'em', 'kde'}  # Using a set for faster lookup
+    # Using a set for faster lookup
+    allowed_algorithms = {'hard_kmeans', 'mle', 'conjugate_priors', 'em', 'kde'}
     if algorithm not in allowed_algorithms:
         raise ValueError(f"Invalid algorithm '{algorithm}'. Must be one of {allowed_algorithms}")
 
@@ -130,20 +132,21 @@ def run_ebm(
     # Run the Metropolis-Hastings algorithm
     try:
         accepted_order_dicts, log_likelihoods, final_theta_phi_params, final_stage_post, current_pi = metropolis_hastings(
-            order_array, data, n_iter, n_shuffle, algorithm, prior_n=prior_n, prior_v=prior_v, weight_change_threshold = weight_change_threshold, bw_method=bw_method, mp_method = mp_method, seed=seed)
+            data, n_iter, n_shuffle, algorithm, prior_n=prior_n, prior_v=prior_v, weight_change_threshold=weight_change_threshold, bw_method=bw_method, seed=seed)
     except Exception as e:
         logging.error(f"Error in Metropolis-Hastings algorithm: {e}")
         raise
 
     # Get the order associated with the highet log likelihoods
-    order_with_highest_ll = accepted_order_dicts[log_likelihoods.index(max(log_likelihoods))]
+    order_with_highest_ll = accepted_order_dicts[log_likelihoods.index(
+        max(log_likelihoods))]
     # Sort by keys in an ascending order
     order_with_highest_ll = dict(sorted(order_with_highest_ll.items()))
     if true_order_dict:
         # Sort both dicts by the key to make sure they are comparable
         true_order_dict = dict(sorted(true_order_dict.items()))
         tau2, p_value2 = kendalltau(
-            list(order_with_highest_ll.values()), 
+            list(order_with_highest_ll.values()),
             list(true_order_dict.values()))
     else:
         tau2, p_value2 = None, None
@@ -158,7 +161,7 @@ def run_ebm(
         # Only calculate tau and p_value if true_order_dict is provided
         if true_order_dict:
             tau, p_value = kendalltau(
-                list(most_likely_order_dic.values()), 
+                list(most_likely_order_dic.values()),
                 list(true_order_dict.values()))
         else:
             tau, p_value = None, None
@@ -188,9 +191,9 @@ def run_ebm(
                 thinning,
                 folder_name=heatmap_folder,
                 file_name=f"{fname_prefix}{fname}_heatmap_{algorithm}",
-                title=f"{pretty_name} Ordering Result",
+                title=f"{pretty_name} Ordering Result {plot_title_detail}",
                 # title=f"Heatmap of {fname_prefix}{fname} Using {algorithm}",
-                best_order = order_with_highest_ll
+                best_order=order_with_highest_ll
             )
         except Exception as e:
             logging.error(f"Error generating heatmap: {e}")
@@ -200,15 +203,15 @@ def run_ebm(
     if not skip_traceplot:
         try:
             save_traceplot(
-                log_likelihoods, 
-                folder_name = traceplot_folder, 
-                file_name = f"{fname_prefix}{fname}_traceplot_{algorithm}",
-                title = f"Traceplot of Log Likelihoods ({pretty_name})" 
+                log_likelihoods,
+                folder_name=traceplot_folder,
+                file_name=f"{fname_prefix}{fname}_traceplot_{algorithm}",
+                title=f"Traceplot of Log Likelihoods ({pretty_name}) {plot_title_detail}"
             )
         except Exception as e:
             logging.error(f"Error generating trace plot: {e}")
-            raise 
-    
+            raise
+
     if algorithm == 'kde':
         final_theta_phi_params = {
             str(k): {kk: vv.tolist() for kk, vv in v.items()}
@@ -216,43 +219,46 @@ def run_ebm(
         }
 
     # Whole dataset
-    participant_data = data_utils.preprocess_participant_data(data, order_with_highest_ll)
-    _, final_stage_post1 =  data_utils.compute_total_ln_likelihood_and_stage_likelihoods(
-                algorithm,
-                participant_data,
-                non_diseased_ids,
-                final_theta_phi_params,
-                current_pi,
-                disease_stages,
-                bw_method
-            )
-    
+    participant_data = data_utils.preprocess_participant_data(
+        data, order_with_highest_ll)
+    _, final_stage_post1 = data_utils.compute_total_ln_likelihood_and_stage_likelihoods(
+        algorithm,
+        participant_data,
+        non_diseased_ids,
+        final_theta_phi_params,
+        current_pi,
+        disease_stages,
+        bw_method
+    )
+
     # Most likely stage for diseased participants
     ml_stages_diseased = [
-        np.random.choice(len(final_stage_post1[pid]), p=final_stage_post1[pid]) + 1
+        np.random.choice(
+            len(final_stage_post1[pid]), p=final_stage_post1[pid]) + 1
         for pid in diseased_ids
     ]
 
     healthy_ratio = len(non_diseased_ids)/n_participants
-    updated_pi = [healthy_ratio] + [(1 - healthy_ratio) * x for x in current_pi]
+    updated_pi = [healthy_ratio] + \
+        [(1 - healthy_ratio) * x for x in current_pi]
 
     final_stage_post2 = data_utils.obtain_unbiased_stage_likelihood_posteriors(
-                algorithm,
-                participant_data,
-                final_theta_phi_params,
-                updated_pi,
-                bw_method = bw_method
-            )
+        algorithm,
+        participant_data,
+        final_theta_phi_params,
+        updated_pi,
+        bw_method=bw_method
+    )
     ml_stages = [
-            np.random.choice(len(final_stage_post2[pid]), p=final_stage_post2[pid])
-            for pid in range(n_participants)
-        ]
-    
-    qwk = None 
+        np.random.choice(len(final_stage_post2[pid]), p=final_stage_post2[pid])
+        for pid in range(n_participants)
+    ]
+
+    qwk = None
     mae = None
     mse = None
     rmse = None
-    qwk2 = None 
+    qwk2 = None
     mae2 = None
     mse2 = None
     rmse2 = None
@@ -267,31 +273,31 @@ def run_ebm(
 
         # Diseased only
         true_stages_diseased = [true_stages[x] for x in diseased_ids]
-        qwk2 = cohen_kappa_score(true_stages_diseased, ml_stages_diseased, weights='quadratic')
+        qwk2 = cohen_kappa_score(true_stages_diseased,
+                                 ml_stages_diseased, weights='quadratic')
         mae2 = mean_absolute_error(true_stages_diseased, ml_stages_diseased)
         mse2 = mean_squared_error(true_stages_diseased, ml_stages_diseased)
         rmse2 = math.sqrt(mse2)
 
-
     if true_order_dict:
-        true_order_result = {k:int(v) for k, v in true_order_dict.items()}
+        true_order_result = {k: int(v) for k, v in true_order_dict.items()}
     else:
         true_order_result = None
 
     end_time = time.time()
-    # Save results 
+    # Save results
     results = {
         "algorithm": algorithm,
         "runtime": end_time - start_time,
         "N_MCMC": n_iter,
-        "n_shuffle": n_shuffle, 
+        "n_shuffle": n_shuffle,
         "burn_in": burn_in,
         "thinning": thinning,
         'healthy_ratio': healthy_ratio,
         "max_log_likelihood": float(max(log_likelihoods)),
         "kendalls_tau2": tau2,
         "p_value2": p_value2,
-        "kendalls_tau": tau, 
+        "kendalls_tau": tau,
         "p_value": p_value,
         "quadratic_weighted_kappa": qwk,
         "mean_absolute_error": mae,
@@ -305,7 +311,7 @@ def run_ebm(
         # updated pi is the pi for all stages, including 0
         'updated_pi': updated_pi,
         'true_order': true_order_result,
-        'ml_order': {k:int(v) for k, v in most_likely_order_dic.items()},
+        'ml_order': {k: int(v) for k, v in most_likely_order_dic.items()},
         "order_with_highest_ll": {k: int(v) for k, v in order_with_highest_ll.items()},
         "true_stages": true_stages,
         'ml_stages': ml_stages,
@@ -321,7 +327,7 @@ def run_ebm(
             json.dump(results, f, indent=4)
     except Exception as e:
         logging.error(f"Error writing results to file: {e}")
-        raise 
+        raise
     logging.info(f"Results saved to {results_folder}/{fname_prefix}{fname}_results.json")
 
     # Clean up logging handlers
