@@ -14,7 +14,7 @@ def metropolis_hastings(
         prior_v: float,
         weight_change_threshold: float = 0.01,
         bw_method: str = 'scott',
-        mp_method: str = 'Mallows',
+        mp_method: Optional[str] = 'Mallows',
         seed: int = 42,
 ) -> Tuple[List[Dict], List[float], Dict[str, Dict], Dict[int, np.ndarray]]:
     """

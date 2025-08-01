@@ -22,7 +22,7 @@ def run_ebm(
     data_file: str,
     output_dir: str,
     output_folder: Optional[str] = None,
-    order_array: List[List[str]] = None,
+    order_array: Optional[List[List[str]]] = None,
     algorithm: str = 'conjugate_priors', 
     n_iter: int = 2000,
     n_shuffle: int = 2,
@@ -38,7 +38,7 @@ def run_ebm(
     prior_v: float = 1.0,     # Prior degrees of freedom, influencing the certainty of prior estimate of the variance (σ²), set to 1 as default
     weight_change_threshold: float = 0.01,
     bw_method: str = 'scott',
-    mp_method: str = "Mallows",
+    mp_method: Optional[str] = "Mallows",
     seed: int = 42,
 ) -> Dict[str, Union[str, int, float, Dict, List]]:
     """

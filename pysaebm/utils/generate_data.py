@@ -561,7 +561,7 @@ def generate(
     keep_all_cols: bool = False ,
     fixed_biomarker_order: bool = False,
     noise_std_parameter: float = 0.05,
-    mp_method: str = "Mallows"
+    mp_method: Optional[str] = "Mallows"
 ) -> Dict[str, Dict[str, int]]:
     """
     Generate multiple datasets for different experimental configurations.

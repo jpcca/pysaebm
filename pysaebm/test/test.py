@@ -37,6 +37,6 @@ for algorithm in ['conjugate_priors']:
             true_stages = true_stages,
             skip_heatmap=False,
             skip_traceplot=False,
-            mp_method='Mallows',
+            # mp_method='Mallows',
             seed = 53
         )

@@ -1,6 +1,7 @@
 # `pysaebm`
 
 
+Test 
 
 ## Installation
 
@@ -420,3 +421,13 @@ The data should be in a [tidy format](https://vita.had.co.nz/papers/tidy-data.pd
 
 - 2025-06-30 (V 2.2.12)
    - Fixed typo: `unbiased`. 
+
+---
+
+All abvoe changelogs were [alabebm](https://pypi.org/project/alabebm/#history). However, I changed the name to [pysaebm](https://pypi.org/project/pysaebm/) after the paper got accepted. This is because of the required anonymity. 
+
+Below will be the changelogs for `pysaebm`. 
+
+- 2025-07-09 (V 1.0.1)
+   - Made `mp_method` optional in `generate_data.py`. 
+   - Made `mp_method` and `order_array` in `algorithm.py` and `run.py` as optional. 
