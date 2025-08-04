@@ -582,3 +582,6 @@ Below will be the changelogs for `pysaebm`.
 - 2025-08-01 (V 1.0.2)
   - Deleted `mixed_pathology` stuff.
 
+- 2025-08-03 (V 1.1.0)
+  - changed from `np.log(current_pi[k_j-1])` to `np.log(current_pi[k_j])` in unbaised stage post. 
+

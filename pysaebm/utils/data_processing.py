@@ -507,14 +507,14 @@ def obtain_unbiased_stage_likelihood_posteriors(
             ln_stage_likelihoods = np.array([
                 compute_ln_likelihood_kde_fast(
                     measurements, S_n, biomarkers, k_j=k_j, kde_dict=theta_phi, bw_method=bw_method
-                ) + np.log(current_pi[k_j-1])
+                ) + np.log(current_pi[k_j])
                 for k_j in range(0, len(theta_phi) + 1)
             ])
         else:
             ln_stage_likelihoods = np.array([
                 compute_ln_likelihood(
                     measurements, S_n, biomarkers, k_j=k_j, theta_phi=theta_phi
-                ) + np.log(current_pi[k_j-1])
+                ) + np.log(current_pi[k_j])
                 for k_j in range(0, len(theta_phi) + 1)
             ])
         # Use log-sum-exp trick for numerical stability
