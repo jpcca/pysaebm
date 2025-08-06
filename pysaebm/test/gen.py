@@ -1,5 +1,4 @@
 from pysaebm import generate, get_params_path
-import os
 import numpy as np 
 import json 
 

@@ -1,0 +1,13 @@
+2025-08-06 00:54:38,114 - INFO - Running conjugate priors for file: j200_r0.25_Esn_kjOrdinalUniform_xnjNormal_m2
+2025-08-06 00:54:38,116 - INFO - Number of biomarkers: 10
+2025-08-06 00:54:41,870 - INFO - Iteration 20/200, Acceptance Ratio: 45.00%, Log Likelihood: -5118.5924, 
+2025-08-06 00:54:41,916 - INFO - Iteration 40/200, Acceptance Ratio: 30.00%, Log Likelihood: -5095.4756, 
+2025-08-06 00:54:41,962 - INFO - Iteration 60/200, Acceptance Ratio: 23.33%, Log Likelihood: -5092.0708, 
+2025-08-06 00:54:42,010 - INFO - Iteration 80/200, Acceptance Ratio: 18.75%, Log Likelihood: -5090.3079, 
+2025-08-06 00:54:42,058 - INFO - Iteration 100/200, Acceptance Ratio: 15.00%, Log Likelihood: -5090.3079, 
+2025-08-06 00:54:42,107 - INFO - Iteration 120/200, Acceptance Ratio: 12.50%, Log Likelihood: -5090.3079, 
+2025-08-06 00:54:42,153 - INFO - Iteration 140/200, Acceptance Ratio: 10.71%, Log Likelihood: -5090.3079, 
+2025-08-06 00:54:42,202 - INFO - Iteration 160/200, Acceptance Ratio: 9.38%, Log Likelihood: -5090.3079, 
+2025-08-06 00:54:42,251 - INFO - Iteration 180/200, Acceptance Ratio: 8.33%, Log Likelihood: -5090.3079, 
+2025-08-06 00:54:42,298 - INFO - Iteration 200/200, Acceptance Ratio: 7.50%, Log Likelihood: -5090.3079, 
+2025-08-06 00:54:43,568 - INFO - Results saved to algo_results/conjugate_priors/results/j200_r0.25_Esn_kjOrdinalUniform_xnjNormal_m2_results.json

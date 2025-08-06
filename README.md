@@ -585,3 +585,7 @@ Below will be the changelogs for `pysaebm`.
 - 2025-08-03 (V 1.1.0)
   - changed from `np.log(current_pi[k_j-1])` to `np.log(current_pi[k_j])` in unbaised stage post. 
 
+- 2025-08-06 (V 1.2.1)
+  - Used vectorized version for all algos except for kde. Used the pd.dataframe and dicts for kde.
+  - Used tau distance instead of tau corr in saved results.
+  - Made sure `fastmath=False` in each `njit`.

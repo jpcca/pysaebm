@@ -1,0 +1,8 @@
+{
+    "algorithm": "em",
+    "runtime": 1.4031500816345215,
+    "healthy_ratio": 0.25,
+    "max_log_likelihood": -5078.237174863331,
+    "kendalls_tau": 0.04444444444444451,
+    "mean_absolute_error": 0.54
+}
