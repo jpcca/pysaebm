@@ -127,63 +127,65 @@ This explains the parameters well enough:
 
 ```py
 def run_ebm(
-   data_file: str,
-   output_dir: str,
-   output_folder: Optional[str] = None,
-   algorithm: str = 'conjugate_priors',
-   n_iter: int = 2000,
-   n_shuffle: int = 2,
-   burn_in: int = 500,
-   thinning: int = 1,
-   true_order_dict: Optional[Dict[str, int]] = None,
-   true_stages: Optional[List[int]] = None,
-   plot_title_detail: Optional[str] = "",
-   fname_prefix: Optional[str] = "",
-   skip_heatmap: Optional[bool] = False,
-   skip_traceplot: Optional[bool] = False,
-   # Strength of the prior belief in prior estimate of the mean (μ), set to 1 as default
-   prior_n: float = 1.0,
-   # Prior degrees of freedom, influencing the certainty of prior estimate of the variance (σ²), set to 1 as default
-   prior_v: float = 1.0,
-   weight_change_threshold: float = 0.01,
-   bw_method: str = 'scott',
-   seed: int = 42,
+    algorithm:str,
+    data_file: str,
+    output_dir: str,
+    output_folder: Optional[str] = None,
+    n_iter: int = 2000,
+    n_shuffle: int = 2,
+    burn_in: int = 500,
+    thinning: int = 1,
+    true_order_dict: Optional[Dict[str, int]] = None,
+    true_stages: Optional[List[int]] = None,
+    plot_title_detail: Optional[str] = "",
+    fname_prefix: Optional[str] = "",
+    skip_heatmap: Optional[bool] = False,
+    skip_traceplot: Optional[bool] = False,
+    # Strength of the prior belief in prior estimate of the mean (μ), set to 1 as default
+    prior_n: float = 1.0,
+    # Prior degrees of freedom, influencing the certainty of prior estimate of the variance (σ²), set to 1 as default
+    prior_v: float = 1.0,
+    seed: int = 123,
+    save_results:bool=True,
+    save_theta_phi:bool=False,
+    save_stage_post:bool=False,
+    save_details:bool=False,
 ) -> Dict[str, Union[str, int, float, Dict, List]]:
-   """
-   Run the metropolis hastings algorithm and save results
+    """
+    Run the metropolis hastings algorithm and save results 
 
+    Args:
+        algorithm (str): Choose from 'hard_kmeans', 'mle', 'em', 'kde', and 'conjugate_priors' (default).
+        data_file (str): Path to the input CSV file with biomarker data.
+        output_dir (str): Path to the directory to store all the results.
+        output_folder (str): Optional. If not provided, all results will be saved to output_dir/algorithm. 
+            If provided, results will be saved to output_dir/output_folder
+        n_iter (int): Number of iterations for the Metropolis-Hastings algorithm.
+        n_shuffle (int): Number of shuffles per iteration.
+        burn_in (int): Burn-in period for the MCMC chain.
+        thinning (int): Thinning interval for the MCMC chain.
+        true_order_dict (Optional[Dict[str, int]]): biomarker name: the correct order of it (if known)
+        true_stages (Optional[List[int]]): true stages for all participants (if known)
+        plot_title_detail (Optional[str]): optional string to add to plot title, as suffix.
+        fname_prefix (Optional[str]): the prefix of heatmap, traceplot, results.json, and logs file, e.g., 5_50_0_heatmap_conjugate_priors.png
+            In the example, there are no prefix strings. 
+        skip_heatmap (Optional[bool]): whether to save heatmaps. True you want to skip saving heatmaps and save space.
+        skip_traceplot (Optional[bool]): whether to save traceplots. True if you want to skip saving traceplots and save space.
+        prior_n (strength of belief in prior of mean): default to be 1.0
+        prior_v (prior degree of freedom) are the weakly informative priors, default to be 1.0
+        seed (int): for reproducibility
+        save_results: whether to save the json result.
+        save_theta_phi: if save_results, whether to include the theta_phi result.
+        save_stage_post: if save_results, whether to include the stage post result. 
+        save_details: if save_results, save the simple version instead of the complete version. 
 
-   Args:
-       data_file (str): Path to the input CSV file with biomarker data.
-       output_dir (str): Path to the directory to store all the results.
-       output_folder (str): Optional. If not provided, all results will be saved to output_dir/algorithm.
-           If provided, results will be saved to output_dir/output_folder
-       algorithm (str): Choose from 'hard_kmeans', 'mle', 'em', 'kde', and 'conjugate_priors' (default).
-       n_iter (int): Number of iterations for the Metropolis-Hastings algorithm.
-       n_shuffle (int): Number of shuffles per iteration.
-       burn_in (int): Burn-in period for the MCMC chain.
-       thinning (int): Thinning interval for the MCMC chain.
-       true_order_dict (Optional[Dict[str, int]]): biomarker name: the correct order of it (if known)
-       true_stages (Optional[List[int]]): true stages for all participants (if known)
-       plot_title_detail (Optional[str]): optional string to add to plot title, as suffix.
-       fname_prefix (Optional[str]): the prefix of heatmap, traceplot, results.json, and logs file, e.g., 5_50_0_heatmap_conjugate_priors.png
-           In the example, there are no prefix strings.
-       skip_heatmap (Optional[bool]): whether to save heatmaps. True if you want to skip saving heatmaps and save space.
-       skip_traceplot (Optional[bool]): whether to save traceplots. True if you want to skip saving traceplots and save space.
-       prior_n (strength of belief in prior of mean): default to be 1.0
-       prior_v (prior degree of freedom) are the weakly informative priors, default to be 1.0
-       weight_change_threshold (float): Threshold for kde weights (if np.mean(new_weights - old_weights)) > threshold, then recalculate
-           otherwise use the new kde and weights
-       bw_method (str): bandwidth selection method in kde
-       seed (int): for reproducibility
+    Returns:
+        Dict[str, Union[str, int, float, Dict, List]]: Results including everything, e.g., Kendall's tau and p-value.
 
-
-   Returns:
-       Dict[str, Union[str, int, float, Dict, List]]: Results including everything, e.g., Kendall's tau and p-value.
-   """
+        Whether to save results or not, the results will be returned. If save_details, the complete veresion will be returned.
+        Otherwise, the simple version will be returned. 
+    """
 ```
-
-
 
 
 Some extra explanations:
@@ -195,89 +197,53 @@ Some extra explanations:
 - `burn_in` and `thinning`: The idea behind the two parameters is that we will only use some of the results from all iterations in `n_iter`. We will do this: if `(i > burn_in) & (i % thinning == 0)`, then we will use the result from that iteration `i`. Usually, we set `thinning` to be 1.
 
 
-
-
 After running the `run_ebm`, you'll see a folder named as your `output_dir`. Each algorithm will have its subfolders.
 
 
-
-
 The results are organized this way:
-
-
-
 
 - `records` folder contains the loggings.
 - `heatmaps` folder contains all the heatmaps. An example is
 
 
-
-
 ![An example of heatmap](./heatmap_example.png)
-
-
 
 
   Biomarkers in the y-axis are ranked according to the ordering that has the highest likelihood among all iterations. Each cell indicates the probability that a certain biomarker falls in a certain stage. **Note, however, these probabilities are calculated based on all the iterations that satisfy  `(i > burn_in) & (i % thinning == 0)`**.
 
 
-
-
   In the heatmap, the sum of each col and each row is 1.
-
-
-
 
 - `traceplots` folder contains all the traceplots (starting from iteration 40, not iteration 0). Those plots will be useful to diagnose whether EBM algorithms are working correctly. It's totally okay for the plots to show fluctuation (because biomarker distribution and stage distributions are re-calculated each iterations). You should not, however, see a clear downward trend.
 
 
 ![An example of traceplot](./traceplot_example.png)
 
-
-
-
 - `results` folder contains all important results in `json`. Each file contains
-
-
 
 
 ```py
 results = {
-       "algorithm": algorithm,
-       "runtime": end_time - start_time,
-       "N_MCMC": n_iter,
-       "n_shuffle": n_shuffle,
-       "burn_in": burn_in,
-       "thinning": thinning,
-       'healthy_ratio': healthy_ratio,
-       "max_log_likelihood": float(max(log_likelihoods)),
-       "kendalls_tau2": tau2,
-       "p_value2": p_value2,
-       "kendalls_tau": tau,
-       "p_value": p_value,
-       "quadratic_weighted_kappa": qwk,
-       "mean_absolute_error": mae,
-       "mean_squared_error": mse,
-       "root_mean_squared_error": rmse,
-       "quadratic_weighted_kappa_diseased": qwk2,
-       "mean_absolute_error_diseased": mae2,
-       "mean_squared_error_diseased": mse2,
-       "root_mean_squared_error_diseased": rmse2,
-       'current_pi': current_pi.tolist(),
-       # updated pi is the pi for all stages, including 0
-       'updated_pi': updated_pi,
-       'true_order': true_order_result,
-       'ml_order': {k: int(v) for k, v in most_likely_order_dic.items()},
-       "order_with_highest_ll": {k: int(v) for k, v in order_with_highest_ll.items()},
-       "true_stages": true_stages,
-       'ml_stages': ml_stages,
-       # stages diseased only contains stage prediction for diseased patients
-       "true_stages_diseased": true_stages_diseased,
-       'ml_stages_diseased': ml_stages_diseased,
-       "stage_likelihood_posterior": {str(k): v.tolist() for k, v in final_stage_post2.items()},
-       "stage_likelihood_posterior_diseased": {str(k): v.tolist() for k, v in final_stage_post.items()},
-       "final_theta_phi_params": final_theta_phi_params,
-   }
+            "algorithm": algorithm, # name of the algoritm
+            "runtime": end_time - start_time, # run time in seconds
+            "N_MCMC": n_iter, # number of MCMC iterations
+            "n_shuffle": n_shuffle, # number of shuffled item in each Metropolis Hastings algorithm
+            "burn_in": burn_in, # burn in
+            "thinning": thinning, # thinning
+            'healthy_ratio': healthy_ratio, # percentage of healthy participants
+            "max_log_likelihood": float(max(log_likelihoods)), # # max of log_likelihoods in (N_MCMC - burn_in) & thinning results
+            "kendalls_tau": tau, # kendalls tau of the ordering with max log likelihood with the true ordering
+            "p_value": p_value,
+            "mean_absolute_error": mae, # mae of the staging result
+            'current_pi': current_pi.tolist(), # stage prob of stage 1 to N where N is the number of biomarkers
+            'updated_pi': updated_pi.tolist(), # updated pi is the pi for all stages, including 0
+            'true_order': true_order_result, # ground true of ordering, if available
+            "order_with_highest_ll": {k: int(v) for k, v in zip(biomarker_names, order_with_highest_ll)},
+            "true_stages": true_stages, # ground true of stages, if available
+            'ml_stages': ml_stages, # most likely stages, according to updated_pi
+            "stage_likelihood_posterior": final_stage_post_dict, # stage distribution posterior 
+            "final_theta_phi_params": final_theta_phi_dict, # the final theta phi params for each biomarker
+        }
 ```
 
 
@@ -288,10 +254,7 @@ results = {
 - `burn_in` and `thinning` are explained above.
 - `healthy_ratio` is the percentage of non-diseased participants in the dataset.
 - `max_log_likelihood` is the max data log likelihood. The script [./pysaebm/algorithms/algorithm.py](./pysaebm/algorithms/algorithm.py) generates `all_accepted_orders`, `log_likelihoods`, `current_theta_phi`, `current_stage_post`, and `current_pi`. `max_log_likelihoods` is the max of `log_likelihoods`.
-- `kendalls_tau2` and `p_values` are the result of comparing the `order_with_highest_ll` with the true order (if provided).
 - `kendalls_tau` and `p_value` are the result of comparing the `ml_order` (most likely order) with the true order (if provided).
-- `quadratic_weighted_kappa`, `mean_absolute_error`, `mean_squared_error` and `root_mean_squared_error` are the results of comparing `ml_stages` and `true_stages` (if provided). These measures are for when we include estimation of healthy participants as well. That is to say, we estimate their disease stages without knowing they are healthy.
-- `quadratic_weighted_kappa_diseased`, `mean_absolute_error_diseased`, `mean_squared_error_diseased` and `root_mean_squared_error_diseased` are the results of comparing `ml_stages` and `true_stages` (if provided). These measures are for when we include estimation of diseased participants only.
 - `current_pi` is the probability distribution of all disease stages.
 - `current_pi` is the probability distribution of all stages, including 0.
 - `true_order` is the dictionary explaining the stage each biomarker is at.
@@ -299,8 +262,6 @@ results = {
 - `order_with_highest_ll` is the ordering that corresponds to the `max_log_likelihoods`.
 - `true_stages` is an array of each participant's disease stage.
 - `ml_stages` is the array of most likely disease stages.
-- `true_stages_diseased` is the array of actual stages for diseased participants only.
-- `'ml_stages_diseased` is the array of the estimated stages for diseased participants only.
 - `stage_likelihood_posterior` is a dictionary detailing each participant's probability in each of the possible stages.
 - - `stage_likelihood_posterior_diseased` is a dictionary detailing each diseased participant's probability in each of the possible disease stages (no 0).
 - `final_theta_phi_params` is a dictionary detailing the parameters for each biomarker. If you are using `kde`, you'll see data points and `theta_weights` and `phi_weights`. If you use other algorithms, you will see the `theta_mean`, `theta_std`, `phi_mean` and `phi_std`.
@@ -589,3 +550,6 @@ Below will be the changelogs for `pysaebm`.
   - Used vectorized version for all algos except for kde. Used the pd.dataframe and dicts for kde.
   - Used tau distance instead of tau corr in saved results.
   - Made sure `fastmath=False` in each `njit`.
+  
+- 2025-08-06 (V 1.2.4)
+  - Solved the logic bug of `save_details` and `save_results`.

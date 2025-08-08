@@ -72,9 +72,16 @@ def run_ebm(
         prior_n (strength of belief in prior of mean): default to be 1.0
         prior_v (prior degree of freedom) are the weakly informative priors, default to be 1.0
         seed (int): for reproducibility
+        save_results: whether to save the json result.
+        save_theta_phi: if save_results, whether to include the theta_phi result.
+        save_stage_post: if save_results, whether to include the stage post result. 
+        save_details: if save_results, save the simple version instead of the complete version. 
 
     Returns:
         Dict[str, Union[str, int, float, Dict, List]]: Results including everything, e.g., Kendall's tau and p-value.
+
+        Whether to save results or not, the results will be returned. If save_details, the complete veresion will be returned.
+        Otherwise, the simple version will be returned. 
     """
     start_time = time.time()
 
@@ -282,41 +289,40 @@ def run_ebm(
                         }
 
     end_time = time.time()
+    if save_details:
+        results = {
+            "algorithm": algorithm,
+            "runtime": end_time - start_time,
+            "N_MCMC": n_iter,
+            "n_shuffle": n_shuffle,
+            "burn_in": burn_in,
+            "thinning": thinning,
+            'healthy_ratio': healthy_ratio,
+            "max_log_likelihood": float(max(log_likelihoods)),
+            "kendalls_tau": tau,
+            "p_value": p_value,
+            "mean_absolute_error": mae,
+            'current_pi': current_pi.tolist(),
+            # updated pi is the pi for all stages, including 0
+            'updated_pi': updated_pi.tolist(),
+            'true_order': true_order_result,
+            "order_with_highest_ll": {k: int(v) for k, v in zip(biomarker_names, order_with_highest_ll)},
+            "true_stages": true_stages,
+            'ml_stages': ml_stages,
+            "stage_likelihood_posterior": final_stage_post_dict,
+            "final_theta_phi_params": final_theta_phi_dict,
+        }
+    else:
+        results = {
+            "algorithm": algorithm,
+            "runtime": end_time - start_time,
+            'healthy_ratio': healthy_ratio,
+            "max_log_likelihood": float(max(log_likelihoods)),
+            "kendalls_tau": tau,
+            "mean_absolute_error": mae,
+        }
     if save_results:
-        # Save results
-        if save_details:
-            results = {
-                "algorithm": algorithm,
-                "runtime": end_time - start_time,
-                "N_MCMC": n_iter,
-                "n_shuffle": n_shuffle,
-                "burn_in": burn_in,
-                "thinning": thinning,
-                'healthy_ratio': healthy_ratio,
-                "max_log_likelihood": float(max(log_likelihoods)),
-                "kendalls_tau": tau,
-                "p_value": p_value,
-                "mean_absolute_error": mae,
-                'current_pi': current_pi.tolist(),
-                # updated pi is the pi for all stages, including 0
-                'updated_pi': updated_pi.tolist(),
-                'true_order': true_order_result,
-                "order_with_highest_ll": {k: int(v) for k, v in zip(biomarker_names, order_with_highest_ll)},
-                "true_stages": true_stages,
-                'ml_stages': ml_stages,
-                "stage_likelihood_posterior": final_stage_post_dict,
-                "final_theta_phi_params": final_theta_phi_dict,
-            }
-        else:
-            results = {
-                "algorithm": algorithm,
-                "runtime": end_time - start_time,
-                'healthy_ratio': healthy_ratio,
-                "max_log_likelihood": float(max(log_likelihoods)),
-                "kendalls_tau": tau,
-                "mean_absolute_error": mae,
-            }
-
+    # Save results
         try:
             with open(f"{results_folder}/{fname_prefix}{fname}_results.json", "w") as f:
                 json.dump(results, f, indent=4)
