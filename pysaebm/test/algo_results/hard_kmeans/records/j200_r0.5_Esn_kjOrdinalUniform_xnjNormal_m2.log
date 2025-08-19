@@ -1,0 +1,13 @@
+2025-08-18 12:10:15,171 - INFO - Running hard kmeans for file: j200_r0.5_Esn_kjOrdinalUniform_xnjNormal_m2
+2025-08-18 12:10:15,172 - INFO - Number of biomarkers: 10
+2025-08-18 12:10:15,279 - INFO - Iteration 200/2000, Acceptance Ratio: 6.00%, Log Likelihood: -5376.1717, 
+2025-08-18 12:10:15,377 - INFO - Iteration 400/2000, Acceptance Ratio: 4.00%, Log Likelihood: -5371.6942, 
+2025-08-18 12:10:15,471 - INFO - Iteration 600/2000, Acceptance Ratio: 3.00%, Log Likelihood: -5371.6289, 
+2025-08-18 12:10:15,563 - INFO - Iteration 800/2000, Acceptance Ratio: 2.50%, Log Likelihood: -5371.2031, 
+2025-08-18 12:10:15,655 - INFO - Iteration 1000/2000, Acceptance Ratio: 2.20%, Log Likelihood: -5372.0628, 
+2025-08-18 12:10:15,748 - INFO - Iteration 1200/2000, Acceptance Ratio: 2.08%, Log Likelihood: -5372.6853, 
+2025-08-18 12:10:15,840 - INFO - Iteration 1400/2000, Acceptance Ratio: 1.79%, Log Likelihood: -5372.6853, 
+2025-08-18 12:10:15,932 - INFO - Iteration 1600/2000, Acceptance Ratio: 1.56%, Log Likelihood: -5372.6853, 
+2025-08-18 12:10:16,025 - INFO - Iteration 1800/2000, Acceptance Ratio: 1.39%, Log Likelihood: -5372.6853, 
+2025-08-18 12:10:16,118 - INFO - Iteration 2000/2000, Acceptance Ratio: 1.25%, Log Likelihood: -5372.6853, 
+2025-08-18 12:10:16,821 - INFO - Results saved to algo_results/hard_kmeans/results/j200_r0.5_Esn_kjOrdinalUniform_xnjNormal_m2_results.json

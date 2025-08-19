@@ -305,6 +305,7 @@ def obtain_affected_and_non_clusters(
     stage_likelihoods_posteriors: np.ndarray,
     disease_stages: np.ndarray,
     curr_order: int,
+    random_state:int
 ) -> Tuple[np.ndarray, np.ndarray]:
     """
     Obtain both the affected and non-affected clusters for a single biomarker.
@@ -315,6 +316,7 @@ def obtain_affected_and_non_clusters(
     Returns:
         Tuple[float, float, float, float]: Mean and standard deviation for affected (theta) and non-affected (phi) clusters.
     """
+    np.random.seed(random_state)
     affected_cluster = []
     non_affected_cluster = []
 
@@ -399,6 +401,7 @@ def update_theta_phi_estimates(
     disease_stages: np.ndarray,
     prior_n: float,    # Weak prior (not data-dependent)
     prior_v: float,     # Weak prior (not data-dependent)
+    random_state: int,
 ) -> np.ndarray:
     """Update theta and phi params for all biomarkers.
     """
@@ -423,6 +426,7 @@ def update_theta_phi_estimates(
                 stage_likelihoods_posteriors,
                 disease_stages,
                 curr_order,
+                random_state
             )
             if algorithm == 'conjugate_priors':
                 updated_params[bm_idx, :] = compute_theta_phi_biomarker_conjugate_priors(

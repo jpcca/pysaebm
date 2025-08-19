@@ -40,8 +40,8 @@ for exp_name in experiment_names:
     bm_et_dict = generate(
             experiment_name = exp_name,
             params_file=params_file,
-            js = [200],
-            rs = [0.25],
+            js = [200, 500],
+            rs = [0.25, 0.5],
             num_of_datasets_per_combination=3,
             output_dir='my_data',
             seed=53,

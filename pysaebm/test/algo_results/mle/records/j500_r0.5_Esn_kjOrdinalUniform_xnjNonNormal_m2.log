@@ -1,0 +1,13 @@
+2025-08-18 12:08:59,286 - INFO - Running mle for file: j500_r0.5_Esn_kjOrdinalUniform_xnjNonNormal_m2
+2025-08-18 12:08:59,288 - INFO - Number of biomarkers: 10
+2025-08-18 12:09:00,055 - INFO - Iteration 200/2000, Acceptance Ratio: 19.50%, Log Likelihood: -13870.9409, 
+2025-08-18 12:09:00,822 - INFO - Iteration 400/2000, Acceptance Ratio: 12.25%, Log Likelihood: -13860.7170, 
+2025-08-18 12:09:01,595 - INFO - Iteration 600/2000, Acceptance Ratio: 9.50%, Log Likelihood: -13859.8964, 
+2025-08-18 12:09:02,379 - INFO - Iteration 800/2000, Acceptance Ratio: 7.38%, Log Likelihood: -13860.7769, 
+2025-08-18 12:09:03,156 - INFO - Iteration 1000/2000, Acceptance Ratio: 6.50%, Log Likelihood: -13858.3676, 
+2025-08-18 12:09:03,930 - INFO - Iteration 1200/2000, Acceptance Ratio: 5.42%, Log Likelihood: -13858.3676, 
+2025-08-18 12:09:04,709 - INFO - Iteration 1400/2000, Acceptance Ratio: 4.71%, Log Likelihood: -13859.7384, 
+2025-08-18 12:09:05,481 - INFO - Iteration 1600/2000, Acceptance Ratio: 4.44%, Log Likelihood: -13859.6585, 
+2025-08-18 12:09:06,251 - INFO - Iteration 1800/2000, Acceptance Ratio: 4.22%, Log Likelihood: -13860.3946, 
+2025-08-18 12:09:07,023 - INFO - Iteration 2000/2000, Acceptance Ratio: 3.85%, Log Likelihood: -13859.9901, 
+2025-08-18 12:09:07,737 - INFO - Results saved to algo_results/mle/results/j500_r0.5_Esn_kjOrdinalUniform_xnjNonNormal_m2_results.json

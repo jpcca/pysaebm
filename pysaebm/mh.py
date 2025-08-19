@@ -54,6 +54,7 @@ def metropolis_hastings(
     log_likelihoods = []
 
     for iteration in range(iterations):
+        random_state = rng.integers(0, 2**32 - 1)
         log_likelihoods.append(current_ln_likelihood)
 
         new_order = current_order.copy()
@@ -99,6 +100,7 @@ def metropolis_hastings(
                 disease_stages,
                 prior_n,    # Weak prior (not data-dependent)
                 prior_v,     # Weak prior (not data-dependent)
+                random_state,
             )
 
             # NOTE THAT WE CANNOT RECOMPUTE P(K_J) BASED ON THIS NEW THETA PHI.

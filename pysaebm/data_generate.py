@@ -249,7 +249,7 @@ def generate_measurements_kjContinuous(
         # If with noise, generate noises here
         max_stage = len(shuffled_biomarkers)
         if experiment_name.startswith('xiNearNormalWithNoise'):
-            noise_std = np.sqrt(max_stage * noise_std_parameter)
+            noise_std = max_stage * noise_std_parameter
             noises = rng.normal(0, noise_std, size=max_stage)
         for biomarker_idx, biomarker in enumerate(shuffled_biomarkers):
             event_time = event_time_dict[biomarker]

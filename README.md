@@ -553,3 +553,9 @@ Below will be the changelogs for `pysaebm`.
   
 - 2025-08-06 (V 1.2.4)
   - Solved the logic bug of `save_details` and `save_results`.
+
+- 2025-08-18 (V 1.2.6)
+  - Used a np seed in the function of `obtain_affected_and_non_clusters`.
+
+- 2025-08-19 (V 1.2.8)
+  - Corrected an error: in data generation, for experiment 9, the noise_std should be max_length * noise_std_parameter rather than its square root. I don't need to redo the experiments because after using square root, the noise_std in fact become larger, not smaller. For example, in our example where N = 10, the noise_std should be N*0.05 = 0.5, but after square root, it becomes 0.7. 
