@@ -557,5 +557,33 @@ Below will be the changelogs for `pysaebm`.
 - 2025-08-18 (V 1.2.6)
   - Used a np seed in the function of `obtain_affected_and_non_clusters`.
 
-- 2025-08-19 (V 1.2.8)
+- 2025-08-19 (V 1.2.9)
   - Corrected an error: in data generation, for experiment 9, the noise_std should be max_length * noise_std_parameter rather than its square root. I don't need to redo the experiments because after using square root, the noise_std in fact become larger, not smaller. For example, in our example where N = 10, the noise_std should be N*0.05 = 0.5, but after square root, it becomes 0.7. 
+  - Changed 
+
+```py
+def compute_unbiased_stage_likelihoods(
+    n_participants:int,
+    data_matrix:np.ndarray,
+    new_order:np.ndarray,
+    theta_phi: np.ndarray,
+    updated_pi: np.ndarray,
+    n_stages=int,
+) -> np.ndarray:
+```
+
+to 
+
+```py
+def compute_unbiased_stage_likelihoods(
+    n_participants:int,
+    data_matrix:np.ndarray,
+    new_order:np.ndarray,
+    theta_phi: np.ndarray,
+    updated_pi: np.ndarray,
+    n_stages: int,
+) -> np.ndarray:
+```
+
+- 2025-08-21 (V 1.3.1)
+    - Update the staging task algorithm in `run.py` for kde and other algos.

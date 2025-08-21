@@ -1,8 +1,0 @@
-{
-    "algorithm": "mle",
-    "runtime": 4.040004253387451,
-    "healthy_ratio": 0.25,
-    "max_log_likelihood": -5748.022102935112,
-    "kendalls_tau": 0.2,
-    "mean_absolute_error": 1.025
-}

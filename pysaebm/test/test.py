@@ -13,8 +13,8 @@ with open(f"{cwd}/pysaebm/test/true_order_and_stages.json", "r") as f:
     true_order_and_stages = json.load(f)
 
 # for algorithm in ['kde', 'conjugate_priors', "em", 'mle', 'hard_kmeans']:
-for algorithm in ['conjugate_priors', "em", 'mle', 'hard_kmeans']:
-    for data_file in data_files:
+for algorithm in ["kde", 'conjugate_priors']:
+    for data_file in data_files[:1]:
         fname = data_file.replace('.csv', '')
         true_order_dict = true_order_and_stages[fname]['true_order']
         true_stages = true_order_and_stages[fname]['true_stages']
@@ -22,9 +22,9 @@ for algorithm in ['conjugate_priors', "em", 'mle', 'hard_kmeans']:
             algorithm=algorithm,
             data_file= os.path.join(data_dir, data_file),
             output_dir=OUTPUT_DIR,
-            n_iter=2000,
+            n_iter=50,
             n_shuffle=2,
-            burn_in=50,
+            burn_in=5,
             thinning=1,
             true_order_dict=true_order_dict,
             true_stages = true_stages,

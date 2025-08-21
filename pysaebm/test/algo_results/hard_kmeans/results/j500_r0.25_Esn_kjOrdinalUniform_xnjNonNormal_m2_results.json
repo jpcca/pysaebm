@@ -1,8 +1,0 @@
-{
-    "algorithm": "hard_kmeans",
-    "runtime": 4.012149095535278,
-    "healthy_ratio": 0.25,
-    "max_log_likelihood": -16619.34335456034,
-    "kendalls_tau": 0.28888888888888886,
-    "mean_absolute_error": 1.14
-}

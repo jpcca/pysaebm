@@ -476,13 +476,14 @@ def compute_unbiased_stage_likelihoods_kde(
     """Obtain stage_likelihoods_posteriors while ignoring the diagnosis label or diseased or not.
     """
     stage_likelihoods_posteriors = {}
+    eps = 1e-12  # guard against log(0)
 
     for participant, (measurements, S_n, biomarkers) in participant_data.items():
 
         ln_stage_likelihoods = np.array([
             compute_ln_likelihood_kde_fast(
                 measurements, S_n, biomarkers, k_j=k_j, kde_dict=theta_phi
-            ) + np.log(current_pi[k_j])
+            ) + np.log(current_pi[k_j] if current_pi[k_j] > eps else eps)
             for k_j in range(0, len(theta_phi) + 1)
         ])
         # Use log-sum-exp trick for numerical stability
@@ -490,7 +491,71 @@ def compute_unbiased_stage_likelihoods_kde(
         stage_likelihoods = np.exp(ln_stage_likelihoods - max_ln_likelihood)
         likelihood_sum = np.sum(stage_likelihoods)
 
-        stage_likelihoods_posteriors[participant] = stage_likelihoods / \
-            likelihood_sum
+        stage_likelihoods_posteriors[participant] = stage_likelihoods/likelihood_sum
 
     return stage_likelihoods_posteriors
+
+def stage_with_plugin_pi_em_kde(
+    participant_data:pd.DataFrame,
+    final_theta_phi: np.ndarray,
+    healthy_ratio:float,
+    diseased_pi_from_mh: np.ndarray,   # length = n_biomarkers (stages 1..N)
+    diseased_arr: np.ndarray,           # 0=healthy, 1=diseased
+    clamp_known_healthy: bool = False,
+    prior_strength: float = 50.0,       # 0 => no prior; larger => trust MH+healthy more
+    max_iter: int = 20,
+    tol: float = 1e-6,
+):
+    """
+    EM-calibrates full stage prior π over 0..N, then returns posteriors and MAP stages.
+    Uses your compute_unbiased_stage_likelihoods internally. MH is untouched.
+
+    sample inside MH, posterior mean outside MH.
+    """
+    n_participants = len(participant_data)
+    n_stages = len(diseased_pi_from_mh) + 1
+
+    # Prior mean from your healthy ratio + MH diseased-only π
+    prior_vec = np.empty(n_stages, dtype=np.float64)
+    prior_vec[0] = healthy_ratio
+    prior_vec[1:] = (1.0 - healthy_ratio) * diseased_pi_from_mh
+    prior_vec /= prior_vec.sum()
+
+    # Dirichlet prior α encodes how strongly to trust (healthy_ratio, MH π)
+    alpha = 1.0 + prior_strength * prior_vec
+
+    # Initialize π from prior mean
+    pi = (alpha / alpha.sum()).copy()
+
+    stage_post = None
+    stage_post_matrix = np.zeros((n_participants, n_stages), dtype=np.float64)
+    for _ in range(max_iter):
+        # E-step: posteriors with current π (your existing function)
+        stage_post = compute_unbiased_stage_likelihoods_kde(
+            participant_data=participant_data,
+            theta_phi=final_theta_phi,
+            current_pi=pi,
+        )
+
+        for p, data in stage_post.items():
+            stage_post_matrix[p] = data 
+
+        # (Optional) clamp truly-known healthy participants
+        if clamp_known_healthy:
+            mask = (diseased_arr == 0)
+            stage_post_matrix[mask] = 0.0
+            stage_post_matrix[mask, 0] = 1.0
+
+        # M-step (Dirichlet-MAP): counts + (alpha-1), then normalize
+        counts = stage_post_matrix.sum(axis=0)
+        pi_new = (alpha + counts) / (alpha.sum() + counts.sum())
+
+        # Converged?
+        if np.linalg.norm(pi_new - pi, ord=1) < tol:
+            pi = pi_new
+            break
+        pi = pi_new
+
+    # MAP stages (deterministic)
+    ml_stages = np.argmax(stage_post_matrix, axis=1).astype(int)
+    return stage_post_matrix, ml_stages, pi

@@ -12,7 +12,9 @@ from sklearn.metrics import mean_absolute_error
 from .utils import (setup_logging, 
                    extract_fname, 
                    cleanup_old_files, 
-                   compute_unbiased_stage_likelihoods)
+                   compute_unbiased_stage_likelihoods,
+                   stage_with_plugin_pi_em
+                   )
 from .viz import save_heatmap, save_traceplot
 # Import algorithms
 from .mh import metropolis_hastings
@@ -20,8 +22,8 @@ from .mh import metropolis_hastings
 from .kde_mh import metropolis_hastings_kde
 
 from .kde_utils import (
-    compute_unbiased_stage_likelihoods_kde, 
-    preprocess_participant_data
+    preprocess_participant_data,
+    stage_with_plugin_pi_em_kde
 )
 
 def run_ebm(
@@ -241,20 +243,31 @@ def run_ebm(
         order_with_highest_ll_dict = dict(zip(biomarker_names, order_with_highest_ll))
         participant_data = preprocess_participant_data(data, order_with_highest_ll_dict)
 
-        final_stage_post = compute_unbiased_stage_likelihoods_kde(
-            participant_data,
-            final_theta_phi,
-            updated_pi,
+        final_stage_post, ml_stages, updated_pi = stage_with_plugin_pi_em_kde(
+            participant_data=participant_data,
+            final_theta_phi=final_theta_phi,
+            healthy_ratio=healthy_ratio,
+            diseased_pi_from_mh=current_pi,   # your MH diseased-only π (stages 1..N)
+            diseased_arr=diseased_arr,
+            clamp_known_healthy=False,        # set True only if you want to force known healthy to stage 0
+            prior_strength=50.0,              # 0 => identical to pure MLE on π; larger => closer to plug-in
+            max_iter=50,
+            tol=1e-6
         )
+        
     else:
-        final_stage_post = compute_unbiased_stage_likelihoods(
-            n_participants, data_matrix, order_with_highest_ll, final_theta_phi, updated_pi, n_stages
+        final_stage_post, ml_stages, updated_pi = stage_with_plugin_pi_em(
+            data_matrix=data_matrix,
+            order_with_highest_ll=order_with_highest_ll,
+            final_theta_phi=final_theta_phi,
+            healthy_ratio=healthy_ratio,
+            diseased_pi_from_mh=current_pi,   # your MH diseased-only π (stages 1..N)
+            diseased_arr=diseased_arr,
+            clamp_known_healthy=False,        # set True only if you want to force known healthy to stage 0
+            prior_strength=50.0,              # 0 => identical to pure MLE on π; larger => closer to plug-in
+            max_iter=50,
+            tol=1e-6
         )
-
-    ml_stages = [
-        rng.choice(len(final_stage_post[pid]), p=final_stage_post[pid])
-        for pid in range(n_participants)
-    ]
 
     mae = None
     true_order_result = None
@@ -268,11 +281,8 @@ def run_ebm(
     final_theta_phi_dict = {}
     if save_results:
         if save_stage_post:
-            if algorithm=='kde':
-                final_stage_post_dict = final_stage_post
-            else:
-                for p in range(n_participants):
-                    final_stage_post_dict[p] = final_stage_post[p].tolist()
+            for p in range(n_participants):
+                final_stage_post_dict[p] = final_stage_post[p].astype(float).tolist()
         
         if save_theta_phi:
             if algorithm =='kde':
@@ -302,13 +312,13 @@ def run_ebm(
             "kendalls_tau": tau,
             "p_value": p_value,
             "mean_absolute_error": mae,
-            'current_pi': current_pi.tolist(),
+            'current_pi': current_pi.astype(float).tolist(),
             # updated pi is the pi for all stages, including 0
-            'updated_pi': updated_pi.tolist(),
+            'updated_pi': updated_pi.astype(float).tolist(),
             'true_order': true_order_result,
             "order_with_highest_ll": {k: int(v) for k, v in zip(biomarker_names, order_with_highest_ll)},
             "true_stages": true_stages,
-            'ml_stages': ml_stages,
+            'ml_stages': ml_stages.astype(int).tolist(),
             "stage_likelihood_posterior": final_stage_post_dict,
             "final_theta_phi_params": final_theta_phi_dict,
         }

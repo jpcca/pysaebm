@@ -1,8 +1,0 @@
-{
-    "algorithm": "conjugate_priors",
-    "runtime": 4.093932151794434,
-    "healthy_ratio": 0.25,
-    "max_log_likelihood": -5101.217893266992,
-    "kendalls_tau": 0.2,
-    "mean_absolute_error": 0.945
-}

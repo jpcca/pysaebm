@@ -617,33 +617,128 @@ def cleanup_old_files(output_dir: str, fname: str):
         else:
             logging.warning(f"File does not exist, skipping removal: {file_path}")
 
-@njit(fastmath=False)
+# @njit(fastmath=False)
+# def compute_unbiased_stage_likelihoods(
+#     n_participants:int,
+#     data_matrix:np.ndarray,
+#     new_order:np.ndarray,
+#     theta_phi: np.ndarray,
+#     updated_pi: np.ndarray,
+#     n_stages:int,
+# ) -> np.ndarray:
+#     """Calculate the total log likelihood across all participants
+#         and obtain stage_likelihoods_posteriors
+#     """
+#     stage_likelihoods_posteriors = np.zeros((n_participants, n_stages))
+
+#     for participant in range(n_participants):
+#         measurements = data_matrix[participant]
+#         # ln_stage_likelihoods: N length vector
+#         ln_stage_likelihoods = np.ones(n_stages)
+#         for k_j in range(n_stages):
+#             ln_stage_likelihoods[k_j] = compute_ln_likelihood(
+#                 measurements, new_order, k_j=k_j, theta_phi=theta_phi
+#             ) + np.log(updated_pi[k_j])
+#         # Use log-sum-exp trick for numerical stability
+#         max_ln_likelihood = np.max(ln_stage_likelihoods)
+#         stage_likelihoods = np.exp(
+#             ln_stage_likelihoods - max_ln_likelihood)
+#         likelihood_sum = np.sum(stage_likelihoods)
+#         stage_likelihoods_posteriors[participant] = stage_likelihoods/likelihood_sum
+
+#     return stage_likelihoods_posteriors
+
+
+@njit
 def compute_unbiased_stage_likelihoods(
     n_participants:int,
     data_matrix:np.ndarray,
     new_order:np.ndarray,
     theta_phi: np.ndarray,
     updated_pi: np.ndarray,
-    n_stages = int,
+    n_stages: int,
 ) -> np.ndarray:
-    """Calculate the total log likelihood across all participants
-        and obtain stage_likelihoods_posteriors
-    """
+    """Return posteriors P(stage k | x_i, order, theta/phi, pi) as (n_participants, n_stages)."""
     stage_likelihoods_posteriors = np.zeros((n_participants, n_stages))
+    eps = 1e-12  # guard against log(0)
 
     for participant in range(n_participants):
         measurements = data_matrix[participant]
         # ln_stage_likelihoods: N length vector
-        ln_stage_likelihoods = np.ones(n_stages)
+        ln_stage_likelihoods = np.empty(n_stages)
         for k_j in range(n_stages):
             ln_stage_likelihoods[k_j] = compute_ln_likelihood(
                 measurements, new_order, k_j=k_j, theta_phi=theta_phi
-            ) + np.log(updated_pi[k_j])
-        # Use log-sum-exp trick for numerical stability
-        max_ln_likelihood = np.max(ln_stage_likelihoods)
-        stage_likelihoods = np.exp(
-            ln_stage_likelihoods - max_ln_likelihood)
-        likelihood_sum = np.sum(stage_likelihoods)
-        stage_likelihoods_posteriors[participant] = stage_likelihoods/likelihood_sum
-
+            ) + np.log(updated_pi[k_j] if updated_pi[k_j] > eps else eps)
+        # log-sum-exp
+        max_ln = np.max(ln_stage_likelihoods)
+        stage_likelihoods = np.exp(ln_stage_likelihoods - max_ln)
+        denom = np.sum(stage_likelihoods)
+        stage_likelihoods_posteriors[participant] = stage_likelihoods / denom
     return stage_likelihoods_posteriors
+
+
+def stage_with_plugin_pi_em(
+    data_matrix: np.ndarray,
+    order_with_highest_ll: np.ndarray,
+    final_theta_phi: np.ndarray,
+    healthy_ratio: float,
+    diseased_pi_from_mh: np.ndarray,   # length = n_biomarkers (stages 1..N)
+    diseased_arr: np.ndarray,           # 0=healthy, 1=diseased
+    clamp_known_healthy: bool = False,
+    prior_strength: float = 50.0,       # 0 => no prior; larger => trust MH+healthy more
+    max_iter: int = 200,
+    tol: float = 1e-6,
+):
+    """
+    EM-calibrates full stage prior π over 0..N, then returns posteriors and MAP stages.
+    Uses your compute_unbiased_stage_likelihoods internally. MH is untouched.
+
+    sample inside MH, posterior mean outside MH.
+    """
+    n_participants, n_biomarkers = data_matrix.shape
+    n_stages = n_biomarkers + 1
+
+    # Prior mean from your healthy ratio + MH diseased-only π
+    prior_vec = np.empty(n_stages, dtype=np.float64)
+    prior_vec[0] = healthy_ratio
+    prior_vec[1:] = (1.0 - healthy_ratio) * diseased_pi_from_mh
+    prior_vec /= prior_vec.sum()
+
+    # Dirichlet prior α encodes how strongly to trust (healthy_ratio, MH π)
+    alpha = 1.0 + prior_strength * prior_vec
+
+    # Initialize π from prior mean
+    pi = (alpha / alpha.sum()).copy()
+
+    stage_post = None
+    for _ in range(max_iter):
+        # E-step: posteriors with current π (your existing function)
+        stage_post = compute_unbiased_stage_likelihoods(
+            n_participants=n_participants,
+            data_matrix=data_matrix,
+            new_order=order_with_highest_ll,
+            theta_phi=final_theta_phi,
+            updated_pi=pi,
+            n_stages=n_stages
+        )
+
+        # (Optional) clamp truly-known healthy participants
+        if clamp_known_healthy:
+            mask = (diseased_arr == 0)
+            stage_post[mask] = 0.0
+            stage_post[mask, 0] = 1.0
+
+        # M-step (Dirichlet-MAP): counts + (alpha-1), then normalize
+        counts = stage_post.sum(axis=0)
+        pi_new = (alpha + counts) / (alpha.sum() + counts.sum())
+
+        # Converged?
+        if np.linalg.norm(pi_new - pi, ord=1) < tol:
+            pi = pi_new
+            break
+        pi = pi_new
+
+    # MAP stages (deterministic)
+    ml_stages = np.argmax(stage_post, axis=1).astype(int)
+    return stage_post, ml_stages, pi
