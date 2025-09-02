@@ -11,11 +11,17 @@ def metropolis_hastings(
         n_shuffle: int,
         prior_n: float,
         prior_v: float,
+        burn_in:int,
         rng: np.random.Generator
 ) -> Tuple:
     """
     
     """
+    best_ll = -np.inf
+    best_order = None 
+    best_theta_phi = None 
+    best_stage_post = None 
+    best_stage_prior = None 
     n_participants, n_biomarkers = data_matrix.shape
 
     # Validate input
@@ -107,7 +113,6 @@ def metropolis_hastings(
             # THIS IS BECAUSE IN MCMC, WE CAN ONLY GET NEW THINGS THAT ARE SOLELY CONDITIONED ON THE NEWLY PROPOSED S'
 
             # Recompute new_ln_likelihood using the new theta_phi_estimates
-            
             new_ln_likelihood, stage_post_new = utils.compute_total_ln_likelihood_and_stage_likelihoods(
                 n_participants, data_matrix, new_order, non_diseased_ids, new_theta_phi, current_pi, disease_stages
             )
@@ -125,13 +130,17 @@ def metropolis_hastings(
                 current_theta_phi = new_theta_phi
             acceptance_count += 1
 
-            stage_counts = np.zeros(n_disease_stages)
-            # participant, array of stage likelihoods
-            for p in diseased_ids:
-                stage_probs = stage_post_new[p]
-                stage_counts += stage_probs  # Soft counts
+            # --- Gibbs update for π using CURRENT posteriors ---
+            stage_counts = current_stage_post[diseased_ids].sum(axis=0)  # soft counts
             current_pi = rng.dirichlet(alpha_prior + stage_counts)
 
+            if current_ln_likelihood > best_ll and iteration >= burn_in:
+                best_ll = current_ln_likelihood
+                best_order = current_order.copy()
+                best_stage_prior = current_pi 
+                best_stage_post = current_stage_post
+                best_theta_phi = current_theta_phi
+            
         all_accepted_orders.append(current_order.copy())
 
         # Log progress
@@ -143,4 +152,4 @@ def metropolis_hastings(
                 f"Log Likelihood: {current_ln_likelihood:.4f}, "
             )
 
-    return all_accepted_orders, log_likelihoods, current_theta_phi, current_stage_post, current_pi
+    return all_accepted_orders, log_likelihoods, best_order, best_theta_phi,  best_stage_prior 

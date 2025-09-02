@@ -587,3 +587,10 @@ def compute_unbiased_stage_likelihoods(
 
 - 2025-08-21 (V 1.3.1)
     - Update the staging task algorithm in `run.py` for kde and other algos.
+
+- 2025-09-02 (V 1.3.6)
+    - Updated the conjugate priors. 
+    - updated the `mh.py` and `kde_mh.py` about what to return. 
+    - Now using the best_theta_phi and best_stage_prior to get the updated_stage_post (when we are blind about the cn/ad labels to decide the disease stages).
+    - Now when getting the stage assignments, I am totally blind, even to `healthy_ratio`. 
+    - Added `iterations >= burn_in` in `mh.py` and `kde_mh.py`. 

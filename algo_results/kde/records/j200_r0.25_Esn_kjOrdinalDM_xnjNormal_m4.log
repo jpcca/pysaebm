@@ -1,0 +1,4 @@
+2025-09-02 15:28:32,351 - INFO - Running kde for file: j200_r0.25_Esn_kjOrdinalDM_xnjNormal_m4
+2025-09-02 15:28:32,353 - INFO - Number of biomarkers: 10
+2025-09-02 15:28:34,057 - INFO - Iteration 10/10, Acceptance Ratio: 50.00%, Log Likelihood: -6979.4249, Current Accepted Order: dict_values([9, 2, 1, 5, 10, 6, 7, 4, 8, 3]), 
+2025-09-02 15:28:35,723 - INFO - Results saved to algo_results/kde/results/j200_r0.25_Esn_kjOrdinalDM_xnjNormal_m4_results.json

@@ -12,10 +12,10 @@ from sklearn.metrics import mean_absolute_error
 from .utils import (setup_logging, 
                    extract_fname, 
                    cleanup_old_files, 
-                   compute_unbiased_stage_likelihoods,
                    stage_with_plugin_pi_em
                    )
 from .viz import save_heatmap, save_traceplot
+
 # Import algorithms
 from .mh import metropolis_hastings
 
@@ -163,8 +163,8 @@ def run_ebm(
     if algorithm == 'kde':
         # Run the Metropolis-Hastings algorithm
         try:
-            accepted_orders, log_likelihoods, final_theta_phi, final_stage_post, current_pi = metropolis_hastings_kde(
-                data_we_have=data, iterations=n_iter, n_shuffle=n_shuffle, rng=rng
+            accepted_orders, log_likelihoods, best_order, best_theta_phi, best_stage_prior = metropolis_hastings_kde(
+                data_we_have=data, iterations=n_iter, n_shuffle=n_shuffle, rng=rng, burn_in=burn_in
             )
         except Exception as e:
             logging.error(f"Error in Metropolis-Hastings KDE algorithm: {e}")
@@ -173,9 +173,9 @@ def run_ebm(
     else:
         # Run the Metropolis-Hastings algorithm
         try:
-            accepted_orders, log_likelihoods, final_theta_phi, final_stage_post, current_pi = metropolis_hastings(
+            accepted_orders, log_likelihoods, best_order, best_theta_phi, best_stage_prior = metropolis_hastings(
                 algorithm=algorithm, data_matrix=data_matrix, diseased_arr=diseased_arr, iterations = n_iter, 
-                n_shuffle = n_shuffle,  prior_n=prior_n, prior_v=prior_v, rng=rng
+                n_shuffle = n_shuffle,  prior_n=prior_n, prior_v=prior_v, rng=rng, burn_in=burn_in
             )
             
         except Exception as e:
@@ -183,8 +183,9 @@ def run_ebm(
             raise
 
     # Get the order associated with the highet log likelihoods
-    order_with_highest_ll = accepted_orders[log_likelihoods.index(max(log_likelihoods))]
+    order_with_highest_ll = best_order
 
+    
     if true_order_dict:
         # Sort both dicts by the key to make sure they are comparable
         true_order_dict = dict(sorted(true_order_dict.items()))
@@ -235,9 +236,6 @@ def run_ebm(
         except Exception as e:
             logging.error(f"Error generating trace plot: {e}")
             raise
-
-    updated_pi = np.array([healthy_ratio] + \
-        [(1 - healthy_ratio) * x for x in current_pi])
     
     if algorithm == 'kde':
         order_with_highest_ll_dict = dict(zip(biomarker_names, order_with_highest_ll))
@@ -245,12 +243,8 @@ def run_ebm(
 
         final_stage_post, ml_stages, updated_pi = stage_with_plugin_pi_em_kde(
             participant_data=participant_data,
-            final_theta_phi=final_theta_phi,
-            healthy_ratio=healthy_ratio,
-            diseased_pi_from_mh=current_pi,   # your MH diseased-only π (stages 1..N)
-            diseased_arr=diseased_arr,
-            clamp_known_healthy=False,        # set True only if you want to force known healthy to stage 0
-            prior_strength=50.0,              # 0 => identical to pure MLE on π; larger => closer to plug-in
+            final_theta_phi=best_theta_phi,
+            rng=rng,
             max_iter=50,
             tol=1e-6
         )
@@ -259,13 +253,8 @@ def run_ebm(
         final_stage_post, ml_stages, updated_pi = stage_with_plugin_pi_em(
             data_matrix=data_matrix,
             order_with_highest_ll=order_with_highest_ll,
-            final_theta_phi=final_theta_phi,
-            healthy_ratio=healthy_ratio,
-            diseased_pi_from_mh=current_pi,   # your MH diseased-only π (stages 1..N)
-            diseased_arr=diseased_arr,
-            clamp_known_healthy=False,        # set True only if you want to force known healthy to stage 0
-            prior_strength=50.0,              # 0 => identical to pure MLE on π; larger => closer to plug-in
-            max_iter=50,
+            final_theta_phi=best_theta_phi,
+            rng=rng,
             tol=1e-6
         )
 
@@ -286,11 +275,11 @@ def run_ebm(
         
         if save_theta_phi:
             if algorithm =='kde':
-                final_theta_phi_dict = final_theta_phi
+                final_theta_phi_dict = best_theta_phi
             else:
                 if algorithm != 'kde':
                     for bm_idx, bm in enumerate(biomarker_names):
-                        params = final_theta_phi[bm_idx]
+                        params = best_theta_phi[bm_idx]
                         final_theta_phi_dict[bm] = {
                             'theta_mean': params[0],
                             'theta_std': params[1],
@@ -312,7 +301,8 @@ def run_ebm(
             "kendalls_tau": tau,
             "p_value": p_value,
             "mean_absolute_error": mae,
-            'current_pi': current_pi.astype(float).tolist(),
+            # the stage prior associated with the best_order
+            'current_pi': best_stage_prior.astype(float).tolist(),
             # updated pi is the pi for all stages, including 0
             'updated_pi': updated_pi.astype(float).tolist(),
             'true_order': true_order_result,

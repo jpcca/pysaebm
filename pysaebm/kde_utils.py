@@ -498,11 +498,7 @@ def compute_unbiased_stage_likelihoods_kde(
 def stage_with_plugin_pi_em_kde(
     participant_data:pd.DataFrame,
     final_theta_phi: np.ndarray,
-    healthy_ratio:float,
-    diseased_pi_from_mh: np.ndarray,   # length = n_biomarkers (stages 1..N)
-    diseased_arr: np.ndarray,           # 0=healthy, 1=diseased
-    clamp_known_healthy: bool = False,
-    prior_strength: float = 50.0,       # 0 => no prior; larger => trust MH+healthy more
+    rng:np.random.Generator,
     max_iter: int = 20,
     tol: float = 1e-6,
 ):
@@ -513,19 +509,10 @@ def stage_with_plugin_pi_em_kde(
     sample inside MH, posterior mean outside MH.
     """
     n_participants = len(participant_data)
-    n_stages = len(diseased_pi_from_mh) + 1
+    n_stages = len(final_theta_phi) + 1
 
-    # Prior mean from your healthy ratio + MH diseased-only π
-    prior_vec = np.empty(n_stages, dtype=np.float64)
-    prior_vec[0] = healthy_ratio
-    prior_vec[1:] = (1.0 - healthy_ratio) * diseased_pi_from_mh
-    prior_vec /= prior_vec.sum()
-
-    # Dirichlet prior α encodes how strongly to trust (healthy_ratio, MH π)
-    alpha = 1.0 + prior_strength * prior_vec
-
-    # Initialize π from prior mean
-    pi = (alpha / alpha.sum()).copy()
+    alpha_prior = np.ones(n_stages)
+    pi = rng.dirichlet(alpha_prior)
 
     stage_post = None
     stage_post_matrix = np.zeros((n_participants, n_stages), dtype=np.float64)
@@ -540,15 +527,9 @@ def stage_with_plugin_pi_em_kde(
         for p, data in stage_post.items():
             stage_post_matrix[p] = data 
 
-        # (Optional) clamp truly-known healthy participants
-        if clamp_known_healthy:
-            mask = (diseased_arr == 0)
-            stage_post_matrix[mask] = 0.0
-            stage_post_matrix[mask, 0] = 1.0
-
         # M-step (Dirichlet-MAP): counts + (alpha-1), then normalize
         counts = stage_post_matrix.sum(axis=0)
-        pi_new = (alpha + counts) / (alpha.sum() + counts.sum())
+        pi_new = (alpha_prior + counts) / (alpha_prior.sum() + counts.sum())
 
         # Converged?
         if np.linalg.norm(pi_new - pi, ord=1) < tol:

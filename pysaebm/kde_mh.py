@@ -9,6 +9,7 @@ def metropolis_hastings_kde(
         data_we_have: pd.DataFrame,
         iterations: int,
         n_shuffle: int,
+        burn_in:int,
         rng:np.random.Generator
 ) -> Tuple[np.ndarray, List[float], Dict[str, Dict], np.ndarray]:
     """
@@ -27,14 +28,21 @@ def metropolis_hastings_kde(
             - Final theta phi estimates
             - Stage likelihood posterior 
     """
-
+    best_ll = -np.inf
+    best_order = None 
+    best_theta_phi = None 
+    best_stage_post = None 
+    best_stage_prior = None 
+    
     biomarkers = sorted(data_we_have.biomarker.unique())
     n_stages = len(biomarkers) + 1
     disease_stages = np.arange(start=1, stop=n_stages, step=1)
     n_disease_stages = n_stages - 1
     non_diseased_ids = data_we_have.loc[data_we_have.diseased ==
                                         False].participant.unique()
-
+    diseased_ids = data_we_have.loc[data_we_have.diseased ==
+                                        True].participant.unique()
+    
     theta_phi_default = kde_utils.get_initial_kde_estimates(data_we_have, rng)
     current_theta_phi = theta_phi_default.copy()
 
@@ -125,6 +133,13 @@ def metropolis_hastings_kde(
                 stage_counts += stage_probs  # Soft counts
             current_pi = rng.dirichlet(alpha_prior + stage_counts)
 
+            if current_ln_likelihood > best_ll and iteration >= burn_in:
+                best_ll = current_ln_likelihood
+                best_order = current_order.copy()
+                best_stage_prior = current_pi 
+                best_stage_post = current_stage_post
+                best_theta_phi = current_theta_phi
+
         all_accepted_orders.append(current_order.copy())
 
         # Log progress
@@ -137,4 +152,4 @@ def metropolis_hastings_kde(
                 f"Current Accepted Order: {current_order_dict.values()}, "
             )
 
-    return all_accepted_orders, log_likelihoods, current_theta_phi, current_stage_post, current_pi
+    return all_accepted_orders, log_likelihoods, best_order, best_theta_phi, best_stage_prior

@@ -1,0 +1,8 @@
+{
+    "algorithm": "kde",
+    "runtime": 2.395616054534912,
+    "healthy_ratio": 0.25,
+    "max_log_likelihood": -6671.858687576551,
+    "kendalls_tau": 0.5555555555555556,
+    "mean_absolute_error": 2.265
+}

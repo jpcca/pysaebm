@@ -1,8 +1,0 @@
-2025-08-21 12:34:17,426 - INFO - Running kde for file: j500_r0.25_Esn_kjOrdinalUniform_xnjNonNormal_m2
-2025-08-21 12:34:17,428 - INFO - Number of biomarkers: 10
-2025-08-21 12:34:22,179 - INFO - Iteration 10/50, Acceptance Ratio: 40.00%, Log Likelihood: -17658.0138, Current Accepted Order: dict_values([1, 5, 8, 2, 10, 6, 7, 4, 9, 3]), 
-2025-08-21 12:34:25,962 - INFO - Iteration 20/50, Acceptance Ratio: 30.00%, Log Likelihood: -16349.7855, Current Accepted Order: dict_values([2, 5, 8, 6, 10, 1, 7, 4, 9, 3]), 
-2025-08-21 12:34:29,736 - INFO - Iteration 30/50, Acceptance Ratio: 23.33%, Log Likelihood: -16306.7775, Current Accepted Order: dict_values([2, 5, 9, 6, 10, 1, 7, 4, 8, 3]), 
-2025-08-21 12:34:33,497 - INFO - Iteration 40/50, Acceptance Ratio: 20.00%, Log Likelihood: -16289.4154, Current Accepted Order: dict_values([2, 5, 9, 6, 7, 1, 10, 4, 8, 3]), 
-2025-08-21 12:34:37,250 - INFO - Iteration 50/50, Acceptance Ratio: 16.00%, Log Likelihood: -16289.4154, Current Accepted Order: dict_values([2, 5, 9, 6, 7, 1, 10, 4, 8, 3]), 
-2025-08-21 12:34:42,508 - INFO - Results saved to algo_results/kde/results/j500_r0.25_Esn_kjOrdinalUniform_xnjNonNormal_m2_results.json
