@@ -183,13 +183,13 @@ def run_ebm(
             raise
 
     # Get the order associated with the highet log likelihoods
-    order_with_highest_ll = best_order
-
+    order_with_highest_ll = best_order # best order starts from 1!!! both for mh.py and kde_mh.py
     
     if true_order_dict:
         # Sort both dicts by the key to make sure they are comparable
         true_order_dict = dict(sorted(true_order_dict.items()))
-        tau, p_value = kendalltau(order_with_highest_ll, list(true_order_dict.values()))
+        true_order_indices = np.array(list(true_order_dict.values())) 
+        tau, p_value = kendalltau(order_with_highest_ll, true_order_indices)
         tau = (1-tau)/2
     else:
         tau, p_value = None, None
@@ -252,7 +252,10 @@ def run_ebm(
     else:
         final_stage_post, ml_stages, updated_pi = stage_with_plugin_pi_em(
             data_matrix=data_matrix,
-            order_with_highest_ll=order_with_highest_ll,
+            order_with_highest_ll=order_with_highest_ll,  # no need to + 1 because in pysaebm, the order starts from 1 already. 
+            # this in fact is okay, because current_order, the ordering index always starts from 1. 
+            # in inference with label, the disease stages, or stage_post, has n_biomarker diseases starting from 1
+            # but in blind inference, we have n_stages, starting from 0. 
             final_theta_phi=best_theta_phi,
             rng=rng,
             tol=1e-6

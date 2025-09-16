@@ -484,7 +484,8 @@ def compute_unbiased_stage_likelihoods_kde(
             compute_ln_likelihood_kde_fast(
                 measurements, S_n, biomarkers, k_j=k_j, kde_dict=theta_phi
             ) + np.log(current_pi[k_j] if current_pi[k_j] > eps else eps)
-            for k_j in range(0, len(theta_phi) + 1)
+            for k_j in range(0, len(theta_phi) + 1) # possible stages now starts from 0; but that's okay because
+            # S_n always starts from 1
         ])
         # Use log-sum-exp trick for numerical stability
         max_ln_likelihood = np.max(ln_stage_likelihoods)
@@ -509,7 +510,7 @@ def stage_with_plugin_pi_em_kde(
     sample inside MH, posterior mean outside MH.
     """
     n_participants = len(participant_data)
-    n_stages = len(final_theta_phi) + 1
+    n_stages = len(final_theta_phi) + 1 
 
     alpha_prior = np.ones(n_stages)
     pi = rng.dirichlet(alpha_prior)

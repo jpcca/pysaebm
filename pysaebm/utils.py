@@ -687,6 +687,8 @@ def stage_with_plugin_pi_em(
         )
 
         # M-step (Dirichlet-MAP): counts + (alpha-1), then normalize
+        # this is different from current_pi = rng.dirichlet(alpha_prior + stage_counts)
+        # because we are doing MAP, not updating the stage prior
         counts = stage_post.sum(axis=0)
         pi_new = (alpha_prior + counts) / (alpha_prior.sum() + counts.sum())
 
