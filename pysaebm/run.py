@@ -50,6 +50,7 @@ def run_ebm(
     save_theta_phi:bool=False,
     save_stage_post:bool=False,
     save_details:bool=False,
+    max_iter_staging:Optional[int]=100,
 ) -> Dict[str, Union[str, int, float, Dict, List]]:
     """
     Run the metropolis hastings algorithm and save results 
@@ -139,7 +140,7 @@ def run_ebm(
     # sort biomarkeres by name, ascending
     biomarker_names = sorted(data.biomarker.unique())
     n_biomarkers = len(biomarker_names)
-    n_stages = n_biomarkers + 1
+    # n_stages = n_biomarkers + 1
     logging.info(f"Number of biomarkers: {n_biomarkers}")
 
     n_participants = len(data.participant.unique())
@@ -189,6 +190,8 @@ def run_ebm(
         # Sort both dicts by the key to make sure they are comparable
         true_order_dict = dict(sorted(true_order_dict.items()))
         true_order_indices = np.array(list(true_order_dict.values())) 
+        print('order with highest ll: ', order_with_highest_ll)
+        print('true order indices: ', true_order_indices)
         tau, p_value = kendalltau(order_with_highest_ll, true_order_indices)
         tau = (1-tau)/2
     else:
@@ -245,7 +248,7 @@ def run_ebm(
             participant_data=participant_data,
             final_theta_phi=best_theta_phi,
             rng=rng,
-            max_iter=50,
+            max_iter=max_iter_staging,
             tol=1e-6
         )
         
@@ -258,7 +261,8 @@ def run_ebm(
             # but in blind inference, we have n_stages, starting from 0. 
             final_theta_phi=best_theta_phi,
             rng=rng,
-            tol=1e-6
+            tol=1e-6,
+            max_iter=max_iter_staging
         )
 
     mae = None

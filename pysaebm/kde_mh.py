@@ -50,11 +50,11 @@ def metropolis_hastings_kde(
     current_order = rng.permutation(np.arange(1, n_stages))
     current_order_dict = dict(zip(biomarkers, current_order))
     current_ln_likelihood = -np.inf
-    alpha_prior = [1.0] * (n_disease_stages)
+    alpha_prior = np.array([1.0] * (n_disease_stages))
     # current_pi is the prior distribution of N disease stages.
     # Sample from uniform dirichlet dist.
     current_pi = rng.dirichlet(alpha_prior)
-    current_stage_post = {}
+    # current_stage_post = {}
     acceptance_count = 0
 
     # Note that this records only the current accepted orders in each iteration
@@ -123,7 +123,7 @@ def metropolis_hastings_kde(
             current_order = new_order
             current_order_dict = new_order_dict
             current_ln_likelihood = new_ln_likelihood
-            current_stage_post = stage_post_new
+            # current_stage_post = stage_post_new
             current_theta_phi = new_theta_phi
             acceptance_count += 1
 
@@ -133,11 +133,11 @@ def metropolis_hastings_kde(
                 stage_counts += stage_probs  # Soft counts
             current_pi = rng.dirichlet(alpha_prior + stage_counts)
 
-            if current_ln_likelihood > best_ll and iteration >= burn_in:
+            if current_ln_likelihood > best_ll:
                 best_ll = current_ln_likelihood
                 best_order = current_order.copy()
                 best_stage_prior = current_pi 
-                best_stage_post = current_stage_post
+                # best_stage_post = current_stage_post
                 best_theta_phi = current_theta_phi
 
         all_accepted_orders.append(current_order.copy())

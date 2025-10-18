@@ -594,3 +594,11 @@ def compute_unbiased_stage_likelihoods(
     - Now using the best_theta_phi and best_stage_prior to get the updated_stage_post (when we are blind about the cn/ad labels to decide the disease stages).
     - Now when getting the stage assignments, I am totally blind, even to `healthy_ratio`. 
     - Added `iterations >= burn_in` in `mh.py` and `kde_mh.py`. 
+- 2025-09-15 (V 7.2)
+    - No changes. But accidentally increased the version to 7.1. That's okay. 
+    - Added `max_iter_staging` in `run.py`. 
+- 2025-09-20 (V 7.5)
+    - Made sure `alpha_prior` is a numpy array, not a python list. 
+    - Removed `iteration >= burn_in` when updating best_*. 
+- 2025-10-08 (V 7.6)
+    - Try soft assignment for conjugate priors and compare results. 

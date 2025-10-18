@@ -20,7 +20,6 @@ def metropolis_hastings(
     best_ll = -np.inf
     best_order = None 
     best_theta_phi = None 
-    best_stage_post = None 
     best_stage_prior = None 
     n_participants, n_biomarkers = data_matrix.shape
 
@@ -45,13 +44,13 @@ def metropolis_hastings(
     # initialize an ordering and likelihood
     current_order = rng.permutation(np.arange(1, n_stages))
     current_ln_likelihood = -np.inf
-    alpha_prior = [1.0] * (n_disease_stages)
+    alpha_prior = np.array([1.0] * (n_disease_stages))
     # current_pi is the prior distribution of N disease stages.
     # Sample from uniform dirichlet dist.
     # Notice that the index starts from zero here. 
     current_pi = rng.dirichlet(alpha_prior)
     # Only for diseased participants
-    current_stage_post = np.zeros((n_participants, n_disease_stages))
+    # current_stage_post = np.zeros((n_participants, n_disease_stages))
     acceptance_count = 0
 
     # Note that this records only the current accepted orders in each iteration
@@ -125,20 +124,18 @@ def metropolis_hastings(
         if rng.random() < prob_accept:
             current_order = new_order
             current_ln_likelihood = new_ln_likelihood
-            current_stage_post = stage_post_new
             if algorithm != 'hard_kmeans':
                 current_theta_phi = new_theta_phi
             acceptance_count += 1
 
             # --- Gibbs update for π using CURRENT posteriors ---
-            stage_counts = current_stage_post[diseased_ids].sum(axis=0)  # soft counts
+            stage_counts = stage_post_new[diseased_ids].sum(axis=0)  # soft counts
             current_pi = rng.dirichlet(alpha_prior + stage_counts)
 
-            if current_ln_likelihood > best_ll and iteration >= burn_in:
+            if current_ln_likelihood > best_ll:
                 best_ll = current_ln_likelihood
                 best_order = current_order.copy()
                 best_stage_prior = current_pi 
-                best_stage_post = current_stage_post
                 best_theta_phi = current_theta_phi
             
         all_accepted_orders.append(current_order.copy())

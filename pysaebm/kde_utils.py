@@ -500,7 +500,7 @@ def stage_with_plugin_pi_em_kde(
     participant_data:pd.DataFrame,
     final_theta_phi: np.ndarray,
     rng:np.random.Generator,
-    max_iter: int = 20,
+    max_iter: int = 100,
     tol: float = 1e-6,
 ):
     """

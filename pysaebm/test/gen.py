@@ -4,12 +4,12 @@ import json
 import os 
 
 experiment_names = [
-    "sn_kjOrdinalDM_xnjNormal",     # Experiment 1: Ordinal kj with Dirichlet-Multinomial, Normal Xnj
+    # "sn_kjOrdinalDM_xnjNormal",     # Experiment 1: Ordinal kj with Dirichlet-Multinomial, Normal Xnj
     # "sn_kjOrdinalDM_xnjNonNormal",  # Experiment 2: Ordinal kj with Dirichlet-Multinomial, Non-Normal Xnj
     # "sn_kjOrdinalUniform_xnjNormal", # Experiment 3: Ordinal kj with Uniform distribution, Normal Xnj
     # "sn_kjOrdinalUniform_xnjNonNormal", # Experiment 4: Ordinal kj with Uniform distribution, Non-Normal Xnj
     # "sn_kjContinuousUniform",       # Experiment 5: Continuous kj with Uniform distribution
-    # "sn_kjContinuousBeta",          # Experiment 6: Continuous kj with Beta distribution
+    "sn_kjContinuousBeta",          # Experiment 6: Continuous kj with Beta distribution
     # "xiNearNormal_kjContinuousUniform", # Experiment 7: Near-normal Xi with Continuous Uniform kj
     # "xiNearNormal_kjContinuousBeta", # Experiment 8: Near-normal Xi with Continuous Beta kj
     # "xiNearNormalWithNoise_kjContinuousBeta", # Experiment 9: Same as Exp 8 but with noises to xi
@@ -47,11 +47,11 @@ if __name__ == '__main__':
         bm_et_dict = generate(
                 experiment_name = exp_name,
                 params_file=params_file,
-                js = [200],
-                rs = [0.25],
+                js = [50],
+                rs = [0.1],
                 num_of_datasets_per_combination=10,
                 output_dir=OUTPUT_DIR,
-                seed=53,
+                seed=42,
                 keep_all_cols = False,
                 fixed_biomarker_order = False, 
             )

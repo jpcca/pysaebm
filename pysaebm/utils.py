@@ -34,6 +34,7 @@ import re
 import os 
 import logging 
 
+eps = 1e-12
 
 def get_two_clusters_with_kmeans(
     bm_measurements: np.ndarray,
@@ -148,7 +149,9 @@ def get_initial_theta_phi_estimates(
              np.mean(phi_measurements),
              np.std(phi_measurements, ddof=1)])
         theta_mean, theta_std, phi_mean, phi_std = compute_theta_phi_biomarker_conjugate_priors(
-            theta_measurements, phi_measurements, fallback_params, prior_n, prior_v)
+            theta_measurements, np.ones(len(theta_measurements)), 
+            phi_measurements, np.ones(len(phi_measurements)),
+            fallback_params, prior_n, prior_v)
         estimates[bm] = np.array([theta_mean, theta_std, phi_mean, phi_std])
     return estimates
 
@@ -194,10 +197,12 @@ def update_theta_phi_biomarker_em(
         np.sum(resp_nonaffected*(bm_measurements - phi_mean)**2) / sum_nonaffected)
     return theta_mean, theta_std, phi_mean, phi_std
 
-@njit(fastmath=False)
+@njit
 def compute_theta_phi_biomarker_conjugate_priors(
-    affected_cluster: np.ndarray,
-    non_affected_cluster: np.ndarray,
+    theta_measurements: np.ndarray,
+    theta_weights:np.ndarray,
+    phi_measurements: np.ndarray,
+    phi_weights: np.ndarray,
     theta_phi_current_biomarker: np.ndarray,  # Current state’s θ/φ
     prior_n: float,
     prior_v: float
@@ -208,8 +213,10 @@ def compute_theta_phi_biomarker_conjugate_priors(
     This means the posterior distribution will also be a normal-inverse gamma distribution after updating with observed data.
 
     Args:
-        affected_cluster: list of biomarker measurements
-        non_affected_cluster: list of biomarker measurements
+        theta_measurements: list of biomarker measurements across participants
+        theta_weights: theta weights
+        phi_measurements: list of biomarker measurements
+        phi_weights: phi weights
         theta_phi_current_biomarker: the current state's theta/phi for this biomarker
         prior_n (strength of belief in prior of mean), and prior_v (prior degree of freedom) are the weakly infomred priors.
 
@@ -217,43 +224,47 @@ def compute_theta_phi_biomarker_conjugate_priors(
         Tuple[float, float, float, float]: Mean and standard deviation for affected (theta) and non-affected (phi) clusters.
     """
     # --- Affected Cluster (Theta) ---
-    if len(affected_cluster) < 2:  # Fallback if cluster has 0 or 1 data points
+    if len(theta_measurements) < 2:  # Fallback if cluster has 0 or 1 data points
         theta_mean = theta_phi_current_biomarker[0]
         theta_std = theta_phi_current_biomarker[1]
     else:
         theta_mean, theta_std = estimate_params_exact(
             m0=theta_phi_current_biomarker[0],
-            # m0=np.mean(affected_cluster),
+            # m0=np.mean(theta_measurements),
             n0=prior_n,
-            # s0_sq = np.var(affected_cluster, ddof=1),
+            # s0_sq = np.var(theta_measurements, ddof=1),
             s0_sq=theta_phi_current_biomarker[1]**2,
             v0=prior_v,
-            data=affected_cluster
+            data=theta_measurements,
+            weights=theta_weights,
         )
 
     # --- Non-Affected Cluster (Phi) ---
-    if len(non_affected_cluster) < 2:  # Fallback if cluster has 0 or 1 data points
+    if len(phi_measurements) < 2:  # Fallback if cluster has 0 or 1 data points
         phi_mean = theta_phi_current_biomarker[2]
         phi_std = theta_phi_current_biomarker[3]
     else:
         phi_mean, phi_std = estimate_params_exact(
             m0=theta_phi_current_biomarker[2],
-            # m0=np.mean(non_affected_cluster),
+            # m0=np.mean(phi_measurements),
             n0=prior_n,
-            # s0_sq = np.var(non_affected_cluster, ddof=1),
+            # s0_sq = np.var(phi_measurements, ddof=1),
             s0_sq=theta_phi_current_biomarker[3]**2,
             v0=prior_v,
-            data=non_affected_cluster
+            data=phi_measurements,
+            weights=phi_weights,
         )
     return theta_mean, theta_std, phi_mean, phi_std
 
-@njit(fastmath=False)
+@njit
 def estimate_params_exact(
     m0: float,
     n0: float,
     s0_sq: float,
     v0: float,
-    data: np.ndarray
+    data: np.ndarray,
+    weights:np.ndarray=np.array([]), 
+    epsilon: float = 1e-6 # Add a small constant for stability
 ) -> Tuple[float, float]:
     """
     Estimate posterior mean and standard deviation using conjugate priors for a Normal-Inverse Gamma model.
@@ -264,35 +275,44 @@ def estimate_params_exact(
         s0_sq (float): Prior estimate of the variance (σ²).
         v0 (float): Prior degrees of freedom, influencing the certainty of s0_sq.
         data (np.ndarray): Observed data (measurements).
+        weights (np.ndarray): The weight for each data point.
 
     Returns:
         Tuple[float, float]: Posterior mean (μ) and standard deviation (σ).
     """
+    if weights is None:
+        weights = np.ones(len(data))
     # Data summary
-    sample_size = len(data)
-    sample_mean = np.mean(data)
-    # calculate sample variance
-    sum_squared_diff = 0.0 
-    for i in range(sample_size):
-        diff = data[i] - sample_mean 
-        sum_squared_diff += diff * diff 
-    # ddof=1 for unbiased estimator
-    sample_var = sum_squared_diff/(sample_size - 1)
+    sum_of_weights = np.sum(weights)
+    if sum_of_weights <= eps:
+        # Fall back to the prior/current params; avoid division by zero.
+        return m0, np.sqrt(max(s0_sq, epsilon))
+
+    sample_mean = np.sum(data * weights) / sum_of_weights
+
+    # calculate weighted sum of sample variance
+    sum_weighted_squared_diff = np.sum(weights * (data - sample_mean)**2)
 
     # Update hyperparameters for the Normal-Inverse Gamma posterior
-    updated_m0 = (n0 * m0 + sample_size * sample_mean) / (n0 + sample_size)
-    updated_n0 = n0 + sample_size
-    updated_v0 = v0 + sample_size
-    updated_s0_sq = (1 / updated_v0) * ((sample_size - 1) * sample_var + v0 * s0_sq +
-                                        (n0 * sample_size / updated_n0) * (sample_mean - m0)**2)
+    updated_m0 = (n0 * m0 + sum_of_weights * sample_mean) / (n0 + sum_of_weights)
+    updated_n0 = n0 + sum_of_weights
+    updated_v0 = v0 + sum_of_weights
+    updated_s0_sq = (1 / updated_v0) * (sum_weighted_squared_diff + v0 * s0_sq +
+                                        (n0 * sum_of_weights / updated_n0) * (sample_mean - m0)**2)
+    
+    # Ensure the variance is never exactly zero
+    updated_s0_sq = max(updated_s0_sq, epsilon)
+
     updated_alpha = updated_v0/2
     updated_beta = updated_v0*updated_s0_sq/2
 
     # Posterior estimates
     mu_posterior_mean = updated_m0
     # Use the statistically correct mean of the Inverse Gamma distribution
-    sigma_squared_posterior_mean = updated_beta / (updated_alpha - 1) if updated_alpha > 1 else updated_beta / updated_alpha
-    # sigma_squared_posterior_mean = updated_beta/updated_alpha
+    # sigma_squared_posterior_mean = updated_beta / (updated_alpha - 1) if updated_alpha > 1 else updated_beta / updated_alpha
+    sigma_squared_posterior_mean = updated_beta / updated_alpha
+    # Ensure the final estimated variance is also not zero
+    sigma_squared_posterior_mean = max(sigma_squared_posterior_mean, epsilon)
 
     mu_estimation = mu_posterior_mean
     std_estimation = np.sqrt(sigma_squared_posterior_mean)
@@ -421,19 +441,23 @@ def update_theta_phi_estimates(
                 disease_stages,
                 curr_order) 
         else:
-            affected_cluster, non_affected_cluster = obtain_affected_and_non_clusters(
-                bm_measurements,
-                n_participants,
-                non_diseased_ids,
-                stage_likelihoods_posteriors,
-                disease_stages,
-                curr_order,
-                random_state
-            )
             if algorithm == 'conjugate_priors':
+                affected_stages_mask = disease_stages >= curr_order
+                theta_weights = np.sum(stage_likelihoods_posteriors[:, affected_stages_mask], axis = 1)
+                phi_weights = 1 - theta_weights
                 updated_params[bm_idx, :] = compute_theta_phi_biomarker_conjugate_priors(
-                    affected_cluster, non_affected_cluster, theta_phi_current_biomarker, prior_n, prior_v)
+                    bm_measurements, theta_weights, bm_measurements, phi_weights, theta_phi_current_biomarker, prior_n, prior_v)
             else:
+                # MLE
+                affected_cluster, non_affected_cluster = obtain_affected_and_non_clusters(
+                    bm_measurements,
+                    n_participants,
+                    non_diseased_ids,
+                    stage_likelihoods_posteriors,
+                    disease_stages,
+                    curr_order,
+                    random_state
+                )
                 updated_params[bm_idx, :] = update_theta_phi_biomarker_mle(
                     affected_cluster, non_affected_cluster, theta_phi_current_biomarker)     
     return updated_params
@@ -659,7 +683,7 @@ def stage_with_plugin_pi_em(
     order_with_highest_ll: np.ndarray,
     final_theta_phi: np.ndarray,
     rng:np.random.Generator,
-    max_iter: int = 200,
+    max_iter: int = 100,
     tol: float = 1e-6,
 ):
     """
