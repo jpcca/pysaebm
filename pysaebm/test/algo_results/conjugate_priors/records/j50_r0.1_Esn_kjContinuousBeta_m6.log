@@ -1,13 +1,13 @@
-2025-10-08 12:06:47,535 - INFO - Running conjugate priors for file: j50_r0.1_Esn_kjContinuousBeta_m6
-2025-10-08 12:06:47,539 - INFO - Number of biomarkers: 10
-2025-10-08 12:06:53,400 - INFO - Iteration 100/1000, Acceptance Ratio: 29.00%, Log Likelihood: -1178.3817, 
-2025-10-08 12:06:53,467 - INFO - Iteration 200/1000, Acceptance Ratio: 14.50%, Log Likelihood: -1178.3817, 
-2025-10-08 12:06:53,531 - INFO - Iteration 300/1000, Acceptance Ratio: 9.67%, Log Likelihood: -1178.3817, 
-2025-10-08 12:06:53,599 - INFO - Iteration 400/1000, Acceptance Ratio: 7.25%, Log Likelihood: -1178.3817, 
-2025-10-08 12:06:53,671 - INFO - Iteration 500/1000, Acceptance Ratio: 5.80%, Log Likelihood: -1178.3817, 
-2025-10-08 12:06:53,737 - INFO - Iteration 600/1000, Acceptance Ratio: 4.83%, Log Likelihood: -1178.3817, 
-2025-10-08 12:06:53,802 - INFO - Iteration 700/1000, Acceptance Ratio: 4.43%, Log Likelihood: -1176.9044, 
-2025-10-08 12:06:53,869 - INFO - Iteration 800/1000, Acceptance Ratio: 6.00%, Log Likelihood: -1176.1901, 
-2025-10-08 12:06:53,935 - INFO - Iteration 900/1000, Acceptance Ratio: 6.22%, Log Likelihood: -1173.1170, 
-2025-10-08 12:06:54,000 - INFO - Iteration 1000/1000, Acceptance Ratio: 6.60%, Log Likelihood: -1176.4831, 
-2025-10-08 12:06:54,367 - INFO - Results saved to algo_results/conjugate_priors/results/j50_r0.1_Esn_kjContinuousBeta_m6_results.json
+2026-01-20 21:22:58,547 - INFO - Running conjugate priors for file: j50_r0.1_Esn_kjContinuousBeta_m6
+2026-01-20 21:22:58,549 - INFO - Number of biomarkers: 10
+2026-01-20 21:23:02,108 - INFO - Iteration 100/1000, Acceptance Ratio: 23.00%, Log Likelihood: -1176.5732, 
+2026-01-20 21:23:02,141 - INFO - Iteration 200/1000, Acceptance Ratio: 12.50%, Log Likelihood: -1175.0355, 
+2026-01-20 21:23:02,174 - INFO - Iteration 300/1000, Acceptance Ratio: 10.67%, Log Likelihood: -1171.8850, 
+2026-01-20 21:23:02,208 - INFO - Iteration 400/1000, Acceptance Ratio: 8.75%, Log Likelihood: -1169.9030, 
+2026-01-20 21:23:02,240 - INFO - Iteration 500/1000, Acceptance Ratio: 7.00%, Log Likelihood: -1169.9030, 
+2026-01-20 21:23:02,273 - INFO - Iteration 600/1000, Acceptance Ratio: 6.50%, Log Likelihood: -1171.4522, 
+2026-01-20 21:23:02,306 - INFO - Iteration 700/1000, Acceptance Ratio: 5.57%, Log Likelihood: -1171.4522, 
+2026-01-20 21:23:02,339 - INFO - Iteration 800/1000, Acceptance Ratio: 5.62%, Log Likelihood: -1172.5439, 
+2026-01-20 21:23:02,373 - INFO - Iteration 900/1000, Acceptance Ratio: 5.56%, Log Likelihood: -1168.9660, 
+2026-01-20 21:23:02,407 - INFO - Iteration 1000/1000, Acceptance Ratio: 5.00%, Log Likelihood: -1168.9660, 
+2026-01-20 21:23:02,653 - INFO - Results saved to algo_results/conjugate_priors/results/j50_r0.1_Esn_kjContinuousBeta_m6_results.json

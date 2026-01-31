@@ -602,3 +602,7 @@ def compute_unbiased_stage_likelihoods(
     - Removed `iteration >= burn_in` when updating best_*. 
 - 2025-10-08 (V 7.6)
     - Try soft assignment for conjugate priors and compare results. 
+- 2026-01-20 (V 7.7.0)
+    - Use python 3.11 and download the dependences (latest versions) again. Everthing works. 
+- 2026-01-30 (V 7.7.1)
+    - bug fix: if the len(params) is not equal to the `dirichlet_alpha['multinomial']` size, then automatically generate one for the full params instead of using a fixed length of it. 

@@ -488,6 +488,24 @@ def generate_data(
 
     return df
 
+def dirichlet_near_normal(n_biomarkers: int, peak_height: float = 4.25, min_height: float = 0.35):
+    # Stage indices
+    x = np.arange(n_biomarkers)
+    
+    # Center index
+    center = (n_biomarkers - 1) / 2
+    
+    # Set sigma so that shape looks like your 12-stage example
+    sigma = n_biomarkers / 6  # adjust denominator for wider/narrower curves
+    
+    # Generate Gaussian shape
+    curve = np.exp(-0.5 * ((x - center) / sigma) ** 2)
+    
+    # Normalize to desired peak and min
+    curve = (curve - curve.min()) / (curve.max() - curve.min())
+    curve = curve * (peak_height - min_height) + min_height
+    
+    return curve.tolist()
 
 def generate(
     experiment_name: str = "sn_kjOrdinalDM_xnjNormal",
@@ -558,9 +576,12 @@ def generate(
     # Load biomarker parameters from file
     with open(params_file) as f:
         params = json.load(f)
+    
+    if len(params) != len(dirichlet_alpha['multinomial']):
+                    dirichlet_alpha['multinomial'] = dirichlet_near_normal(n_biomarkers=len(params))
 
-    if len(params) > len(dirichlet_alpha['multinomial']):
-        raise ValueError(f"Your dirichlet_alpha multinomial must have the length of {len(params)}, as indicated by params.")
+    # if len(params) > len(dirichlet_alpha['multinomial']):
+    #     raise ValueError(f"Your dirichlet_alpha multinomial must have the length of {len(params)}, as indicated by params.")
 
     rng = np.random.default_rng(seed)
 
