@@ -486,6 +486,21 @@ def generate_data(
         range(1, max_stage + 1)))
     true_order_and_stages_dict[filename]['true_stages'] = true_stages.copy()
 
+    # Keep a copy of the continuous event times and stages when applicable
+    is_kj_continuous = 'kjContinuous' in experiment_name
+    is_xi_experiment = experiment_name.startswith('xi')
+    
+    if is_kj_continuous:
+        true_order_and_stages_dict[filename]['true_stages_continuous'] = list(all_kjs)
+    else:
+        true_order_and_stages_dict[filename]['true_stages_continuous'] = []
+    
+    if is_xi_experiment:
+        true_order_and_stages_dict[filename]['true_order_continuous'] = event_time_dict.copy()
+    else:
+        true_order_and_stages_dict[filename]['true_order_continuous'] = {}
+        
+
     return df
 
 def dirichlet_near_normal(n_biomarkers: int, peak_height: float = 4.25, min_height: float = 0.35):
@@ -507,6 +522,28 @@ def dirichlet_near_normal(n_biomarkers: int, peak_height: float = 4.25, min_heig
     
     return curve.tolist()
 
+def randomize_params(
+    params: Dict[str, Dict[str, float]],
+    rng: np.random.Generator
+) -> Dict[str, Dict[str, float]]:
+    """
+    Create a randomized copy of the biomarker parameter dictionary.
+
+    The structure (biomarker names and parameter keys) is preserved, while
+    the values are resampled with varied scales to avoid extreme magnitudes.
+    """
+    randomized = {}
+    for biomarker, bm_params in params.items():
+        # Give each biomarker its own scale to diversify magnitudes
+        base_scale = rng.uniform(5.0, 400.0)
+        randomized[biomarker] = {}
+        for key in bm_params:
+            if key.endswith("_std"):
+                randomized[biomarker][key] = float(rng.uniform(0.1, max(base_scale, 1.0)))
+            else:
+                randomized[biomarker][key] = float(rng.normal(loc=0.0, scale=base_scale))
+    return randomized
+
 def generate(
     experiment_name: str = "sn_kjOrdinalDM_xnjNormal",
     params_file: str = 'params.json',
@@ -515,6 +552,7 @@ def generate(
     num_of_datasets_per_combination: int = 50,
     output_dir: str = 'data',
     seed: int=53,
+    random_params: bool = False,
     dirichlet_alpha: Optional[Dict[str, List[float]]] = {
         'uniform': [100],
         'multinomial': [0.4013728324975898,
@@ -554,6 +592,7 @@ def generate(
         num_of_datasets_per_combination: Number of dataset variants to generate per parameter combination
         output_dir: Directory to save generated CSV files
         seed: Master random seed (if None, a random seed will be generated)
+        random_params: When True, resample parameter values (keeping the same keys) for every dataset variant
         dirichlet_alpha: Parameters for Dirichlet distributions:
             - 'uniform': For uniform stage distribution
             - 'multinomial': For non-uniform stage distribution
@@ -578,7 +617,7 @@ def generate(
         params = json.load(f)
     
     if len(params) != len(dirichlet_alpha['multinomial']):
-                    dirichlet_alpha['multinomial'] = dirichlet_near_normal(n_biomarkers=len(params))
+        dirichlet_alpha['multinomial'] = dirichlet_near_normal(n_biomarkers=len(params))
 
     # if len(params) > len(dirichlet_alpha['multinomial']):
     #     raise ValueError(f"Your dirichlet_alpha multinomial must have the length of {len(params)}, as indicated by params.")
@@ -603,11 +642,13 @@ def generate(
                 if suffix:
                     filename = f"{filename}_{suffix}"
 
+                params_to_use = randomize_params(params, rng) if random_params else params
+
                 # Generate a single dataset with the current parameter combination
                 generate_data(
                     filename=filename,
                     experiment_name=experiment_name,
-                    params=params,
+                    params=params_to_use,
                     n_participants=participant_count,
                     healthy_ratio=healthy_ratio,
                     output_dir=output_dir,
