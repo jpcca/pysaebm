@@ -608,5 +608,6 @@ def compute_unbiased_stage_likelihoods(
     - bug fix: if the len(params) is not equal to the `dirichlet_alpha['multinomial']` size, then automatically generate one for the full params instead of using a fixed length of it. 
 - 2026-01-31 (V 7.7.2):
     - enable save continuous stages and orders in to true_order_and_stages.json when generating data. 
-- 2026-02-01 (V 7.7.7)
-    - Allow randomizing the params to use in data generation. 
+- 2026-02-01 (V 7.7.9)
+    - Added random_params option to generate to randomize biomarker parameter values per dataset variant while preserving keys; introduced randomize_params helper to resample means/stds with varied scales.
+    - Guarded the logistic exponent in generate_measurements_kjContinuous by clipping to [-60, 60] to prevent exp overflow when parameters are large.

@@ -273,8 +273,10 @@ def generate_measurements_kjContinuous(
                 progression_rate = bm_params["rho"]     # Rate of progression
 
                 # Sigmoid function for disease progression
-                sigmoid_term = progression_magnitude / \
-                    (1 + np.exp(-progression_rate * (disease_stage - event_time)))
+                # Clip the exponent to avoid overflow when params are randomized and large
+                delta = progression_rate * (disease_stage - event_time)
+                delta = np.clip(delta, -60, 60)
+                sigmoid_term = progression_magnitude / (1 + np.exp(-delta))
                 measurement = sigmoid_term + healthy_measurement
             else:
                 # For healthy participants: just use the healthy baseline measurement
